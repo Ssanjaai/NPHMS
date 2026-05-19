@@ -1,0 +1,284 @@
+import React, { useState } from 'react';
+import {
+  IonPage,
+  IonContent,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonButtons,
+  IonBackButton,
+  IonIcon,
+} from '@ionic/react';
+import {
+  saveOutline,
+  closeOutline,
+  homeOutline,
+  locationOutline,
+  callOutline,
+  mailOutline,
+  informationCircleOutline,
+} from 'ionicons/icons';
+import { useHistory } from 'react-router-dom';
+import { ROUTES } from '../../constants/routes.constant';
+import './super-admin.css';
+
+const CreateBranchPage: React.FC = () => {
+  const history = useHistory();
+  const [formData, setFormData] = useState({
+    name: '',
+    addressLine1: '',
+    addressLine2: '',
+    city: '',
+    district: '',
+    state: '',
+    pincode: '',
+    phone: '',
+    email: '',
+    details: '',
+  });
+
+  const [admins, setAdmins] = React.useState<any[]>([]);
+
+  React.useEffect(() => {
+    const savedAdmins = localStorage.getItem('ph_admins');
+    if (savedAdmins) {
+      setAdmins(JSON.parse(savedAdmins));
+    } else {
+      const INITIAL_ADMINS = [
+        { id: 1, name: 'John Admin', email: 'john.a@phms.com', phone: '0876543210', branch: 'Uptown Sanctuary', status: 'active', joined: '2023-01-16' },
+        { id: 2, name: 'Sarah Admin', email: 'sarah.m@phms.com', phone: '0876543211', branch: 'Coastal Healing Center', status: 'active', joined: '2023-02-20' },
+        { id: 3, name: 'Mike Admin', email: 'mike.t@phms.com', phone: '0876543212', branch: 'Green Valley Branch', status: 'Inactive', joined: '2022-02-10' },
+        { id: 4, name: 'Elena Thorne', email: 'elena.t@phms.com', phone: '0876543212', branch: 'Downtown Sanctuary', status: 'active', joined: '2023-04-05' },
+      ];
+      setAdmins(INITIAL_ADMINS);
+      localStorage.setItem('ph_admins', JSON.stringify(INITIAL_ADMINS));
+    }
+  }, []);
+
+  const handleCreate = (e: React.FormEvent) => {
+    e.preventDefault();
+    // In a real app, this would be an API call
+    console.log('Creating Branch:', formData);
+
+    // Save to localStorage for cross-page persistence
+    const savedBranches = localStorage.getItem('ph_branches');
+    let branches = [];
+    if (savedBranches) {
+      branches = JSON.parse(savedBranches);
+    } else {
+      branches = [
+        { name: 'Uptown Sanctuary', region: 'Northern Region', status: 'active', admin: 'John Admin', phone: '0876543210', est: '2023-01-16' },
+        { name: 'Coastal Healing Center', region: 'Western Region', status: 'active', admin: 'Sarah Admin', phone: '0876543211', est: '2023-02-20' },
+        { name: 'Green Valley Branch', region: 'Southern Region', status: 'Inactive', admin: 'Mike Admin', phone: '0876543212', est: '2022-02-10' },
+        { name: 'Downtown Sanctuary', region: 'Central Region', status: 'active', admin: 'Elena Thorne', phone: '0876543212', est: '2023-04-05' },
+      ];
+    }
+    const newBranch = {
+      name: formData.name || 'New Branch',
+      region: formData.city ? `${formData.city} Region` : 'Unknown Region',
+      status: 'active',
+      admin: 'Unassigned',
+      phone: formData.phone || 'N/A',
+      est: new Date().toISOString().split('T')[0],
+    };
+    const updatedBranches = [...branches, newBranch];
+    localStorage.setItem('ph_branches', JSON.stringify(updatedBranches));
+
+    // After creation, navigate back
+    history.push({
+      pathname: ROUTES.SUPER_ADMIN.BRANCHES,
+      state: { newBranch: formData }
+    });
+  };
+
+  const handleCancel = () => {
+    history.push(ROUTES.SUPER_ADMIN.BRANCHES);
+  };
+
+  return (
+    <IonPage className="sa-page">
+      <IonHeader className="ion-no-border">
+        <IonToolbar className="sa-page__toolbar">
+          <IonButtons slot="start">
+            <IonBackButton defaultHref={ROUTES.SUPER_ADMIN.BRANCHES} text="" />
+          </IonButtons>
+          <IonTitle className="sa-page__toolbar-title">Create New Branch</IonTitle>
+
+        </IonToolbar>
+      </IonHeader>
+
+      <IonContent className="sa-page__content">
+        <div className="sa-page__body">
+          <div className="sa-page__header">
+            <h1 className="sa-page__title">Register New Sanctuary</h1>
+            <p className="sa-page__subtitle">Enter the details to establish a new healing branch</p>
+          </div>
+
+          <form onSubmit={handleCreate} className="sa-form-layout">
+            <div className="sa-section">
+              <div className="sa-section__header">
+                <div>
+                  <h2 className="sa-section__title">Branch Information</h2>
+                  <p className="sa-section__subtitle">Primary identification and contact details</p>
+                </div>
+              </div>
+
+              <div className="sa-settings__form-grid">
+                <div className="sa-settings__form-group">
+                  <label className="sa-settings__label sa-label--required">
+                    <IonIcon icon={homeOutline} style={{ marginRight: '8px' }} />
+                    Branch Name
+                  </label>
+                  <input
+                    className="sa-settings__input"
+                    placeholder="Enter the name of the branch"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="sa-settings__form-group">
+                  <label className="sa-settings__label sa-label--required">
+                    <IonIcon icon={mailOutline} style={{ marginRight: '8px' }} />
+                    Email ID
+                  </label>
+                  <input
+                    type="email"
+                    className="sa-settings__input"
+                    placeholder="Enter email address"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="sa-settings__form-group">
+                  <label className="sa-settings__label sa-label--required">
+                    <IonIcon icon={callOutline} style={{ marginRight: '8px' }} />
+                    Contact Number
+                  </label>
+                  <input
+                    type="tel"
+                    className="sa-settings__input"
+                    placeholder="Enter phone number"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="sa-settings__form-group">
+                  <label className="sa-settings__label sa-label--required">
+                    <IonIcon icon={locationOutline} style={{ marginRight: '8px' }} />
+                    Address Line 1
+                  </label>
+                  <input
+                    className="sa-settings__input"
+                    placeholder="Building / Street name"
+                    value={formData.addressLine1}
+                    onChange={(e) => setFormData({ ...formData, addressLine1: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="sa-settings__form-group">
+                  <label className="sa-settings__label sa-label--required">
+                    <IonIcon icon={locationOutline} style={{ marginRight: '8px' }} />
+                    Address Line 2
+                  </label>
+                  <input
+                    className="sa-settings__input"
+                    placeholder="Area / Landmark"
+                    value={formData.addressLine2}
+                    onChange={(e) => setFormData({ ...formData, addressLine2: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="sa-settings__form-group">
+                  <label className="sa-settings__label sa-label--required">City</label>
+                  <input
+                    className="sa-settings__input"
+                    placeholder="City name"
+                    value={formData.city}
+                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="sa-settings__form-group">
+                  <label className="sa-settings__label sa-label--required">District</label>
+                  <input
+                    className="sa-settings__input"
+                    placeholder="District name"
+                    value={formData.district}
+                    onChange={(e) => setFormData({ ...formData, district: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="sa-settings__form-group">
+                  <label className="sa-settings__label sa-label--required">State</label>
+                  <input
+                    className="sa-settings__input"
+                    placeholder="State name"
+                    value={formData.state}
+                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="sa-settings__form-group">
+                  <label className="sa-settings__label sa-label--required">Pincode</label>
+                  <input
+                    className="sa-settings__input"
+                    placeholder="Postal code"
+                    value={formData.pincode}
+                    onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="sa-section">
+              <div className="sa-section__header">
+                <div>
+                  <h2 className="sa-section__title">Overall Details</h2>
+                  <p className="sa-section__subtitle">Additional description and mission</p>
+                </div>
+              </div>
+
+              <div className="sa-settings__form">
+                <div className="sa-settings__form-group">
+                  <label className="sa-settings__label sa-label--required">
+                    <IonIcon icon={informationCircleOutline} style={{ marginRight: '8px' }} />
+                    Branch Description
+                  </label>
+                  <textarea
+                    className="sa-settings__input"
+                    placeholder="Provide a detailed overview of the branch, healing specialties, and overall mission..."
+                    style={{ resize: 'none', padding: '12px', width: '75%', height: '100px', minHeight: '100px' }}
+                    value={formData.details}
+                    onChange={(e) => setFormData({ ...formData, details: e.target.value })}
+                    required
+                  ></textarea>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px', marginBottom: '40px', marginTop: '30px' }}>
+              <button type="button" className="sa-btn sa-btn--outline" onClick={handleCancel}>
+                <IonIcon icon={closeOutline} /> Cancel
+              </button>
+              <button type="submit" className="sa-btn sa-btn--primary">
+                <IonIcon icon={saveOutline} /> Save Branch
+              </button>
+            </div>
+          </form>
+        </div>
+      </IonContent>
+    </IonPage>
+  );
+};
+
+export default CreateBranchPage;
