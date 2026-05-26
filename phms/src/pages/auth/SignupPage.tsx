@@ -55,7 +55,7 @@ const SignupPage: React.FC = () => {
 
   const roleOptions = [
     { label: 'Super Admin', value: 'SUPER_ADMIN' },
-    // { label: 'Branch Admin', value: 'BRANCH_ADMIN' },
+    { label: 'Branch Admin', value: 'BRANCH_ADMIN' },
   ];
 
   const validateForm = () => {
@@ -98,7 +98,7 @@ const SignupPage: React.FC = () => {
       
       const roleRedirectMap: Record<string, string> = {
         'SUPER_ADMIN': ROUTES.AUTH.LOGIN,
-        // 'BRANCH_ADMIN': ROUTES.BRANCH_ADMIN.DASHBOARD,
+        'BRANCH_ADMIN': ROUTES.AUTH.LOGIN,
         // 'HEALER': ROUTES.HEALER.DASHBOARD,
         // 'PATIENT': ROUTES.PATIENT.DASHBOARD,
       };

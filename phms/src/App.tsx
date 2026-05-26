@@ -32,9 +32,20 @@ import SASettingsPage from './pages/super-admin/SettingsPage';
 import SAVisitorLogPage from './pages/super-admin/VisitorLogPage';
 import SAAttendancePage from './pages/super-admin/AttendancePage';
 import BAAttendancePage from './pages/branch-admin/AttendancePage';
+import BADashboardPage from './pages/branch-admin/DashboardPage';
+import BAFinancePage from './pages/branch-admin/FinancePage';
+import BAHealersPage from './pages/branch-admin/HealersPage';
+import BACreateHealerPage from './pages/branch-admin/CreateHealerPage';
+import BAPatientsPage from './pages/branch-admin/PatientsPage';
+import BARegisterPatientPage from './pages/branch-admin/RegisterPatientPage';
+import BASessionsPage from './pages/branch-admin/SessionsPage';
 import SARevenuePage from './pages/super-admin/RevenuePage';
 import SADailyFinancePage from './pages/super-admin/DailyFinancePage';
 import BAVisitorLogPage from './pages/branch-admin/VisitorLogPage';
+import BAVisitorCheckInPage from './pages/branch-admin/VisitorCheckInPage';
+import BADocumentManagementPage from './pages/branch-admin/DocumentManagementPage';
+import BAReportsPage from './pages/branch-admin/ReportsPage';
+import BASettingsPage from './pages/branch-admin/SettingsPage';
 import SATreatmentCategoriesPage from './pages/super-admin/TreatmentCategoriesPage';
 import SACreateTreatmentCategoryPage from './pages/super-admin/SACreateTreatmentCategoryPage';
 import SATreatmentCategoryDetailsPage from './pages/super-admin/SATreatmentCategoryDetailsPage';
@@ -205,11 +216,44 @@ const AppContent: React.FC = () => {
         </Route>
 
         {/* Default Route */}
+        <Route path={ROUTES.BRANCH_ADMIN.DASHBOARD} exact={true}>
+          <BADashboardPage />
+        </Route>
+        <Route path={ROUTES.BRANCH_ADMIN.PATIENTS} exact={true}>
+          <BAPatientsPage />
+        </Route>
+        <Route path={ROUTES.BRANCH_ADMIN.REGISTER_PATIENT} exact={true}>
+          <BARegisterPatientPage />
+        </Route>
+        <Route path={ROUTES.BRANCH_ADMIN.HEALERS} exact={true}>
+          <BAHealersPage />
+        </Route>
+        <Route path={ROUTES.BRANCH_ADMIN.CREATE_HEALER} exact={true}>
+          <BACreateHealerPage />
+        </Route>
         <Route path={ROUTES.BRANCH_ADMIN.ATTENDANCE} exact={true}>
           <BAAttendancePage />
         </Route>
         <Route path={ROUTES.BRANCH_ADMIN.VISITOR_LOG} exact={true}>
           <BAVisitorLogPage />
+        </Route>
+        <Route path={ROUTES.BRANCH_ADMIN.VISITOR_CHECKIN} exact={true}>
+          <BAVisitorCheckInPage />
+        </Route>
+        <Route path={ROUTES.BRANCH_ADMIN.FINANCE} exact={true}>
+          <BAFinancePage />
+        </Route>
+        <Route path={ROUTES.BRANCH_ADMIN.SESSIONS} exact={true}>
+          <BASessionsPage />
+        </Route>
+        <Route path={ROUTES.BRANCH_ADMIN.DOCUMENTS} exact={true}>
+          <BADocumentManagementPage />
+        </Route>
+        <Route path={ROUTES.BRANCH_ADMIN.REPORTS} exact={true}>
+          <BAReportsPage />
+        </Route>
+        <Route path={ROUTES.BRANCH_ADMIN.SETTINGS} exact={true}>
+          <BASettingsPage />
         </Route>
         <Route path="/" exact={true}>
           <Redirect to={ROUTES.AUTH.LOGIN} />

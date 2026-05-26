@@ -111,17 +111,17 @@ const LoginPage: React.FC = () => {
     
     try {
       // Call real login from hook
-      await login(data as LoginRequest);
+      const response = await login(data as LoginRequest);
       
       const roleRedirectMap: Record<string, string> = {
         SUPER_ADMIN: ROUTES.SUPER_ADMIN.DASHBOARD,
-        // BRANCH_ADMIN: ROUTES.BRANCH_ADMIN.DASHBOARD,
-        // HEALER: ROUTES.HEALER.DASHBOARD,
-        // PATIENT: ROUTES.PATIENT.DASHBOARD,
+        BRANCH_ADMIN: ROUTES.BRANCH_ADMIN.DASHBOARD,
+        HEALER: ROUTES.HEALER.DASHBOARD,
+        PATIENT: ROUTES.PATIENT.DASHBOARD,
       };
 
-      const selectedRole = data.role || 'SUPER_ADMIN';
-      const redirectPath = roleRedirectMap[selectedRole] || ROUTES.SUPER_ADMIN.DASHBOARD;
+      const userRole = response?.user?.role || data.role || 'SUPER_ADMIN';
+      const redirectPath = roleRedirectMap[userRole] || ROUTES.SUPER_ADMIN.DASHBOARD;
 
       present({
         message: 'Login successful!',

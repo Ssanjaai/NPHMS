@@ -52,12 +52,16 @@ export const ROUTES = {
   BRANCH_ADMIN: {
     DASHBOARD: '/branch-admin/dashboard',
     HEALERS: '/branch-admin/healers',
+    CREATE_HEALER: '/branch-admin/healers/create',
     PATIENTS: '/branch-admin/patients',
+    REGISTER_PATIENT: '/branch-admin/patients/register',
     SESSIONS: '/branch-admin/sessions',
     ATTENDANCE: '/branch-admin/attendance',
     VISITOR_LOG: '/branch-admin/visitor-log',
+    VISITOR_CHECKIN: '/branch-admin/visitor-log/check-in',
     FINANCE: '/branch-admin/finance',
     REPORTS: '/branch-admin/reports',
+    DOCUMENTS: '/branch-admin/documents',
     SETTINGS: '/branch-admin/settings',
   },
 

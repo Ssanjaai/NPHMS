@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '../store/auth.store';
 import { authAPI } from '../api/auth.api';
-import { LoginRequest, User } from '../types/api.types';
+import { LoginRequest, User, UserRole } from '../types/api.types';
 
 export const useAuth = () => {
   const { user, token, role, branch, loading, error, setAuth, logout, setLoading, setError, clearError } =
@@ -101,9 +101,10 @@ export const useAuth = () => {
     mutationFn: async (userData: {
       email: string;
       password: string;
-      firstName: string;
-      lastName: string;
-      role: 'HEALER' | 'PATIENT';
+      fullName?: string;
+      firstName?: string;
+      lastName?: string;
+      role: UserRole;
     }) => {
       setLoading(true);
       clearError();

@@ -26,6 +26,7 @@ import {
   calendarOutline,
   chevronDownOutline,
   chevronForwardOutline,
+  documentOutline,
 } from 'ionicons/icons';
 import { ROUTES } from '../constants/routes.constant';
 import { useAuthStore } from '../store/auth.store';
@@ -71,15 +72,20 @@ const superAdminNav: NavItem[] = [
 ];
 
 const branchAdminNav: NavItem[] = [
-  { title: 'Dashboard', url: ROUTES.BRANCH_ADMIN.DASHBOARD, icon: gridOutline, section: 'Main' },
-  { title: 'Healers', url: ROUTES.BRANCH_ADMIN.HEALERS, icon: medkitOutline },
-  { title: 'Patients', url: ROUTES.BRANCH_ADMIN.PATIENTS, icon: peopleOutline },
-  { title: 'Sessions', url: ROUTES.BRANCH_ADMIN.SESSIONS, icon: timeOutline },
-  { title: 'Attendance', url: ROUTES.BRANCH_ADMIN.ATTENDANCE, icon: timeOutline, section: 'Operations' },
-  { title: 'Visitor Log', url: ROUTES.BRANCH_ADMIN.VISITOR_LOG, icon: listOutline },
-  { title: 'Finance', url: ROUTES.BRANCH_ADMIN.FINANCE, icon: cashOutline, section: 'Finance' },
+  { title: 'Dashboard', url: ROUTES.BRANCH_ADMIN.DASHBOARD, icon: gridOutline },
+  { title: 'Patient Management', url: ROUTES.BRANCH_ADMIN.PATIENTS, icon: peopleOutline },
+  { title: 'Healer Management', url: ROUTES.BRANCH_ADMIN.HEALERS, icon: medkitOutline },
+  { title: 'Session Management', url: ROUTES.BRANCH_ADMIN.SESSIONS, icon: timeOutline },
+
+  /* ADMINISTRATION */
+  { title: 'Finance Management', url: ROUTES.BRANCH_ADMIN.FINANCE, icon: cashOutline, section: 'ADMINISTRATION' },
+  { title: 'Daily Visitor Log', url: ROUTES.BRANCH_ADMIN.VISITOR_LOG, icon: listOutline },
+  { title: 'Worker Attendance', url: ROUTES.BRANCH_ADMIN.ATTENDANCE, icon: timeOutline },
+
+  /* INSIGHTS */
+  { title: 'Document Management', url: ROUTES.BRANCH_ADMIN.DOCUMENTS, icon: documentOutline, section: 'INSIGHTS' },
   { title: 'Reports', url: ROUTES.BRANCH_ADMIN.REPORTS, icon: barChartOutline },
-  { title: 'Settings', url: ROUTES.BRANCH_ADMIN.SETTINGS, icon: settingsOutline, section: 'System' },
+  { title: 'Settings', url: ROUTES.BRANCH_ADMIN.SETTINGS, icon: settingsOutline },
 ];
 
 const Menu: React.FC = () => {
@@ -119,13 +125,21 @@ const Menu: React.FC = () => {
     history.push(ROUTES.AUTH.LOGIN);
   };
 
-  const userInitials = user
-    ? `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase() || 'SA'
-    : 'SA';
+  const userName = user?.name || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Aria Seraphina';
+  
+  const rawBranch = typeof user?.branch === 'object' && user?.branch !== null
+    ? (user.branch as any).name
+    : (user?.branch || 'Mumbai');
+  
+  const branchName = rawBranch.toLowerCase().includes('branch') ? rawBranch : `${rawBranch} Branch`;
+  
+  const userSubtext = user?.role === 'SUPER_ADMIN'
+    ? 'Super Admin'
+    : `${branchName} Admin`;
 
-  const userName = user
-    ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Super Admin'
-    : 'Super Admin';
+  const userInitials = user
+    ? `${user.name?.[0] || user.firstName?.[0] || 'B'}${user.name?.split(' ')?.[1]?.[0] || user.lastName?.[0] || 'A'}`.toUpperCase()
+    : 'BA';
 
   return (
     <IonMenu contentId="main" type="overlay" className="app-menu">
@@ -200,14 +214,15 @@ const Menu: React.FC = () => {
         </nav>
       </IonContent>
 
-      <IonFooter className="ion-no-border">
+      <IonFooter className="ion-no-border" style={{ background: 'var(--ion-background-color)' }}>
+
         {/* User Profile at Bottom */}
         <div className="app-menu__footer">
           <div className="app-menu__user">
             <div className="app-menu__user-avatar">{userInitials}</div>
             <div className="app-menu__user-info">
               <span className="app-menu__user-name">{userName}</span>
-              <span className="app-menu__user-role">Aria Seraphina</span>
+              <span className="app-menu__user-role">{userSubtext}</span>
             </div>
           </div>
           <button className="app-menu__logout-btn" onClick={handleLogout} title="Logout">

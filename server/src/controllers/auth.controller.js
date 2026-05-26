@@ -27,7 +27,7 @@ class AuthController {
   };
 
   getMe = async (req, res) => {
-    const user = await authService.getProfile(req.user.uid || req.user.id);
+    const user = await authService.getProfile(req.user.id);
     
     // Normalize user role for the frontend
     const userJson = user.toJSON ? user.toJSON() : { ...user };

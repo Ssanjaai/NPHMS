@@ -65,3 +65,44 @@
 .app-select--error .app-select__item {
   border-color: var(--color-danger);
 }
+
+/* Premium Popover Dropdown Custom Styles */
+.app-select-popover {
+  --background: #ffffff !important;
+  --box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15) !important;
+  --border-radius: var(--radius-lg) !important;
+  --width: 280px;
+}
+
+.app-select-popover ion-list {
+  background: #ffffff !important;
+  padding: 8px 0;
+}
+
+.app-select-popover ion-item {
+  --background: #ffffff !important;
+  --color: var(--color-text-primary) !important;
+  --padding-start: var(--space-md);
+  --padding-end: var(--space-md);
+  --min-height: 48px;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  border-bottom: none !important;
+  margin: 2px 8px;
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease-in-out;
+}
+
+/* Hover & Active Effects */
+.app-select-popover ion-item:hover,
+.app-select-popover ion-item.item-radio-checked {
+  --background: rgba(31, 122, 106, 0.08) !important;
+  --color: var(--color-primary-dark) !important;
+  font-weight: var(--font-weight-semibold);
+}
+
+.app-select-popover ion-radio {
+  --color: var(--color-text-muted) !important;
+  --color-checked: var(--color-primary) !important;
+}
+

@@ -47,8 +47,8 @@ export const authAPI = {
    * Get current logged-in user profile
    */
   getCurrentUser: async (): Promise<User> => {
-    const response = await axiosInstance.get<User>('/auth/me');
-    return response.data;
+    const response = await axiosInstance.get<any>('/auth/me');
+    return response.data.data;
   },
 
   /**

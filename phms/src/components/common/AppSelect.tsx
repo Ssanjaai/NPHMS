@@ -52,6 +52,8 @@ const AppSelect: React.FC<AppSelectProps> = ({
           placeholder={placeholder}
           name={name}
           className="app-select__field"
+          interface="popover"
+          interfaceOptions={{ cssClass: 'app-select-popover' }}
         >
           {options.map((option) => (
             <IonSelectOption key={option.value} value={option.value}>
