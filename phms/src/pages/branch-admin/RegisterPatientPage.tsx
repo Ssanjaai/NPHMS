@@ -17,6 +17,7 @@ import {
   checkmarkCircleOutline,
   closeCircleOutline,
   trashOutline,
+  shieldCheckmarkOutline,
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { useAuthStore } from '../../store/auth.store';
@@ -52,6 +53,9 @@ export default function BARegisterPatientPage() {
     medicalHistory: '',
     treatmentType: 'Pranic Psychotherapy',
     assignedHealer: 'Dr. Aris Varma',
+    username: 'dr._aris varma',
+    password: 'PHMS-5542',
+    accountStatus: 'Active' as 'Active' | 'Inactive',
   });
 
   // Uploaded files state for the 7 requested fields
@@ -113,6 +117,9 @@ export default function BARegisterPatientPage() {
       medicalHistory: '',
       treatmentType: '',
       assignedHealer: '',
+      username: '',
+      password: '',
+      accountStatus: 'Active',
     });
     setUploadedFiles({
       reports: null,
@@ -123,6 +130,15 @@ export default function BARegisterPatientPage() {
       idProofs: null,
       healingRecords: null,
     });
+  };
+
+  // Generate random password like PHMS-XXXX
+  const handleRegeneratePassword = () => {
+    const randomDigits = Math.floor(1000 + Math.random() * 9000);
+    setFormData((prev) => ({
+      ...prev,
+      password: `PHMS-${randomDigits}`,
+    }));
   };
 
   // Handle Submit
@@ -595,7 +611,103 @@ export default function BARegisterPatientPage() {
                           </select>
                         </div>
                       </div>
+                    </div>
 
+                    {/* Card 2: Login Details */}
+                    <div style={customStyles.formCard}>
+                      <div style={customStyles.subHeader}>
+                        <IonIcon icon={shieldCheckmarkOutline} style={customStyles.subHeaderIcon} />
+                        <span>Login Details</span>
+                      </div>
+
+                      <div className="st-form-group">
+                        <label style={customStyles.label}>USERNAME</label>
+                        <input 
+                          type="text" 
+                          name="username" 
+                          style={customStyles.grayInput}
+                          value={formData.username} 
+                          onChange={handleInputChange} 
+                          placeholder="e.g. dr._aris varma"
+                          required
+                        />
+                      </div>
+
+                      <div className="st-form-group">
+                        <label style={customStyles.label}>PASSWORD (AUTO GENERATED)</label>
+                        <div style={{ display: 'flex', gap: '12px' }}>
+                          <input 
+                            type="text" 
+                            name="password" 
+                            style={{ ...customStyles.grayInput, fontFamily: 'monospace', fontWeight: 'bold' }}
+                            value={formData.password} 
+                            onChange={handleInputChange} 
+                            placeholder="PHMS-XXXX"
+                            required
+                          />
+                          <button 
+                            type="button"
+                            onClick={handleRegeneratePassword}
+                            style={{
+                              background: '#0D5C46',
+                              border: 'none',
+                              borderRadius: '8px',
+                              padding: '10px 16px',
+                              fontSize: '12px',
+                              fontWeight: 600,
+                              color: '#ffffff',
+                              cursor: 'pointer',
+                              whiteSpace: 'nowrap',
+                              transition: 'background 0.2s ease',
+                            }}
+                          >
+                            Regenerate
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label style={customStyles.label}>ACCOUNT STATUS</label>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '6px' }}>
+                          {/* Active */}
+                          <div 
+                            onClick={() => setFormData(prev => ({ ...prev, accountStatus: 'Active' }))}
+                            style={{
+                              padding: '12px',
+                              borderRadius: '8px',
+                              border: formData.accountStatus === 'Active' ? '2px solid #10b981' : '1px solid #cbd5e1',
+                              background: formData.accountStatus === 'Active' ? '#f0fdf4' : '#f8fafc',
+                              cursor: 'pointer',
+                              textAlign: 'center',
+                              fontWeight: 700,
+                              fontSize: '13px',
+                              color: formData.accountStatus === 'Active' ? '#047857' : '#475569',
+                              transition: 'all 0.2s ease'
+                            }}
+                          >
+                            Active
+                          </div>
+
+                          {/* Inactive */}
+                          <div 
+                            onClick={() => setFormData(prev => ({ ...prev, accountStatus: 'Inactive' }))}
+                            style={{
+                              padding: '12px',
+                              borderRadius: '8px',
+                              border: formData.accountStatus === 'Inactive' ? '2px solid #ef4444' : '1px solid #cbd5e1',
+                              background: formData.accountStatus === 'Inactive' ? '#fef2f2' : '#f8fafc',
+                              cursor: 'pointer',
+                              textAlign: 'center',
+                              fontWeight: 700,
+                              fontSize: '13px',
+                              color: formData.accountStatus === 'Inactive' ? '#b91c1c' : '#475569',
+                              transition: 'all 0.2s ease'
+                            }}
+                          >
+                            Inactive
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
                     {/* Card 2: Uploaded Documents */}

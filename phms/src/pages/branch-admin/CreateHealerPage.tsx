@@ -42,20 +42,20 @@ export default function BACreateHealerPage() {
 
   // Form states with requested healer defaults
   const [formData, setFormData] = useState({
-    name: 'Dr. Aris Varma',
-    gender: 'Male',
-    dob: '1985-08-22',
-    mobile: '0876543210',
-    email: 'aris.v@phms.com',
-    address: '45 Lotus Gardens, OM Road, Chennai',
-    username: 'dr._aris varma',
+    name: '',
+    gender: '',
+    dob: '',
+    mobile: '',
+    email: '',
+    address: '',
+    username: '',
     password: 'PHMS-' + Math.floor(1000 + Math.random() * 9000),
     status: 'Active' as 'Active' | 'Inactive',
-    certLevel: 'Advanced',
-    specialization: 'Energy Healing',
-    experience: '8',
-    languages: 'English, Tamil',
-    verificationStatus: 'Verified Practitioner',
+    certLevel: '',
+    specialization: '',
+    experience: '',
+    languages: '',
+    verificationStatus: '',
   });
 
   // Profile Photo state
@@ -133,6 +133,10 @@ export default function BACreateHealerPage() {
     }
     if (!formData.email.trim() || !formData.email.includes('@')) {
       alert('A valid email address is required.');
+      return;
+    }
+    if (formData.experience !== '' && parseInt(formData.experience) < 0) {
+      alert('Years of Experience cannot be negative.');
       return;
     }
 
@@ -324,7 +328,7 @@ export default function BACreateHealerPage() {
                               value={formData.name} 
                               onChange={handleInputChange} 
                               required 
-                              placeholder="Dr. Aris Varma"
+                              placeholder="Enter Name"
                             />
                           </div>
 
@@ -332,6 +336,7 @@ export default function BACreateHealerPage() {
                             <div className="st-form-group">
                               <label style={customStyles.label}>GENDER</label>
                               <select name="gender" className="st-input" style={customStyles.grayInput} value={formData.gender} onChange={handleInputChange}>
+                                <option value="">Select Gender</option>
                                 <option value="Male">Male</option>
                                 <option value="Female">Female</option>
                                 <option value="Other">Other</option>
@@ -360,7 +365,7 @@ export default function BACreateHealerPage() {
                                 value={formData.mobile} 
                                 onChange={handleInputChange} 
                                 required 
-                                placeholder="0876543210"
+                                placeholder="Enter phone number"
                               />
                             </div>
 
@@ -373,7 +378,7 @@ export default function BACreateHealerPage() {
                                 value={formData.email} 
                                 onChange={handleInputChange} 
                                 required 
-                                placeholder="aris.v@phms.com"
+                                placeholder="Enter email address"
                               />
                             </div>
                           </div>
@@ -386,7 +391,7 @@ export default function BACreateHealerPage() {
                               style={customStyles.grayTextarea}
                               value={formData.address} 
                               onChange={handleInputChange} 
-                              placeholder="45 Lotus Gardens, OM Road, Chennai"
+                              placeholder="Enter complete address"
                             />
                           </div>
 
@@ -407,6 +412,7 @@ export default function BACreateHealerPage() {
                             <div className="st-form-group">
                               <label style={customStyles.label}>CERTIFICATION LEVEL</label>
                               <select name="certLevel" className="st-input" style={customStyles.grayInput} value={formData.certLevel} onChange={handleInputChange}>
+                                <option value="">Select Certification Level</option>
                                 <option value="Advanced">Advanced</option>
                                 <option value="Associate">Associate</option>
                                 <option value="Certified">Certified</option>
@@ -422,7 +428,7 @@ export default function BACreateHealerPage() {
                                 style={customStyles.grayInput}
                                 value={formData.specialization} 
                                 onChange={handleInputChange} 
-                                placeholder="Energy Healing"
+                                placeholder="Enter specialization (e.g. Energy Healing)"
                               />
                             </div>
                           </div>
@@ -436,7 +442,8 @@ export default function BACreateHealerPage() {
                                 style={customStyles.grayInput}
                                 value={formData.experience} 
                                 onChange={handleInputChange} 
-                                placeholder="8"
+                                placeholder="Enter years of experience"
+                                min="0"
                               />
                             </div>
 
@@ -448,7 +455,7 @@ export default function BACreateHealerPage() {
                                 style={customStyles.grayInput}
                                 value={formData.languages} 
                                 onChange={handleInputChange} 
-                                placeholder="English, Tamil"
+                                placeholder="Enter languages known (e.g. English, Tamil)"
                               />
                             </div>
                           </div>
@@ -479,7 +486,7 @@ export default function BACreateHealerPage() {
                               style={customStyles.grayInput}
                               value={formData.username} 
                               onChange={handleInputChange} 
-                              placeholder="dr._aris varma"
+                              placeholder="Enter username"
                             />
                           </div>
 
@@ -492,6 +499,7 @@ export default function BACreateHealerPage() {
                                 style={{ ...customStyles.grayInput, fontFamily: 'monospace' }}
                                 value={formData.password} 
                                 readOnly
+                                placeholder="PHMS-XXXX"
                               />
                               <button 
                                 type="button" 
@@ -603,6 +611,7 @@ export default function BACreateHealerPage() {
                           <div className="st-form-group">
                             <label style={customStyles.label}>PROFILE VERIFICATION STATUS</label>
                             <select name="verificationStatus" className="st-input" style={customStyles.grayInput} value={formData.verificationStatus} onChange={handleInputChange}>
+                              <option value="">Select Verification Status</option>
                               <option value="Verified Practitioner">Verified Practitioner</option>
                               <option value="Pending Review">Pending Review</option>
                               <option value="Suspended">Suspended</option>
