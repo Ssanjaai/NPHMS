@@ -55,6 +55,7 @@ export const ROUTES = {
     CREATE_HEALER: '/branch-admin/healers/create',
     PATIENTS: '/branch-admin/patients',
     REGISTER_PATIENT: '/branch-admin/patients/register',
+    EDIT_PATIENT: '/branch-admin/patients/edit/:id',
     SESSIONS: '/branch-admin/sessions',
     ATTENDANCE: '/branch-admin/attendance',
     VISITOR_LOG: '/branch-admin/visitor-log',

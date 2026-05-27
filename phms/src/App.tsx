@@ -38,6 +38,7 @@ import BAHealersPage from './pages/branch-admin/HealersPage';
 import BACreateHealerPage from './pages/branch-admin/CreateHealerPage';
 import BAPatientsPage from './pages/branch-admin/PatientsPage';
 import BARegisterPatientPage from './pages/branch-admin/RegisterPatientPage';
+import BAEditPatientPage from './pages/branch-admin/EditPatientPage';
 import BASessionsPage from './pages/branch-admin/SessionsPage';
 import SARevenuePage from './pages/super-admin/RevenuePage';
 import SADailyFinancePage from './pages/super-admin/DailyFinancePage';
@@ -224,6 +225,9 @@ const AppContent: React.FC = () => {
         </Route>
         <Route path={ROUTES.BRANCH_ADMIN.REGISTER_PATIENT} exact={true}>
           <BARegisterPatientPage />
+        </Route>
+        <Route path={ROUTES.BRANCH_ADMIN.EDIT_PATIENT} exact={true}>
+          <BAEditPatientPage />
         </Route>
         <Route path={ROUTES.BRANCH_ADMIN.HEALERS} exact={true}>
           <BAHealersPage />

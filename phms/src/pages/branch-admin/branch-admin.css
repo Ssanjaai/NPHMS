@@ -3021,11 +3021,11 @@ select.sa-settings__input {
 /* Branch Admin Dashboard Premium Stylesheet */
 
 :root {
-  --ba-color-bg: #f8fafc;
-  --ba-color-primary: #0f5b4b;
-  --ba-color-primary-light: #147a65;
-  --ba-color-primary-dark: #093c31;
-  --ba-color-text-main: #0f172a;
+  --ba-color-bg: #f5f6fa;
+  --ba-color-primary: #1f7a6a;
+  --ba-color-primary-light: #279482;
+  --ba-color-primary-dark: #165f52;
+  --ba-color-text-main: #1e293b;
   --ba-color-text-sub: #64748b;
   
   --ba-color-income: #0f766e;
@@ -8409,6 +8409,10 @@ select.sa-settings__input {
   justify-content: space-between;
   align-items: center;
   width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 32px;
+  box-sizing: border-box;
 }
 
 .db-toolbar-left {
@@ -9762,9 +9766,10 @@ select.sa-settings__input {
 
 .st-pagination {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  padding-top: 8px;
+  gap: 10px;
+  padding-top: 16px;
 }
 
 .st-pagination-info {
@@ -9776,6 +9781,7 @@ select.sa-settings__input {
 .st-pagination-controls {
   display: flex;
   gap: 6px;
+  justify-content: center;
 }
 
 .st-page-btn {

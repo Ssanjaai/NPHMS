@@ -43,13 +43,18 @@ import {
   receiptOutline,
   settingsOutline,
   arrowBackOutline,
+  locationOutline,
+  medkitOutline,
+  peopleOutline,
+  closeCircleOutline,
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { useAuthStore } from '../../store/auth.store';
+import { ROUTES } from '../../constants/routes.constant';
 import './branch-admin.css';
 
 // Highly comprehensive Patient structure matching all requirements
-interface Patient {
+export interface Patient {
   id: string; // Patient ID
   name: string; // Patient Name
   photoUrl?: string; // Profile Photo Mock
@@ -66,6 +71,8 @@ interface Patient {
   regDate: string; // Registration Date
   lastVisitDate: string; // Last Visit Date
   status: 'Active' | 'On Hold' | 'Completed' | 'Inactive'; // Status
+  address?: string;
+  treatmentType?: string;
   emergencyContact: {
     name: string;
     relation: string;
@@ -148,6 +155,102 @@ const PatientsPage: React.FC = () => {
 
   // Strict Scoping / Access Control Check
   const isBranchAdmin = user?.role === 'BRANCH_ADMIN';
+
+  const customStyles = {
+    formCard: {
+      background: '#ffffff',
+      borderRadius: '16px',
+      padding: '28px',
+      border: '1px solid #e2e8f0',
+      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.025)',
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: '20px',
+    },
+    subHeader: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '10px',
+      fontSize: '18px',
+      fontWeight: 700,
+      color: 'var(--ba-color-primary)',
+      marginTop: '4px',
+      marginBottom: '12px',
+    },
+    subHeaderIcon: {
+      color: 'var(--ba-color-primary)',
+      fontSize: '22px',
+    },
+    label: {
+      fontSize: '11px',
+      fontWeight: 800,
+      color: '#475569',
+      letterSpacing: '0.5px',
+      marginBottom: '6px',
+      textTransform: 'uppercase' as const,
+    },
+    grayInput: {
+      background: '#f8fafc',
+      border: '1px solid #e2e8f0',
+      borderRadius: '8px',
+      padding: '12px 16px',
+      fontSize: '14px',
+      color: '#1e293b',
+      outline: 'none',
+      width: '100%',
+      transition: 'all 0.2s ease',
+    },
+    grayTextarea: {
+      background: '#f8fafc',
+      border: '1px solid #e2e8f0',
+      borderRadius: '8px',
+      padding: '12px 16px',
+      fontSize: '14px',
+      color: '#1e293b',
+      outline: 'none',
+      width: '100%',
+      resize: 'none' as const,
+      lineHeight: 1.5,
+      transition: 'all 0.2s ease',
+    },
+    dashedUpload: {
+      background: '#f8fafc',
+      border: '1px dashed #cbd5e1',
+      borderRadius: '8px',
+      height: '38px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      cursor: 'pointer',
+      width: '100%',
+      transition: 'all 0.2s ease',
+    },
+    dashedUploadActive: {
+      background: '#f0fdf4',
+      border: '1px solid #a7f3d0',
+      borderRadius: '8px',
+      height: '38px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 12px',
+      cursor: 'pointer',
+      width: '100%',
+    },
+    statusCard: {
+      display: 'flex',
+      flexDirection: 'column' as const,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '20px 12px',
+      borderRadius: '12px',
+      cursor: 'pointer',
+      textAlign: 'center' as const,
+      transition: 'all 0.2s ease',
+      width: '100%',
+      minHeight: '104px',
+    },
+  };
 
   // Primary State
   const [patients, setPatients] = useState<Patient[]>([
@@ -351,7 +454,7 @@ const PatientsPage: React.FC = () => {
 
   // Selected Patient Workspace
   const [selectedPatientId, setSelectedPatientId] = useState<string>('#P-8921');
-  const [viewMode, setViewMode] = useState<'list' | 'detail'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'detail' | 'edit'>('list');
   const [profileTab, setProfileTab] = useState<'basic' | 'sessions' | 'financials' | 'documents' | 'feedback' | 'logs'>('basic');
 
   // Search & Filter & Sorting state
@@ -468,7 +571,7 @@ const PatientsPage: React.FC = () => {
     if (selectedPatient) {
       setEditForm({ ...selectedPatient });
     }
-  }, [selectedPatientId]);
+  }, [selectedPatientId, viewMode, patients]);
 
   if (!isBranchAdmin) {
     return (
@@ -587,35 +690,36 @@ const PatientsPage: React.FC = () => {
   };
 
   // Handle Edit Patient Action
-  const handleEditPatientSubmit = () => {
-    if (!editForm) return;
-    const oldPatient = patients.find((p) => p.id === editForm.id) || selectedPatient;
+  const handleEditPatientSubmit = (updatedPatient?: Patient) => {
+    const patientToSave = updatedPatient || editForm;
+    if (!patientToSave) return;
+    const oldPatient = patients.find((p) => p.id === patientToSave.id) || selectedPatient;
     const timestampString = new Date().toISOString().replace('T', ' ').substring(0, 19);
 
-    let updatedHealerHistory = [...(editForm.healerHistory || [])];
-    let updatedStatusHistory = [...(editForm.statusHistory || [])];
-    let updatedActivityLogs = [...(editForm.activityLogs || [])];
-    let credentials = editForm.credentials;
+    let updatedHealerHistory = [...(patientToSave.healerHistory || [])];
+    let updatedStatusHistory = [...(patientToSave.statusHistory || [])];
+    let updatedActivityLogs = [...(patientToSave.activityLogs || [])];
+    let credentials = patientToSave.credentials;
 
     // Detect healer change
-    if (editForm.assignedHealer !== oldPatient.assignedHealer) {
+    if (patientToSave.assignedHealer !== oldPatient.assignedHealer) {
       updatedHealerHistory.unshift({
         prevHealer: oldPatient.assignedHealer || 'None',
-        newHealer: editForm.assignedHealer,
+        newHealer: patientToSave.assignedHealer,
         changedBy: displayName,
         timestamp: timestampString,
       });
       updatedActivityLogs.unshift({
-        action: `Healer assignment updated: [${oldPatient.assignedHealer || 'None'}] ➔ [${editForm.assignedHealer}]`,
+        action: `Healer assignment updated: [${oldPatient.assignedHealer || 'None'}] ➔ [${patientToSave.assignedHealer}]`,
         timestamp: 'Just now',
         category: 'profile_update' as const,
       });
 
       // Trigger credentials generation if unlocking from None
       const wasNone = !oldPatient.assignedHealer || oldPatient.assignedHealer === 'None';
-      const isNowAssigned = editForm.assignedHealer && editForm.assignedHealer !== 'None';
+      const isNowAssigned = patientToSave.assignedHealer && patientToSave.assignedHealer !== 'None';
       if (wasNone && isNowAssigned && !credentials) {
-        const username = editForm.name.toLowerCase().replace(/\s+/g, '_') + `_${Math.floor(Math.random() * 100)}`;
+        const username = patientToSave.name.toLowerCase().replace(/\s+/g, '_') + `_${Math.floor(Math.random() * 100)}`;
         const passwordAutoGenerated = `PHMS-${Math.random().toString(36).substring(2, 7)}#`;
         credentials = {
           username,
@@ -625,21 +729,21 @@ const PatientsPage: React.FC = () => {
         };
         updatedActivityLogs.unshift(
           { action: `SMS login credentials dispatched for username: ${username}`, timestamp: 'Just now', category: 'profile_update' as const },
-          { action: `Email login credentials dispatched for email: ${editForm.email}`, timestamp: 'Just now', category: 'profile_update' as const }
+          { action: `Email login credentials dispatched for email: ${patientToSave.email}`, timestamp: 'Just now', category: 'profile_update' as const }
         );
       }
     }
 
     // Detect status change
-    if (editForm.status !== oldPatient.status) {
+    if (patientToSave.status !== oldPatient.status) {
       updatedStatusHistory.unshift({
         prevStatus: oldPatient.status || 'None',
-        newStatus: editForm.status,
+        newStatus: patientToSave.status,
         changedBy: displayName,
         timestamp: timestampString,
       });
       updatedActivityLogs.unshift({
-        action: `Patient status transitioned: [${oldPatient.status}] ➔ [${editForm.status}]`,
+        action: `Patient status transitioned: [${oldPatient.status}] ➔ [${patientToSave.status}]`,
         timestamp: 'Just now',
         category: 'profile_update' as const,
       });
@@ -652,14 +756,14 @@ const PatientsPage: React.FC = () => {
     });
 
     const saved: Patient = {
-      ...editForm,
+      ...patientToSave,
       credentials,
       healerHistory: updatedHealerHistory,
       statusHistory: updatedStatusHistory,
       activityLogs: updatedActivityLogs,
     };
 
-    setPatients(patients.map((p) => (p.id === editForm.id ? saved : p)));
+    setPatients(patients.map((p) => (p.id === patientToSave.id ? saved : p)));
     setShowEditModal(false);
   };
 
@@ -957,33 +1061,13 @@ const PatientsPage: React.FC = () => {
               <p className="db-page-subtitle">Patient Records, Medical Workflows and Session Tracking</p>
             </div>
 
-            {/* Right Actions & Profile */}
-            <div className="db-toolbar-right">
-              {/* Scoped restriction indicator */}
-              <span className="st-panel-badge st-panel-badge--green" style={{ marginRight: '12px', fontSize: '10px' }}>
-                Scoped: {branchName}
-              </span>
-
-              {/* Notification Button */}
-              <button className="db-icon-btn" title="Notifications">
-                <IonIcon icon={notificationsOutline} />
-                <div className="db-badge-dot" />
+            {/* Add Patient Button */}
+            {viewMode === 'list' && (
+              <button className="st-btn st-btn--primary" onClick={() => history.push('/branch-admin/patients/register')} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <IonIcon icon={addOutline} /> Add New Patient
               </button>
-
-              {/* Help Button */}
-              <button className="db-icon-btn" title="Help & Support">
-                <IonIcon icon={helpCircleOutline} />
-              </button>
-
-              {/* Profile card */}
-              <div className="db-profile-card">
-                <div className="db-profile-info">
-                  <span className="db-profile-name">{displayName}</span>
-                  <span className="db-profile-branch">{branchName} Admin</span>
-                </div>
-                <div className="db-profile-avatar">{userInitials}</div>
-              </div>
-            </div>
+            )}
+            
           </div>
         </IonToolbar>
       </IonHeader>
@@ -996,7 +1080,7 @@ const PatientsPage: React.FC = () => {
               {/* =======================================================
                   SECTION 1: CLINICAL STATS PREVIEW PRE-CHECKS RIBBON
                  ======================================================= */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '16px', marginBottom: '24px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '24px' }}>
                 <div style={{ background: '#ffffff', borderRadius: '12px', padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.02)', borderLeft: '4px solid #10b981', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Active Cases</span>
                   <span style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a' }}>{activeCount}</span>
@@ -1015,7 +1099,7 @@ const PatientsPage: React.FC = () => {
                 </div>
                 <div style={{ background: '#ffffff', borderRadius: '12px', padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.02)', borderLeft: '4px solid #ef4444', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Pending Balance</span>
-                  <span style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a' }}>₹{selectedPatient.financials.balanceDue}</span>
+                  <span style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a' }}>₹2500</span>
                 </div>
               </div>
 
@@ -1023,7 +1107,20 @@ const PatientsPage: React.FC = () => {
                   SECTION 2: ADVANCED FILTERING & SORTING BAR
                  ========================================== */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#f1f5f9', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 700, color: '#334155' }}>
+                {/* Search Bar Input */}
+                <div className="st-header-search" style={{ margin: 0, height: '36px', boxSizing: 'border-box', background: '#ffffff', width: '280px' }}>
+                  <IonIcon icon={searchOutline} className="st-search-bar-icon" />
+                  <input
+                    type="text"
+                    placeholder="Search by ID, Name, Mobile, Email..."
+                    className="st-search-bar-input"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    style={{ fontSize: '12px' }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#f1f5f9', padding: '0 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 700, color: '#334155', height: '36px', boxSizing: 'border-box' }}>
                   <IonIcon icon={filterOutline} />
                   <span>FILTERS</span>
                 </div>
@@ -1032,7 +1129,7 @@ const PatientsPage: React.FC = () => {
                 <select
                   value={genderFilter}
                   onChange={(e) => setGenderFilter(e.target.value)}
-                  style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', fontSize: '12px', color: '#475569', outline: 'none', fontWeight: 600 }}
+                  style={{ height: '36px', padding: '0 12px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', fontSize: '12px', color: '#475569', outline: 'none', fontWeight: 600, boxSizing: 'border-box' }}
                 >
                   <option value="All">All Genders</option>
                   <option value="Male">Male</option>
@@ -1043,7 +1140,7 @@ const PatientsPage: React.FC = () => {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', fontSize: '12px', color: '#475569', outline: 'none', fontWeight: 600 }}
+                  style={{ height: '36px', padding: '0 12px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', fontSize: '12px', color: '#475569', outline: 'none', fontWeight: 600, boxSizing: 'border-box' }}
                 >
                   <option value="All">All Statuses</option>
                   <option value="Active">Active</option>
@@ -1054,7 +1151,7 @@ const PatientsPage: React.FC = () => {
                 <select
                   value={healerFilter}
                   onChange={(e) => setHealerFilter(e.target.value)}
-                  style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', fontSize: '12px', color: '#475569', outline: 'none', fontWeight: 600 }}
+                  style={{ height: '36px', padding: '0 12px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', fontSize: '12px', color: '#475569', outline: 'none', fontWeight: 600, boxSizing: 'border-box' }}
                 >
                   <option value="All">All Healers</option>
                   <option value="Dr. Anjali Rao">Dr. Anjali Rao</option>
@@ -1062,12 +1159,11 @@ const PatientsPage: React.FC = () => {
                 </select>
 
                 {/* Sorting select */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
-                  <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748b' }}>SORT BY:</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto', height: '36px', boxSizing: 'border-box' }}>
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', fontSize: '12px', color: '#475569', outline: 'none', fontWeight: 600 }}
+                    style={{ height: '36px', padding: '0 12px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', fontSize: '12px', color: '#475569', outline: 'none', fontWeight: 600, boxSizing: 'border-box' }}
                   >
                     <option value="Newest">Newest Registered</option>
                     <option value="Alphabetical">Alphabetical</option>
@@ -1088,23 +1184,8 @@ const PatientsPage: React.FC = () => {
                   </div>
 
                   <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                    {/* Search Bar Input */}
-                    <div className="st-header-search" style={{ margin: 0 }}>
-                      <IonIcon icon={searchOutline} className="st-search-bar-icon" />
-                      <input
-                        type="text"
-                        placeholder="Search by ID, Name, Mobile, Email..."
-                        className="st-search-bar-input"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        style={{ width: '280px' }}
-                      />
-                    </div>
+                   
 
-                    {/* Add Patient Button */}
-                    <button className="st-btn st-btn--primary" onClick={() => history.push('/branch-admin/patients/register')} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <IonIcon icon={addOutline} /> Add New Patient
-                    </button>
                   </div>
                 </div>
 
@@ -1117,8 +1198,6 @@ const PatientsPage: React.FC = () => {
                         <th>PATIENT NAME</th>
                         <th>GENDER</th>
                         <th>AGE</th>
-                        <th>MOBILE</th>
-                        <th>EMAIL</th>
                         <th>ASSIGNED HEALER</th>
                         <th>REG DATE</th>
                         <th>STATUS</th>
@@ -1160,8 +1239,7 @@ const PatientsPage: React.FC = () => {
                               </td>
                               <td>{patient.gender}</td>
                               <td>{patient.age}</td>
-                              <td>{patient.mobile}</td>
-                              <td style={{ fontSize: '11px' }}>{patient.email}</td>
+                              
                               <td>{patient.assignedHealer}</td>
                               <td>{patient.regDate}</td>
                               <td>
@@ -1174,7 +1252,7 @@ const PatientsPage: React.FC = () => {
                                   <button className="pa-doc-action-btn" title="View Folder" onClick={() => { setSelectedPatientId(patient.id); setViewMode('detail'); }}>
                                     <IonIcon icon={eyeOutline} />
                                   </button>
-                                  <button className="pa-doc-action-btn" title="Edit Profile" onClick={() => { setSelectedPatientId(patient.id); setViewMode('detail'); setShowEditModal(true); }}>
+                                  <button className="pa-doc-action-btn" title="Edit Profile" onClick={() => { setSelectedPatientId(patient.id); history.push(ROUTES.BRANCH_ADMIN.EDIT_PATIENT.replace(':id', encodeURIComponent(patient.id))); }}>
                                     <IonIcon icon={pencilOutline} />
                                   </button>
                                 </div>
@@ -1206,79 +1284,7 @@ const PatientsPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* ==========================================
-                  SECTION 5: INTELLIGENCE & ANALYTICS PANELS
-                 ========================================== */}
-              <div style={{ background: '#ffffff', borderRadius: '16px', padding: '24px', border: '1px solid #e2e8f0', marginTop: '24px' }}>
-                <div style={{ borderBottom: '1px solid #f1f5f9', paddingBottom: '16px', marginBottom: '16px' }}>
-                  <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a', margin: 0 }}>Intelligence &amp; Analytics Summary</h3>
-                  <p style={{ fontSize: '11px', color: '#64748b', margin: '2px 0 0 0' }}>Enforced registration patterns, utilizing cancellation rates and healers distribution</p>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
-                  {/* Daily Registration Trends SVG */}
-                  <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px' }}>
-                    <span className="pa-info-block-title" style={{ fontSize: '10px' }}>Patient Registration Trends (Mtd)</span>
-                    <svg viewBox="0 0 100 40" style={{ width: '100%', height: '80px', marginTop: '8px' }}>
-                      <rect x="5" y="10" width="8" height="30" rx="2" fill="#1f7a6a" />
-                      <rect x="20" y="15" width="8" height="25" rx="2" fill="#1f7a6a" />
-                      <rect x="35" y="5" width="8" height="35" rx="2" fill="#1f7a6a" />
-                      <rect x="50" y="20" width="8" height="20" rx="2" fill="#10b981" />
-                      <rect x="65" y="8" width="8" height="32" rx="2" fill="#1f7a6a" />
-                      <rect x="80" y="12" width="8" height="28" rx="2" fill="#1f7a6a" />
-                    </svg>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '8px', color: '#94a3b8', marginTop: '4px', fontWeight: 700 }}>
-                      <span>DEC</span><span>JAN</span><span>FEB</span><span>MAR</span><span>APR</span><span>MAY</span>
-                    </div>
-                  </div>
-
-                  {/* Caseload distribution progress */}
-                  <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px' }}>
-                    <span className="pa-info-block-title" style={{ fontSize: '10px' }}>Healer caseload distribution</span>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '12px' }}>
-                      <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: 700, color: '#334155', marginBottom: '2px' }}>
-                          <span>Dr. Anjali Rao</span>
-                          <span>12 Cases</span>
-                        </div>
-                        <div className="db-progress-bar-track" style={{ height: '6px' }}>
-                          <div className="db-progress-bar" style={{ width: '70%', background: '#1f7a6a', height: '100%', borderRadius: '3px' }} />
-                        </div>
-                      </div>
-
-                      <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: 700, color: '#334155', marginBottom: '2px' }}>
-                          <span>Dr. Kevin Smith</span>
-                          <span>5 Cases</span>
-                        </div>
-                        <div className="db-progress-bar-track" style={{ height: '6px' }}>
-                          <div className="db-progress-bar" style={{ width: '30%', background: '#10b981', height: '100%', borderRadius: '3px' }} />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Appointment Utilization Rates */}
-                  <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px' }}>
-                    <span className="pa-info-block-title" style={{ fontSize: '10px' }}>Appointment utilization vs cancellations</span>
-                    <div style={{ display: 'flex', gap: '16px', alignItems: 'center', marginTop: '12px' }}>
-                      <div className="db-circular-chart" style={{ width: '60px', height: '60px' }}>
-                        <svg viewBox="0 0 36 36" className="db-circular-svg">
-                          <path className="db-circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                          <path className="db-circle-stroke" strokeDasharray="92, 100" stroke="#1f7a6a" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                        </svg>
-                        <div className="db-circular-chart__content">
-                          <span className="db-circular-pct" style={{ fontSize: '12px' }}>92%</span>
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                        <span style={{ fontSize: '11px', fontWeight: 700, color: '#334155' }}>92% Utilization Rate</span>
-                        <span style={{ fontSize: '9px', color: '#64748b', fontWeight: 600 }}>Cancellations reduced by 14%</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+             
             </>
           )}
 
@@ -1289,22 +1295,24 @@ const PatientsPage: React.FC = () => {
                 <button 
                   className="st-btn st-btn--outline" 
                   onClick={() => setViewMode('list')}
-                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 700, background: '#ffffff', border: '1px solid #cbd5e1', color: '#1b6e5f' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 700, background: '#ffffff', border: '1px solid #cbd5e1', color: 'var(--ba-color-primary)' }}
                 >
-                  <IonIcon icon={arrowBackOutline} /> Back to Patients Directory
+                  <IonIcon icon={arrowBackOutline} /> Back
                 </button>
               </div>
 
               {/* Header Card */}
               <div style={{
-                background: '#1b6e5f', // Beautiful deep green canvas HSL matching image
+                background: 'var(--ba-color-primary)', // Beautiful teal green canvas matching Super Admin theme
                 borderRadius: '16px',
                 padding: '24px 32px',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '20px',
                 color: '#ffffff',
-                boxShadow: '0 4px 20px rgba(27, 110, 95, 0.15)',
+                boxShadow: '0 4px 20px rgba(31, 122, 106, 0.15)',
                 marginBottom: '20px'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
@@ -1338,7 +1346,35 @@ const PatientsPage: React.FC = () => {
                 </div>
 
                 {/* Actions */}
-                <div>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button 
+                    onClick={() => selectedPatient && history.push(ROUTES.BRANCH_ADMIN.EDIT_PATIENT.replace(':id', encodeURIComponent(selectedPatient.id)))}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '10px 20px',
+                      background: 'rgba(255, 255, 255, 0.15)',
+                      border: '1px solid rgba(255, 255, 255, 0.6)',
+                      borderRadius: '8px',
+                      color: '#ffffff',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      outline: 'none'
+                    }}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.25)';
+                      e.currentTarget.style.borderColor = '#ffffff';
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.6)';
+                    }}
+                  >
+                    <IonIcon icon={pencilOutline} style={{ fontSize: '16px' }} /> Edit Profile
+                  </button>
                   <button 
                     onClick={() => setShowSesModal(true)}
                     style={{
@@ -1399,8 +1435,8 @@ const PatientsPage: React.FC = () => {
                         padding: '16px 4px',
                         fontSize: '13px',
                         fontWeight: 700,
-                        color: isActive ? '#1b6e5f' : '#64748b',
-                        borderBottom: isActive ? '3px solid #1b6e5f' : '3px solid transparent',
+                        color: isActive ? 'var(--ba-color-primary)' : '#64748b',
+                        borderBottom: isActive ? '3px solid var(--ba-color-primary)' : '3px solid transparent',
                         cursor: 'pointer',
                         transition: 'all 0.2s ease',
                         outline: 'none',
@@ -1420,7 +1456,7 @@ const PatientsPage: React.FC = () => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                     <div style={{
                       display: 'grid',
-                      gridTemplateColumns: '1fr 1fr',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
                       gap: '24px',
                       alignItems: 'start'
                     }}>
@@ -1435,7 +1471,7 @@ const PatientsPage: React.FC = () => {
                         <h3 style={{
                           fontSize: '14px',
                           fontWeight: 800,
-                          color: '#1b6e5f',
+                          color: 'var(--ba-color-primary)',
                           margin: '0 0 16px 0',
                           textTransform: 'uppercase',
                           letterSpacing: '0.5px'
@@ -1511,7 +1547,7 @@ const PatientsPage: React.FC = () => {
                         <h3 style={{
                           fontSize: '14px',
                           fontWeight: 800,
-                          color: '#1b6e5f',
+                          color: 'var(--ba-color-primary)',
                           margin: '0 0 16px 0',
                           textTransform: 'uppercase',
                           letterSpacing: '0.5px'
@@ -1566,7 +1602,7 @@ const PatientsPage: React.FC = () => {
                     </div>
 
                     {/* Secondary Healer Allocation & Credentials Segment */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
                       {/* Healer Allocation */}
                       <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px' }}>
                         <span className="pa-info-block-title" style={{ fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', color: '#0f172a', margin: '0 0 16px 0' }}>
@@ -1586,12 +1622,12 @@ const PatientsPage: React.FC = () => {
                           
                           <div style={{ display: 'flex', gap: '10px' }}>
                             {selectedPatient.assignedHealer === 'None' ? (
-                              <button className="st-btn st-btn--primary" onClick={() => setShowEditModal(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                              <button className="st-btn st-btn--primary" onClick={() => selectedPatient && history.push(ROUTES.BRANCH_ADMIN.EDIT_PATIENT.replace(':id', encodeURIComponent(selectedPatient.id)))} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                                 <IonIcon icon={addOutline} /> Assign Healer
                               </button>
                             ) : (
                               <>
-                                <button className="st-btn st-btn--primary" onClick={() => setShowEditModal(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                <button className="st-btn st-btn--primary" onClick={() => selectedPatient && history.push(ROUTES.BRANCH_ADMIN.EDIT_PATIENT.replace(':id', encodeURIComponent(selectedPatient.id)))} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                                   <IonIcon icon={swapHorizontalOutline} /> Reassign
                                 </button>
                                 <button className="st-btn st-btn--outline" onClick={handleQuickRemoveHealer} style={{ color: '#ef4444', borderColor: '#fee2e2', background: '#fef2f2' }}>
@@ -1639,15 +1675,15 @@ const PatientsPage: React.FC = () => {
                 )}
 
                 {profileTab === 'sessions' && (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
                     {/* Healing Sessions Table */}
                     <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                        <span className="pa-info-block-title" style={{ fontSize: '13px', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '4px', margin: 0 }}>
-                          <IonIcon icon={timeOutline} style={{ color: '#1f7a6a' }} />
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #e6f4f1', paddingBottom: '12px', marginBottom: '16px' }}>
+                        <h4 style={{ fontSize: '13px', fontWeight: 800, color: 'var(--ba-color-primary)', textTransform: 'uppercase', letterSpacing: '0.6px', display: 'flex', alignItems: 'center', gap: '6px', margin: 0 }}>
+                          <IonIcon icon={timeOutline} style={{ color: 'var(--ba-color-primary)', fontSize: '18px' }} />
                           Clinical Sessions History Ledger
-                        </span>
-                        <button className="st-btn st-btn--primary" onClick={() => setShowSesModal(true)} style={{ fontSize: '10px', padding: '4px 8px' }}>
+                        </h4>
+                        <button className="st-btn st-btn--primary" onClick={() => setShowSesModal(true)} style={{ fontSize: '12px', padding: '6px 14px', whiteSpace: 'nowrap' }}>
                           + Add Session
                         </button>
                       </div>
@@ -1656,10 +1692,10 @@ const PatientsPage: React.FC = () => {
                         <table className="st-table">
                           <thead>
                             <tr>
-                              <th>NO</th>
-                              <th>HEALER</th>
+                              <th style={{ whiteSpace: 'nowrap' }}>NO</th>
+                              <th style={{ whiteSpace: 'nowrap' }}>HEALER</th>
                               <th>OBSERVATIONS / CLINICAL NOTES</th>
-                              <th style={{ width: '120px' }}>STATUS</th>
+                              <th style={{ width: '120px', whiteSpace: 'nowrap' }}>STATUS</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -1668,8 +1704,8 @@ const PatientsPage: React.FC = () => {
                                 const sequentialNumber = arr.length - index;
                                 return (
                                   <tr key={s.id} className="st-table-row">
-                                    <td style={{ fontWeight: '800', color: '#1f7a6a' }}>#{sequentialNumber}</td>
-                                    <td>
+                                    <td style={{ fontWeight: '800', color: 'var(--ba-color-primary)', whiteSpace: 'nowrap' }}>#{sequentialNumber}</td>
+                                    <td style={{ whiteSpace: 'nowrap' }}>
                                       <span style={{ fontWeight: 700, color: '#334155' }}>{s.healer}</span>
                                     </td>
                                     <td>
@@ -1730,12 +1766,12 @@ const PatientsPage: React.FC = () => {
 
                     {/* Appointments Table */}
                     <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                        <span className="pa-info-block-title" style={{ fontSize: '13px', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '4px', margin: 0 }}>
-                          <IonIcon icon={calendarOutline} style={{ color: '#1e3a8a' }} />
-                          Operational Appointments lifecycle
-                        </span>
-                        <button className="st-btn st-btn--outline" onClick={() => setShowAptModal(true)} style={{ fontSize: '10px', padding: '4px 8px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #e6f4f1', paddingBottom: '12px', marginBottom: '16px' }}>
+                        <h4 style={{ fontSize: '13px', fontWeight: 800, color: 'var(--ba-color-primary)', textTransform: 'uppercase', letterSpacing: '0.6px', display: 'flex', alignItems: 'center', gap: '6px', margin: 0 }}>
+                          <IonIcon icon={calendarOutline} style={{ color: 'var(--ba-color-primary)', fontSize: '18px' }} />
+                          Operational Appointments Lifecycle
+                        </h4>
+                        <button className="st-btn st-btn--outline" onClick={() => setShowAptModal(true)} style={{ fontSize: '12px', padding: '6px 14px', whiteSpace: 'nowrap' }}>
                           + Book Appointment
                         </button>
                       </div>
@@ -1744,19 +1780,19 @@ const PatientsPage: React.FC = () => {
                         <table className="st-table">
                           <thead>
                             <tr>
-                              <th>APT ID</th>
-                              <th>DATE &amp; TIME</th>
-                              <th>HEALER</th>
-                              <th>STATUS</th>
+                              <th style={{ whiteSpace: 'nowrap' }}>APT ID</th>
+                              <th style={{ whiteSpace: 'nowrap' }}>DATE &amp; TIME</th>
+                              <th style={{ whiteSpace: 'nowrap' }}>HEALER</th>
+                              <th style={{ whiteSpace: 'nowrap' }}>STATUS</th>
                             </tr>
                           </thead>
                           <tbody>
                             {selectedPatient.appointments.length > 0 ? (
                               selectedPatient.appointments.map((a) => (
                                 <tr key={a.id} className="st-table-row">
-                                  <td style={{ fontWeight: '700' }}>{a.id}</td>
-                                  <td style={{ fontSize: '11px' }}>{a.date} ({a.time})</td>
-                                  <td>{a.healer}</td>
+                                  <td style={{ fontWeight: '700', whiteSpace: 'nowrap' }}>{a.id}</td>
+                                  <td style={{ fontSize: '11px', whiteSpace: 'nowrap' }}>{a.date} ({a.time})</td>
+                                  <td style={{ whiteSpace: 'nowrap' }}>{a.healer}</td>
                                   <td>
                                     <select
                                       value={a.status}
@@ -1811,7 +1847,7 @@ const PatientsPage: React.FC = () => {
 
                   return (
                     <div>
-                      <div className="pa-billing-summary" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '20px' }}>
+                      <div className="pa-billing-summary" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '20px' }}>
                         <div style={{ borderLeft: '4px solid #ef4444', background: '#ffffff', padding: '16px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
                           <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#64748b', fontWeight: 700 }}>Outstanding Balance</span>
                           <span style={{ display: 'block', fontSize: '24px', fontWeight: 800, color: computedBalanceDue > 0 ? '#ef4444' : '#64748b', marginTop: '4px' }}>
@@ -1920,12 +1956,12 @@ const PatientsPage: React.FC = () => {
                       </button>
                     </div>
 
-                    <div className="pa-doc-vault-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    <div className="pa-doc-vault-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
                       {selectedPatient.documents.length > 0 ? (
                         selectedPatient.documents.map((d) => (
                           <div className="pa-doc-vault-card" key={d.id} style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div className="pa-doc-left" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                              <div className={`pa-doc-icon ${d.type === 'image' ? 'pa-doc-icon--image' : ''}`} style={{ width: '40px', height: '40px', background: '#f1f5f9', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyItems: 'center', color: '#1b6e5f', fontSize: '20px', justifyContent: 'center' }}>
+                              <div className={`pa-doc-icon ${d.type === 'image' ? 'pa-doc-icon--image' : ''}`} style={{ width: '40px', height: '40px', background: '#f1f5f9', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyItems: 'center', color: 'var(--ba-color-primary)', fontSize: '20px', justifyContent: 'center' }}>
                                 <IonIcon icon={d.type === 'pdf' ? documentTextOutline : imageOutline} />
                               </div>
                               <div className="pa-doc-info" style={{ display: 'flex', flexDirection: 'column' }}>
@@ -2005,7 +2041,7 @@ const PatientsPage: React.FC = () => {
 
                 {profileTab === 'logs' && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
                       {/* Status Change Audit Table */}
                       <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px' }}>
                         <span className="pa-info-block-title" style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px', color: '#0f172a', marginBottom: '12px', margin: 0 }}>
@@ -2111,6 +2147,7 @@ const PatientsPage: React.FC = () => {
               </div>
             </div>
           )}
+
 
         </div>
       </IonContent>
@@ -2426,7 +2463,7 @@ const PatientsPage: React.FC = () => {
           </div>
           <div className="sa-modal__footer">
             <button className="sa-btn sa-btn--outline" onClick={() => setShowEditModal(false)}>Cancel</button>
-            <button className="sa-btn sa-btn--primary" onClick={handleEditPatientSubmit}>Save Changes</button>
+            <button className="sa-btn sa-btn--primary" onClick={() => handleEditPatientSubmit()}>Save Changes</button>
           </div>
         </div>
       </IonModal>

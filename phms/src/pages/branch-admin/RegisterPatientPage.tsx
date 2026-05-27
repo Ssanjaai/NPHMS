@@ -488,78 +488,12 @@ export default function BARegisterPatientPage() {
 
                     </div>
 
-                    {/* Card 2: Patient Status */}
-                    <div style={customStyles.formCard}>
-                      <div style={customStyles.subHeader}>
-                        <IonIcon icon={alertCircleOutline} style={customStyles.subHeaderIcon} />
-                        <span>Patient Status</span>
-                      </div>
-
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                        
-                        {/* Status active */}
-                        <div 
-                          onClick={() => setFormData(prev => ({ ...prev, status: 'Active' }))}
-                          style={{
-                            ...customStyles.statusCard,
-                            border: formData.status === 'Active' ? '2px solid #10b981' : '1px solid #cbd5e1',
-                            background: formData.status === 'Active' ? '#f0fdf4' : '#f8fafc',
-                          }}
-                        >
-                          <IonIcon icon={checkmarkCircleOutline} style={{ color: '#10b981', fontSize: '22px', marginBottom: '8px' }} />
-                          <span style={{ fontWeight: 800, fontSize: '14px', color: formData.status === 'Active' ? '#047857' : '#1e293b' }}>Active</span>
-                          <span style={{ fontSize: '11px', color: '#64748b', marginTop: '4px', lineHeight: 1.3 }}>Currently receiving healing</span>
-                        </div>
-
-                        {/* Status on hold */}
-                        <div 
-                          onClick={() => setFormData(prev => ({ ...prev, status: 'On Hold' }))}
-                          style={{
-                            ...customStyles.statusCard,
-                            border: formData.status === 'On Hold' ? '2px solid #475569' : '1px solid #cbd5e1',
-                            background: formData.status === 'On Hold' ? '#f1f5f9' : '#f8fafc',
-                          }}
-                        >
-                          <div style={{ fontSize: '18px', fontWeight: 800, color: '#475569', marginBottom: '8px', fontFamily: 'monospace' }}>||</div>
-                          <span style={{ fontWeight: 800, fontSize: '14px', color: '#475569' }}>On Hold</span>
-                          <span style={{ fontSize: '11px', color: '#64748b', marginTop: '4px', lineHeight: 1.3 }}>Temporarily paused</span>
-                        </div>
-
-                        {/* Status completed */}
-                        <div 
-                          onClick={() => setFormData(prev => ({ ...prev, status: 'Completed' }))}
-                          style={{
-                            ...customStyles.statusCard,
-                            border: formData.status === 'Completed' ? '2px solid #475569' : '1px solid #cbd5e1',
-                            background: formData.status === 'Completed' ? '#f1f5f9' : '#f8fafc',
-                          }}
-                        >
-                          <IonIcon icon={checkmarkCircleOutline} style={{ color: '#475569', fontSize: '22px', marginBottom: '8px' }} />
-                          <span style={{ fontWeight: 800, fontSize: '14px', color: '#475569' }}>Completed</span>
-                          <span style={{ fontSize: '11px', color: '#64748b', marginTop: '4px', lineHeight: 1.3 }}>Treatment successful</span>
-                        </div>
-
-                        {/* Status inactive */}
-                        <div 
-                          onClick={() => setFormData(prev => ({ ...prev, status: 'Inactive' }))}
-                          style={{
-                            ...customStyles.statusCard,
-                            border: formData.status === 'Inactive' ? '2px solid #475569' : '1px solid #cbd5e1',
-                            background: formData.status === 'Inactive' ? '#f1f5f9' : '#f8fafc',
-                          }}
-                        >
-                          <IonIcon icon={closeCircleOutline} style={{ color: '#475569', fontSize: '22px', marginBottom: '8px' }} />
-                          <span style={{ fontWeight: 800, fontSize: '14px', color: '#475569' }}>Inactive</span>
-                          <span style={{ fontSize: '11px', color: '#64748b', marginTop: '4px', lineHeight: 1.3 }}>No longer in system</span>
-                        </div>
-
-                      </div>
-                    </div>
+                    
 
                   </div>
 
                   {/* RIGHT COLUMN: Medical History, Assigned Healer, Uploaded Documents */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '28px',width: '100%' }}>
                     
                     {/* Card 1: Medical History & Allocation */}
                     <div style={customStyles.formCard}>
@@ -710,167 +644,169 @@ export default function BARegisterPatientPage() {
                       </div>
                     </div>
 
-                    {/* Card 2: Uploaded Documents */}
-                    <div style={customStyles.formCard}>
-                      <div style={customStyles.subHeader}>
-                        <IonIcon icon={documentTextOutline} style={customStyles.subHeaderIcon} />
-                        <span>Uploaded Documents</span>
-                      </div>
 
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                        
-                        {/* 1. Medical Reports */}
-                        <div className="st-form-group">
-                          <label style={customStyles.label}>Medical Reports</label>
-                          {uploadedFiles.reports ? (
-                            <div style={customStyles.dashedUploadActive}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '80%' }}>
-                                <IonIcon icon={checkmarkCircleOutline} style={{ color: '#10b981' }} />
-                                <span style={{ fontSize: '11px', color: '#065f46', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                  {uploadedFiles.reports.name}
-                                </span>
-                              </div>
-                              <IonIcon icon={trashOutline} onClick={(e) => handleClearFile('reports', e)} style={{ color: '#ef4444', fontSize: '14px' }} />
-                            </div>
-                          ) : (
-                            <label style={customStyles.dashedUpload}>
-                              <IonIcon icon={cloudUploadOutline} style={{ color: '#94a3b8', fontSize: '18px' }} />
-                              <input type="file" style={{ display: 'none' }} onChange={(e) => handleFileChange('reports', e)} />
-                            </label>
-                          )}
-                        </div>
-
-                        {/* 2. Lab Results */}
-                        <div className="st-form-group">
-                          <label style={customStyles.label}>Lab Results</label>
-                          {uploadedFiles.labResults ? (
-                            <div style={customStyles.dashedUploadActive}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '80%' }}>
-                                <IonIcon icon={checkmarkCircleOutline} style={{ color: '#10b981' }} />
-                                <span style={{ fontSize: '11px', color: '#065f46', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                  {uploadedFiles.labResults.name}
-                                </span>
-                              </div>
-                              <IonIcon icon={trashOutline} onClick={(e) => handleClearFile('labResults', e)} style={{ color: '#ef4444', fontSize: '14px' }} />
-                            </div>
-                          ) : (
-                            <label style={customStyles.dashedUpload}>
-                              <IonIcon icon={cloudUploadOutline} style={{ color: '#94a3b8', fontSize: '18px' }} />
-                              <input type="file" style={{ display: 'none' }} onChange={(e) => handleFileChange('labResults', e)} />
-                            </label>
-                          )}
-                        </div>
-
-                        {/* 3. Prescriptions */}
-                        <div className="st-form-group">
-                          <label style={customStyles.label}>Prescriptions</label>
-                          {uploadedFiles.prescriptions ? (
-                            <div style={customStyles.dashedUploadActive}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '80%' }}>
-                                <IonIcon icon={checkmarkCircleOutline} style={{ color: '#10b981' }} />
-                                <span style={{ fontSize: '11px', color: '#065f46', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                  {uploadedFiles.prescriptions.name}
-                                </span>
-                              </div>
-                              <IonIcon icon={trashOutline} onClick={(e) => handleClearFile('prescriptions', e)} style={{ color: '#ef4444', fontSize: '14px' }} />
-                            </div>
-                          ) : (
-                            <label style={customStyles.dashedUpload}>
-                              <IonIcon icon={cloudUploadOutline} style={{ color: '#94a3b8', fontSize: '18px' }} />
-                              <input type="file" style={{ display: 'none' }} onChange={(e) => handleFileChange('prescriptions', e)} />
-                            </label>
-                          )}
-                        </div>
-
-                        {/* 4. Scan Images */}
-                        <div className="st-form-group">
-                          <label style={customStyles.label}>Scan Images</label>
-                          {uploadedFiles.scanImages ? (
-                            <div style={customStyles.dashedUploadActive}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '80%' }}>
-                                <IonIcon icon={checkmarkCircleOutline} style={{ color: '#10b981' }} />
-                                <span style={{ fontSize: '11px', color: '#065f46', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                  {uploadedFiles.scanImages.name}
-                                </span>
-                              </div>
-                              <IonIcon icon={trashOutline} onClick={(e) => handleClearFile('scanImages', e)} style={{ color: '#ef4444', fontSize: '14px' }} />
-                            </div>
-                          ) : (
-                            <label style={customStyles.dashedUpload}>
-                              <IonIcon icon={cloudUploadOutline} style={{ color: '#94a3b8', fontSize: '18px' }} />
-                              <input type="file" style={{ display: 'none' }} onChange={(e) => handleFileChange('scanImages', e)} />
-                            </label>
-                          )}
-                        </div>
-
-                        {/* 5. Consultation Notes */}
-                        <div className="st-form-group">
-                          <label style={customStyles.label}>Consultation Notes</label>
-                          {uploadedFiles.consultationNotes ? (
-                            <div style={customStyles.dashedUploadActive}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '80%' }}>
-                                <IonIcon icon={checkmarkCircleOutline} style={{ color: '#10b981' }} />
-                                <span style={{ fontSize: '11px', color: '#065f46', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                  {uploadedFiles.consultationNotes.name}
-                                </span>
-                              </div>
-                              <IonIcon icon={trashOutline} onClick={(e) => handleClearFile('consultationNotes', e)} style={{ color: '#ef4444', fontSize: '14px' }} />
-                            </div>
-                          ) : (
-                            <label style={customStyles.dashedUpload}>
-                              <IonIcon icon={cloudUploadOutline} style={{ color: '#94a3b8', fontSize: '18px' }} />
-                              <input type="file" style={{ display: 'none' }} onChange={(e) => handleFileChange('consultationNotes', e)} />
-                            </label>
-                          )}
-                        </div>
-
-                        {/* 6. ID Proofs */}
-                        <div className="st-form-group">
-                          <label style={customStyles.label}>ID Proofs</label>
-                          {uploadedFiles.idProofs ? (
-                            <div style={customStyles.dashedUploadActive}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '80%' }}>
-                                <IonIcon icon={checkmarkCircleOutline} style={{ color: '#10b981' }} />
-                                <span style={{ fontSize: '11px', color: '#065f46', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                  {uploadedFiles.idProofs.name}
-                                </span>
-                              </div>
-                              <IonIcon icon={trashOutline} onClick={(e) => handleClearFile('idProofs', e)} style={{ color: '#ef4444', fontSize: '14px' }} />
-                            </div>
-                          ) : (
-                            <label style={customStyles.dashedUpload}>
-                              <IonIcon icon={cloudUploadOutline} style={{ color: '#94a3b8', fontSize: '18px' }} />
-                              <input type="file" style={{ display: 'none' }} onChange={(e) => handleFileChange('idProofs', e)} />
-                            </label>
-                          )}
-                        </div>
-
-                        {/* 7. Healing Records */}
-                        <div className="st-form-group" style={{ gridColumn: 'span 2' }}>
-                          <label style={customStyles.label}>Healing Records</label>
-                          {uploadedFiles.healingRecords ? (
-                            <div style={customStyles.dashedUploadActive}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '90%' }}>
-                                <IonIcon icon={checkmarkCircleOutline} style={{ color: '#10b981' }} />
-                                <span style={{ fontSize: '11px', color: '#065f46', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                  {uploadedFiles.healingRecords.name}
-                                </span>
-                              </div>
-                              <IonIcon icon={trashOutline} onClick={(e) => handleClearFile('healingRecords', e)} style={{ color: '#ef4444', fontSize: '14px' }} />
-                            </div>
-                          ) : (
-                            <label style={customStyles.dashedUpload}>
-                              <IonIcon icon={cloudUploadOutline} style={{ color: '#94a3b8', fontSize: '18px' }} />
-                              <input type="file" style={{ display: 'none' }} onChange={(e) => handleFileChange('healingRecords', e)} />
-                            </label>
-                          )}
-                        </div>
-
-                      </div>
-                    </div>
 
                   </div>
 
+                </div>
+
+                {/* Full-Width: Uploaded Documents */}
+                <div style={customStyles.formCard}>
+                  <div style={customStyles.subHeader}>
+                    <IonIcon icon={documentTextOutline} style={customStyles.subHeaderIcon} />
+                    <span>Uploaded Documents</span>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '20px' }}>
+
+                    {/* 1. Medical Reports */}
+                    <div className="st-form-group">
+                      <label style={customStyles.label}>Medical Reports</label>
+                      {uploadedFiles.reports ? (
+                        <div style={customStyles.dashedUploadActive}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '80%' }}>
+                            <IonIcon icon={checkmarkCircleOutline} style={{ color: '#10b981' }} />
+                            <span style={{ fontSize: '11px', color: '#065f46', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {uploadedFiles.reports.name}
+                            </span>
+                          </div>
+                          <IonIcon icon={trashOutline} onClick={(e) => handleClearFile('reports', e)} style={{ color: '#ef4444', fontSize: '14px' }} />
+                        </div>
+                      ) : (
+                        <label style={customStyles.dashedUpload}>
+                          <IonIcon icon={cloudUploadOutline} style={{ color: '#94a3b8', fontSize: '18px' }} />
+                          <input type="file" style={{ display: 'none' }} onChange={(e) => handleFileChange('reports', e)} />
+                        </label>
+                      )}
+                    </div>
+
+                    {/* 2. Lab Results */}
+                    <div className="st-form-group">
+                      <label style={customStyles.label}>Lab Results</label>
+                      {uploadedFiles.labResults ? (
+                        <div style={customStyles.dashedUploadActive}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '80%' }}>
+                            <IonIcon icon={checkmarkCircleOutline} style={{ color: '#10b981' }} />
+                            <span style={{ fontSize: '11px', color: '#065f46', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {uploadedFiles.labResults.name}
+                            </span>
+                          </div>
+                          <IonIcon icon={trashOutline} onClick={(e) => handleClearFile('labResults', e)} style={{ color: '#ef4444', fontSize: '14px' }} />
+                        </div>
+                      ) : (
+                        <label style={customStyles.dashedUpload}>
+                          <IonIcon icon={cloudUploadOutline} style={{ color: '#94a3b8', fontSize: '18px' }} />
+                          <input type="file" style={{ display: 'none' }} onChange={(e) => handleFileChange('labResults', e)} />
+                        </label>
+                      )}
+                    </div>
+
+                    {/* 3. Prescriptions */}
+                    <div className="st-form-group">
+                      <label style={customStyles.label}>Prescriptions</label>
+                      {uploadedFiles.prescriptions ? (
+                        <div style={customStyles.dashedUploadActive}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '80%' }}>
+                            <IonIcon icon={checkmarkCircleOutline} style={{ color: '#10b981' }} />
+                            <span style={{ fontSize: '11px', color: '#065f46', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {uploadedFiles.prescriptions.name}
+                            </span>
+                          </div>
+                          <IonIcon icon={trashOutline} onClick={(e) => handleClearFile('prescriptions', e)} style={{ color: '#ef4444', fontSize: '14px' }} />
+                        </div>
+                      ) : (
+                        <label style={customStyles.dashedUpload}>
+                          <IonIcon icon={cloudUploadOutline} style={{ color: '#94a3b8', fontSize: '18px' }} />
+                          <input type="file" style={{ display: 'none' }} onChange={(e) => handleFileChange('prescriptions', e)} />
+                        </label>
+                      )}
+                    </div>
+
+                    {/* 4. Scan Images */}
+                    <div className="st-form-group">
+                      <label style={customStyles.label}>Scan Images</label>
+                      {uploadedFiles.scanImages ? (
+                        <div style={customStyles.dashedUploadActive}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '80%' }}>
+                            <IonIcon icon={checkmarkCircleOutline} style={{ color: '#10b981' }} />
+                            <span style={{ fontSize: '11px', color: '#065f46', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {uploadedFiles.scanImages.name}
+                            </span>
+                          </div>
+                          <IonIcon icon={trashOutline} onClick={(e) => handleClearFile('scanImages', e)} style={{ color: '#ef4444', fontSize: '14px' }} />
+                        </div>
+                      ) : (
+                        <label style={customStyles.dashedUpload}>
+                          <IonIcon icon={cloudUploadOutline} style={{ color: '#94a3b8', fontSize: '18px' }} />
+                          <input type="file" style={{ display: 'none' }} onChange={(e) => handleFileChange('scanImages', e)} />
+                        </label>
+                      )}
+                    </div>
+
+                    {/* 5. Consultation Notes */}
+                    <div className="st-form-group">
+                      <label style={customStyles.label}>Consultation Notes</label>
+                      {uploadedFiles.consultationNotes ? (
+                        <div style={customStyles.dashedUploadActive}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '80%' }}>
+                            <IonIcon icon={checkmarkCircleOutline} style={{ color: '#10b981' }} />
+                            <span style={{ fontSize: '11px', color: '#065f46', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {uploadedFiles.consultationNotes.name}
+                            </span>
+                          </div>
+                          <IonIcon icon={trashOutline} onClick={(e) => handleClearFile('consultationNotes', e)} style={{ color: '#ef4444', fontSize: '14px' }} />
+                        </div>
+                      ) : (
+                        <label style={customStyles.dashedUpload}>
+                          <IonIcon icon={cloudUploadOutline} style={{ color: '#94a3b8', fontSize: '18px' }} />
+                          <input type="file" style={{ display: 'none' }} onChange={(e) => handleFileChange('consultationNotes', e)} />
+                        </label>
+                      )}
+                    </div>
+
+                    {/* 6. ID Proofs */}
+                    <div className="st-form-group">
+                      <label style={customStyles.label}>ID Proofs</label>
+                      {uploadedFiles.idProofs ? (
+                        <div style={customStyles.dashedUploadActive}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '80%' }}>
+                            <IonIcon icon={checkmarkCircleOutline} style={{ color: '#10b981' }} />
+                            <span style={{ fontSize: '11px', color: '#065f46', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {uploadedFiles.idProofs.name}
+                            </span>
+                          </div>
+                          <IonIcon icon={trashOutline} onClick={(e) => handleClearFile('idProofs', e)} style={{ color: '#ef4444', fontSize: '14px' }} />
+                        </div>
+                      ) : (
+                        <label style={customStyles.dashedUpload}>
+                          <IonIcon icon={cloudUploadOutline} style={{ color: '#94a3b8', fontSize: '18px' }} />
+                          <input type="file" style={{ display: 'none' }} onChange={(e) => handleFileChange('idProofs', e)} />
+                        </label>
+                      )}
+                    </div>
+
+                    {/* 7. Healing Records */}
+                    <div className="st-form-group">
+                      <label style={customStyles.label}>Healing Records</label>
+                      {uploadedFiles.healingRecords ? (
+                        <div style={customStyles.dashedUploadActive}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '80%' }}>
+                            <IonIcon icon={checkmarkCircleOutline} style={{ color: '#10b981' }} />
+                            <span style={{ fontSize: '11px', color: '#065f46', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {uploadedFiles.healingRecords.name}
+                            </span>
+                          </div>
+                          <IonIcon icon={trashOutline} onClick={(e) => handleClearFile('healingRecords', e)} style={{ color: '#ef4444', fontSize: '14px' }} />
+                        </div>
+                      ) : (
+                        <label style={customStyles.dashedUpload}>
+                          <IonIcon icon={cloudUploadOutline} style={{ color: '#94a3b8', fontSize: '18px' }} />
+                          <input type="file" style={{ display: 'none' }} onChange={(e) => handleFileChange('healingRecords', e)} />
+                        </label>
+                      )}
+                    </div>
+
+                  </div>
                 </div>
 
                 {/* Bottom Footer Actions block (matches bottom right layout in image) */}
