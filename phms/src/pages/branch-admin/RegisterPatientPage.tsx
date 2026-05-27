@@ -38,9 +38,14 @@ export default function BARegisterPatientPage() {
 
   // Form states with requested defaults
   const [formData, setFormData] = useState({
-    name: 'Elena Gilbert',
-    mobile: '+1 234 567 8901',
-    email: 'elena.g@example.com',
+    name: '',
+    mobile: '',
+    email: '',
+    gender: 'Female' as 'Male' | 'Female' | 'Other',
+    dateOfBirth: '',
+    age: '',
+    bloodGroup: 'O+',
+    occupation: '',
     emergencyContact: '',
     address: '',
     status: 'Active' as 'Active' | 'On Hold' | 'Completed' | 'Inactive',
@@ -89,6 +94,35 @@ export default function BARegisterPatientPage() {
       ...prev,
       [field]: null,
     }));
+  };
+
+  // Clear all form inputs and uploaded files
+  const handleClearForm = () => {
+    setFormData({
+      name: '',
+      mobile: '',
+      email: '',
+      gender: '' as any,
+      dateOfBirth: '',
+      age: '',
+      bloodGroup: '',
+      occupation: '',
+      emergencyContact: '',
+      address: '',
+      status: 'Active',
+      medicalHistory: '',
+      treatmentType: '',
+      assignedHealer: '',
+    });
+    setUploadedFiles({
+      reports: null,
+      labResults: null,
+      prescriptions: null,
+      scanImages: null,
+      consultationNotes: null,
+      idProofs: null,
+      healingRecords: null,
+    });
   };
 
   // Handle Submit
@@ -257,10 +291,7 @@ export default function BARegisterPatientPage() {
                 </div>
               </div>
               
-              <div className="db-corp-navbar-right">
-                <div className="db-corp-badge-dot" style={{ background: '#10b981', position: 'relative', marginRight: '6px' }} />
-                <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Branch registry active</span>
-              </div>
+              
             </header>
 
             {/* Main Form Workspace Area */}
@@ -292,8 +323,83 @@ export default function BARegisterPatientPage() {
                             value={formData.name} 
                             onChange={handleInputChange} 
                             required 
-                            placeholder="Elena Gilbert"
+                            placeholder="Enter Name"
                           />
+                        </div>
+
+                        {/* Gender & Date of Birth row */}
+                        <div className="st-form-row" style={{ marginTop: '16px' }}>
+                          <div className="st-form-group">
+                            <label style={customStyles.label}>GENDER</label>
+                            <select
+                              name="gender"
+                              style={customStyles.grayInput}
+                              value={formData.gender}
+                              onChange={handleInputChange}
+                            >
+                              <option value="">Select Gender</option>
+                              <option value="Female">Female</option>
+                              <option value="Male">Male</option>
+                              <option value="Other">Other</option>
+                            </select>
+                          </div>
+                          <div className="st-form-group">
+                            <label style={customStyles.label}>DATE OF BIRTH</label>
+                            <input
+                              type="date"
+                              name="dateOfBirth"
+                              style={customStyles.grayInput}
+                              value={formData.dateOfBirth}
+                              onChange={handleInputChange}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Age, Blood Group & Occupation row */}
+                        <div className="st-form-row" style={{ marginTop: '16px' }}>
+                          <div className="st-form-group">
+                            <label style={customStyles.label}>AGE</label>
+                            <input
+                              type="number"
+                              name="age"
+                              style={customStyles.grayInput}
+                              value={formData.age}
+                              onChange={handleInputChange}
+                              placeholder="Enter age in years"
+                              min="0"
+                              max="120"
+                            />
+                          </div>
+                          <div className="st-form-group">
+                            <label style={customStyles.label}>BLOOD GROUP</label>
+                            <select
+                              name="bloodGroup"
+                              style={customStyles.grayInput}
+                              value={formData.bloodGroup}
+                              onChange={handleInputChange}
+                            >
+                              <option value="">Select Blood Group</option>
+                              <option value="A+">A+</option>
+                              <option value="A-">A-</option>
+                              <option value="B+">B+</option>
+                              <option value="B-">B-</option>
+                              <option value="AB+">AB+</option>
+                              <option value="AB-">AB-</option>
+                              <option value="O+">O+</option>
+                              <option value="O-">O-</option>
+                            </select>
+                          </div>
+                          <div className="st-form-group">
+                            <label style={customStyles.label}>OCCUPATION</label>
+                            <input
+                              type="text"
+                              name="occupation"
+                              style={customStyles.grayInput}
+                              value={formData.occupation}
+                              onChange={handleInputChange}
+                              placeholder="Enter occupation (e.g. Engineer)"
+                            />
+                          </div>
                         </div>
                       </div>
 
@@ -314,7 +420,7 @@ export default function BARegisterPatientPage() {
                               value={formData.mobile} 
                               onChange={handleInputChange} 
                               required 
-                              placeholder="+1 234 567 8901"
+                              placeholder="Enter mobile number"
                             />
                           </div>
 
@@ -327,7 +433,7 @@ export default function BARegisterPatientPage() {
                               value={formData.email} 
                               onChange={handleInputChange} 
                               required 
-                              placeholder="elena.g@example.com"
+                              placeholder="Enter email address"
                             />
                           </div>
                         </div>
@@ -340,7 +446,7 @@ export default function BARegisterPatientPage() {
                             style={customStyles.grayInput}
                             value={formData.emergencyContact} 
                             onChange={handleInputChange} 
-                            placeholder="Name and Relationship (Phone)"
+                            placeholder="e.g Husband number"
                           />
                         </div>
                       </div>
@@ -359,7 +465,7 @@ export default function BARegisterPatientPage() {
                             style={customStyles.grayTextarea}
                             value={formData.address} 
                             onChange={handleInputChange} 
-                            placeholder="Previous health conditions, treatments, allergies..."
+                            placeholder="Enter complete residential address, including city and postal code"
                           />
                         </div>
                       </div>
@@ -456,7 +562,7 @@ export default function BARegisterPatientPage() {
                             style={customStyles.grayTextarea}
                             value={formData.medicalHistory} 
                             onChange={handleInputChange} 
-                            placeholder="Previous health conditions, treatments, allergies, medications, reports, or healing-related notes..."
+                            placeholder="Describe any chronic conditions, allergies, current medications, or previous energy healing experiences..."
                           />
                         </div>
                       </div>
@@ -465,6 +571,7 @@ export default function BARegisterPatientPage() {
                       <div className="st-form-group" style={{ marginTop: '8px' }}>
                         <label style={customStyles.label}>ASSIGN TREATMENT TYPE</label>
                         <select name="treatmentType" className="st-input" style={customStyles.grayInput} value={formData.treatmentType} onChange={handleInputChange}>
+                          <option value="">Select Treatment Type</option>
                           <option value="Pranic Psychotherapy">Pranic Psychotherapy</option>
                           <option value="Advanced Pranic Healing">Advanced Pranic Healing</option>
                           <option value="Crystal Pranic Healing">Crystal Pranic Healing</option>
@@ -481,6 +588,7 @@ export default function BARegisterPatientPage() {
                         <div className="st-form-group">
                           <label style={customStyles.label}>RESPONSIBLE HEALER</label>
                           <select name="assignedHealer" className="st-input" style={customStyles.grayInput} value={formData.assignedHealer} onChange={handleInputChange}>
+                            <option value="">Select Healer</option>
                             <option value="Dr. Aris Varma">Dr. Aris Varma</option>
                             <option value="Dr. Anjali Rao">Dr. Anjali Rao</option>
                             <option value="Dr. Kevin Smith">Dr. Kevin Smith</option>
@@ -655,6 +763,25 @@ export default function BARegisterPatientPage() {
 
                 {/* Bottom Footer Actions block (matches bottom right layout in image) */}
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px', marginTop: '12px', marginBottom: '28px' }}>
+                  <button 
+                    type="button" 
+                    onClick={handleClearForm} 
+                    style={{
+                      background: '#ffffff',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '8px',
+                      padding: '10px 24px',
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      color: '#ef4444',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      marginRight: 'auto',
+                    }}
+                  >
+                    Clear Form
+                  </button>
+
                   <button 
                     type="button" 
                     onClick={() => history.push(ROUTES.BRANCH_ADMIN.DASHBOARD)} 
