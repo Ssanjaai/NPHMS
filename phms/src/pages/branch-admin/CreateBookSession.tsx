@@ -111,9 +111,8 @@ export default function CreateBookSession() {
     type: 'Basic Pranic Healing',
     followUpRequired: false,
     followUpUrgency: 'None' as 'Urgent' | 'Pending' | 'None',
-    observations: '',
-    detailedNotes: '',
-    recommendation: '',
+    followUpDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0], // Default to 7 days from now
+    sessionFee: 1200,
     paymentStatus: 'Pending' as 'Paid' | 'Pending',
     paymentMethod: 'UPI' as 'UPI' | 'Cash',
   });
@@ -132,6 +131,15 @@ export default function CreateBookSession() {
       localStorage.setItem('phms_sessions', JSON.stringify(sessions));
     }
   }, [sessions]);
+
+  // Auto-update session fee based on session type
+  useEffect(() => {
+    let fee = 1200;
+    if (formData.type === 'Pranic Psychotherapy') fee = 2500;
+    else if (formData.type === 'Crystal Healing') fee = 3000;
+    else if (formData.type === 'Advanced Pranic Healing') fee = 2000;
+    setFormData(prev => ({ ...prev, sessionFee: fee }));
+  }, [formData.type]);
 
   // Handle patient autocomplete / registration state
   const handlePatientSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -185,6 +193,10 @@ export default function CreateBookSession() {
       : `Dr. ${formData.healer}`;
       
     const sessionNo = getNextSessionNo(finalPatientName);
+    const totalBilled = formData.sessionFee;
+    const amountPaid = formData.paymentStatus === 'Paid' ? totalBilled : 0;
+    const outstanding = totalBilled - amountPaid;
+    const autoStatus = amountPaid === totalBilled ? 'Paid' : 'Pending';
 
     const newSession: HealingSession = {
       id: Date.now(),
@@ -204,9 +216,9 @@ export default function CreateBookSession() {
       },
       notes: {
         treatmentType: formData.type,
-        observations: formData.observations || 'No initial observations logged.',
-        detailedNotes: formData.detailedNotes || 'No detailed treatment notes.',
-        recommendation: formData.recommendation || 'None',
+        observations: '—',
+        detailedNotes: '—',
+        recommendation: '—',
       }
     };
 
@@ -215,19 +227,62 @@ export default function CreateBookSession() {
     setSessions(updatedSessions);
     localStorage.setItem('phms_sessions', JSON.stringify(updatedSessions));
 
-    // Audit Log recording
+    // Write to phms_patient_payments in localStorage (Rule 3)
+    const savedPayments = localStorage.getItem('phms_patient_payments') || '[]';
+    const payments = JSON.parse(savedPayments);
+    const newPaymentHistory = amountPaid > 0 ? [{
+      date: new Date().toISOString().split('T')[0],
+      amount: amountPaid,
+      mode: formData.paymentMethod === 'UPI' ? 'UPI' as const : 'Cash' as const,
+      status: 'Paid' as const
+    }] : [];
+
+    const newPayment = {
+      id: `P-${Math.floor(1000 + Math.random() * 9000)}`,
+      patientName: finalPatientName,
+      sessionNo: sessionNo,
+      totalBilled: totalBilled,
+      paid: amountPaid,
+      outstanding: outstanding,
+      status: autoStatus,
+      assignedHealer: healerFullName,
+      caseId: `C-${Math.floor(1000 + Math.random() * 9000)}`,
+      history: newPaymentHistory
+    };
+    localStorage.setItem('phms_patient_payments', JSON.stringify([newPayment, ...payments]));
+
+    // Write an Income Entry to general finance ledger
+    if (amountPaid > 0) {
+      const savedTx = localStorage.getItem('phms_finance_transactions') || '[]';
+      const transactionsList = JSON.parse(savedTx);
+
+      const newTx = {
+        id: Date.now(),
+        timestamp: `${new Date().toISOString().split('T')[0]}, ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+        category: 'Session Fee',
+        type: 'income',
+        amount: amountPaid,
+        mode: formData.paymentMethod === 'UPI' ? 'UPI (GPay)' : 'Cash',
+        recordedBy: user?.name || 'Admin - Anjali Rao',
+        description: `${finalPatientName} - Session fee for booked ${sessionNo} (${formData.type})`,
+        dateStr: new Date().toISOString().split('T')[0]
+      };
+      localStorage.setItem('phms_finance_transactions', JSON.stringify([newTx, ...transactionsList]));
+    }
+
+    // Audit Log recording (SMS & Push Reminder simulation - Rule 5)
     const savedAudits = localStorage.getItem('phms_audits') || '[]';
     const audits = JSON.parse(savedAudits);
     const newAudit = {
       id: `A-${Math.floor(1000 + Math.random() * 9000)}`,
       action: 'SESSION_BOOKING',
-      details: `Booked healing session ${sessionNo} for Patient ${finalPatientName} with Healer ${healerFullName}.`,
+      details: `Booked healing session ${sessionNo} for Patient ${finalPatientName} with Healer ${healerFullName}. Automated patient SMS & push notifications triggered.`,
       changedBy: user?.name || user?.email || 'Aria Seraphina',
       timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
     };
     localStorage.setItem('phms_audits', JSON.stringify([newAudit, ...audits]));
 
-    triggerToast(`Session ${sessionNo} successfully booked for ${finalPatientName}!`);
+    triggerToast(`Session ${sessionNo} successfully booked! Patient received SMS & Push reminders.`);
     history.push(ROUTES.BRANCH_ADMIN.SESSIONS);
   };
 
@@ -478,18 +533,31 @@ export default function CreateBookSession() {
                             </div>
 
                             {formData.followUpRequired && (
-                              <div className="st-form-group">
-                                <label style={customStyles.label}>Urgency Priority</label>
-                                <select 
-                                  className="st-input"
-                                  style={customStyles.grayInput}
-                                  value={formData.followUpUrgency}
-                                  onChange={(e) => setFormData({ ...formData, followUpUrgency: e.target.value as any })}
-                                >
-                                  <option value="None">None</option>
-                                  <option value="Pending">Pending (Orange)</option>
-                                  <option value="Urgent">Urgent (Red)</option>
-                                </select>
+                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                                <div className="st-form-group">
+                                  <label style={customStyles.label}>Urgency Priority</label>
+                                  <select 
+                                    className="st-input"
+                                    style={customStyles.grayInput}
+                                    value={formData.followUpUrgency}
+                                    onChange={(e) => setFormData({ ...formData, followUpUrgency: e.target.value as any })}
+                                  >
+                                    <option value="None">None</option>
+                                    <option value="Pending">Pending (Orange)</option>
+                                    <option value="Urgent">Urgent (Red)</option>
+                                  </select>
+                                </div>
+                                <div className="st-form-group">
+                                  <label style={customStyles.label}>Follow-up Date</label>
+                                  <input 
+                                    type="date"
+                                    required
+                                    className="st-input"
+                                    style={customStyles.grayInput}
+                                    value={formData.followUpDate}
+                                    onChange={(e) => setFormData({ ...formData, followUpDate: e.target.value })}
+                                  />
+                                </div>
                               </div>
                             )}
                           </div>
@@ -499,53 +567,8 @@ export default function CreateBookSession() {
                     </div>
                   </div>
 
-                  {/* RIGHT COLUMN: Diagnostic Observations & Ledger details */}
+                  {/* RIGHT COLUMN: Ledger details */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-                    
-                    {/* Clinical Details Card */}
-                    <div style={customStyles.formCard}>
-                      <div>
-                        <div style={customStyles.subHeader}>
-                          <IonIcon icon={documentTextOutline} style={customStyles.subHeaderIcon} />
-                          <span>Initial Diagnostics & Notes</span>
-                        </div>
-
-                        <div className="st-form" style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-                          <div className="st-form-group">
-                            <label style={customStyles.label}>Initial Observations (Chakra blocks)</label>
-                            <textarea 
-                              rows={3}
-                              style={customStyles.grayTextarea}
-                              placeholder="Solar plexus chakra congested, lower chakras depleted."
-                              value={formData.observations}
-                              onChange={(e) => setFormData({ ...formData, observations: e.target.value })}
-                            />
-                          </div>
-
-                          <div className="st-form-group">
-                            <label style={customStyles.label}>Detailed Clinical Notes</label>
-                            <textarea 
-                              rows={3}
-                              style={customStyles.grayTextarea}
-                              placeholder="Performed general sweeping, localized sweeping on affected organs."
-                              value={formData.detailedNotes}
-                              onChange={(e) => setFormData({ ...formData, detailedNotes: e.target.value })}
-                            />
-                          </div>
-
-                          <div className="st-form-group">
-                            <label style={customStyles.label}>Clinical Recommendations</label>
-                            <textarea 
-                              rows={3}
-                              style={customStyles.grayTextarea}
-                              placeholder="Salt water bath twice weekly, daily physical scanning."
-                              value={formData.recommendation}
-                              onChange={(e) => setFormData({ ...formData, recommendation: e.target.value })}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
 
                     {/* Billing Details Card */}
                     <div style={customStyles.formCard}>
@@ -556,6 +579,20 @@ export default function CreateBookSession() {
                         </div>
 
                         <div className="st-form" style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                          
+                          <div className="st-form-group">
+                            <label style={customStyles.label}>Session Fee (₹) *</label>
+                            <input 
+                              type="number"
+                              required
+                              className="st-input"
+                              style={customStyles.grayInput}
+                              placeholder="e.g. 1200"
+                              value={formData.sessionFee}
+                              onChange={(e) => setFormData({ ...formData, sessionFee: parseFloat(e.target.value) || 0 })}
+                            />
+                          </div>
+
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                             <div className="st-form-group">
                               <label style={customStyles.label}>Payment Status</label>

@@ -763,20 +763,7 @@ const FinancePage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Target card */}
-                <div className="bf-stat-card bf-stat-card--target">
-                  <div className="bf-stat-label">MONTHLY TARGET</div>
-                  <div className="bf-stat-value">₹2,80,000</div>
-                  <div className="bf-stat-progress-bar">
-                    <div 
-                      className="bf-stat-progress-fill" 
-                      style={{ '--progress-pct': `${Math.min(100, Math.round((totalRevenue / 280000) * 100))}%` } as React.CSSProperties}
-                    />
-                  </div>
-                  <div className="bf-stat-subtext">
-                    {Math.round((totalRevenue / 280000) * 100)}% of goal reached
-                  </div>
-                </div>
+               
 
                 {/* Insights card */}
                 <div className="bf-stat-card" style={{ background: '#f8fafc', border: '1px solid #cbd5e1' }}>
