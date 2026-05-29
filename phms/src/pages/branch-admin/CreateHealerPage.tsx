@@ -40,7 +40,6 @@ export default function BACreateHealerPage() {
     day: 'numeric',
   });
 
-  // Form states with requested healer defaults
   const [formData, setFormData] = useState({
     name: '',
     gender: '',
@@ -48,6 +47,11 @@ export default function BACreateHealerPage() {
     mobile: '',
     email: '',
     address: '',
+    addressLine1: '',
+    addressLine2: '',
+    city: '',
+    state: '',
+    pincode: '',
     username: '',
     password: 'PHMS-' + Math.floor(1000 + Math.random() * 9000),
     status: 'Active' as 'Active' | 'Inactive',
@@ -139,6 +143,16 @@ export default function BACreateHealerPage() {
       alert('Years of Experience cannot be negative.');
       return;
     }
+
+    // Combine address components into single address string
+    const fullAddress = [
+      formData.addressLine1.trim(),
+      formData.addressLine2.trim(),
+      formData.city.trim(),
+      formData.state.trim(),
+    ].filter(Boolean).join(', ') + (formData.pincode.trim() ? ` - ${formData.pincode.trim()}` : '');
+    
+    formData.address = fullAddress;
 
     // Generate random healer registration ID
     const generatedId = `PHMS-H-${Math.floor(10000 + Math.random() * 90000)}`;
@@ -267,7 +281,7 @@ export default function BACreateHealerPage() {
             {/* Horizontal Header Navbar */}
             <header className="db-corp-navbar" style={{ background: '#ffffff', borderBottom: '1px solid #e2e8f0', padding: '16px 24px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <button className="db-corp-nav-icon-btn" onClick={() => history.push(ROUTES.BRANCH_ADMIN.DASHBOARD)} title="Back to Dashboard">
+                <button className="db-corp-nav-icon-btn" onClick={() => history.push(ROUTES.BRANCH_ADMIN.HEALERS)} title="Back to Healers">
                   <IonIcon icon={arrowBackOutline} style={{ color: '#0D5C46', fontSize: '20px' }} />
                 </button>
                 <div className="db-corp-navbar-left">
@@ -383,16 +397,76 @@ export default function BACreateHealerPage() {
                             </div>
                           </div>
 
+                          {/* Address Details */}
+                          
+                          {/* Address Line 1 */}
                           <div className="st-form-group">
-                            <label style={customStyles.label}>ADDRESS</label>
-                            <textarea 
-                              name="address" 
-                              rows={3} 
-                              style={customStyles.grayTextarea}
-                              value={formData.address} 
+                            <label style={customStyles.label}>Address Line 1 *</label>
+                            <input 
+                              type="text" 
+                              name="addressLine1" 
+                              style={customStyles.grayInput}
+                              value={formData.addressLine1} 
                               onChange={handleInputChange} 
-                              placeholder="Enter complete address"
+                              placeholder="Building, Flat, Street name"
+                              required 
                             />
+                          </div>
+
+                          {/* Address Line 2 */}
+                          <div className="st-form-group" style={{ marginTop: '16px' }}>
+                            <label style={customStyles.label}>Address Line 2</label>
+                            <input 
+                              type="text" 
+                              name="addressLine2" 
+                              style={customStyles.grayInput}
+                              value={formData.addressLine2} 
+                              onChange={handleInputChange} 
+                              placeholder="Landmark, Area, Locality (Optional)"
+                            />
+                          </div>
+
+                          {/* City, State & Pincode Row */}
+                          <div className="st-form-row" style={{ marginTop: '16px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+                            <div className="st-form-group">
+                              <label style={customStyles.label}>City *</label>
+                              <input 
+                                type="text" 
+                                name="city" 
+                                style={customStyles.grayInput}
+                                value={formData.city} 
+                                onChange={handleInputChange} 
+                                placeholder="City"
+                                required 
+                              />
+                            </div>
+
+                            <div className="st-form-group">
+                              <label style={customStyles.label}>State *</label>
+                              <input 
+                                type="text" 
+                                name="state" 
+                                style={customStyles.grayInput}
+                                value={formData.state} 
+                                onChange={handleInputChange} 
+                                placeholder="State"
+                                required 
+                              />
+                            </div>
+
+                            <div className="st-form-group">
+                              <label style={customStyles.label}>Pincode *</label>
+                              <input 
+                                type="text" 
+                                name="pincode" 
+                                style={customStyles.grayInput}
+                                value={formData.pincode} 
+                                onChange={handleInputChange} 
+                                placeholder="6-digit Pincode"
+                                pattern="[0-9]{6}"
+                                required 
+                              />
+                            </div>
                           </div>
 
                         </div>
@@ -422,14 +496,20 @@ export default function BACreateHealerPage() {
 
                             <div className="st-form-group">
                               <label style={customStyles.label}>AREA OF SPECIALIZATION</label>
-                              <input 
-                                type="text" 
+                              <select 
                                 name="specialization" 
-                                style={customStyles.grayInput}
+                                style={{ ...customStyles.grayInput, color: '#1e293b' }}
                                 value={formData.specialization} 
-                                onChange={handleInputChange} 
-                                placeholder="Enter specialization (e.g. Energy Healing)"
-                              />
+                                onChange={handleInputChange}
+                              >
+                                <option value="">Select Specialization</option>
+                                <option value="Stress Healing">Stress Healing</option>
+                                <option value="Energy Cleansing">Energy Cleansing</option>
+                                <option value="Aura Cleansing">Aura Cleansing</option>
+                                <option value="Chakra Balancing">Chakra Balancing</option>
+                                <option value="Grief Therapy">Grief Therapy</option>
+                                <option value="PTSD Care">PTSD Care</option>
+                              </select>
                             </div>
                           </div>
 
@@ -631,7 +711,7 @@ export default function BACreateHealerPage() {
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px', marginTop: '12px', marginBottom: '28px' }}>
                   <button 
                     type="button" 
-                    onClick={() => history.push(ROUTES.BRANCH_ADMIN.DASHBOARD)} 
+                    onClick={() => history.push(ROUTES.BRANCH_ADMIN.HEALERS)} 
                     style={{
                       background: '#ffffff',
                       border: '1px solid #cbd5e1',

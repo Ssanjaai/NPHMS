@@ -1042,6 +1042,23 @@ const PatientsPage: React.FC = () => {
     alert('Healer allocation removed successfully. Patient credentials locked.');
   };
 
+  // Delete Patient Profile Action
+  const handleDeletePatient = (patient: Patient) => {
+    const confirmDelete = window.confirm(`Are you sure you want to delete patient profile for ${patient.name} (${patient.id})?`);
+    if (confirmDelete) {
+      const remaining = patients.filter((p) => p.id !== patient.id);
+      setPatients(remaining);
+      if (selectedPatientId === patient.id) {
+        if (remaining.length > 0) {
+          setSelectedPatientId(remaining[0].id);
+        } else {
+          setSelectedPatientId('');
+        }
+      }
+      alert(`Patient profile for ${patient.name} has been deleted successfully.`);
+    }
+  };
+
   // Global Analytics metrics calculated dynamically
   const activeCount = patients.filter((p) => p.status === 'Active').length;
   const mtdRegistered = patients.length;
@@ -1254,6 +1271,9 @@ const PatientsPage: React.FC = () => {
                                   </button>
                                   <button className="pa-doc-action-btn" title="Edit Profile" onClick={() => { setSelectedPatientId(patient.id); history.push(ROUTES.BRANCH_ADMIN.EDIT_PATIENT.replace(':id', encodeURIComponent(patient.id))); }}>
                                     <IonIcon icon={pencilOutline} />
+                                  </button>
+                                  <button className="pa-doc-action-btn pa-doc-action-btn--delete" title="Delete Profile" onClick={() => handleDeletePatient(patient)}>
+                                    <IonIcon icon={trashOutline} />
                                   </button>
                                 </div>
                               </td>
@@ -1676,91 +1696,72 @@ const PatientsPage: React.FC = () => {
 
                 {profileTab === 'sessions' && (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
-                    {/* Healing Sessions Table */}
-                    <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #e6f4f1', paddingBottom: '12px', marginBottom: '16px' }}>
-                        <h4 style={{ fontSize: '13px', fontWeight: 800, color: 'var(--ba-color-primary)', textTransform: 'uppercase', letterSpacing: '0.6px', display: 'flex', alignItems: 'center', gap: '6px', margin: 0 }}>
+                    {/* Chronological Session History Timeline */}
+                    <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '24px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #e6f4f1', paddingBottom: '12px', marginBottom: '20px' }}>
+                        <h4 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--ba-color-primary)', textTransform: 'uppercase', letterSpacing: '0.6px', display: 'flex', alignItems: 'center', gap: '6px', margin: 0 }}>
                           <IonIcon icon={timeOutline} style={{ color: 'var(--ba-color-primary)', fontSize: '18px' }} />
-                          Clinical Sessions History Ledger
+                          Chronological Session History Timeline
                         </h4>
                         <button className="st-btn st-btn--primary" onClick={() => setShowSesModal(true)} style={{ fontSize: '12px', padding: '6px 14px', whiteSpace: 'nowrap' }}>
                           + Add Session
                         </button>
                       </div>
 
-                      <div className="st-table-container">
-                        <table className="st-table">
-                          <thead>
-                            <tr>
-                              <th style={{ whiteSpace: 'nowrap' }}>NO</th>
-                              <th style={{ whiteSpace: 'nowrap' }}>HEALER</th>
-                              <th>OBSERVATIONS / CLINICAL NOTES</th>
-                              <th style={{ width: '120px', whiteSpace: 'nowrap' }}>STATUS</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {selectedPatient.sessions.length > 0 ? (
-                              [...selectedPatient.sessions].reverse().map((s, index, arr) => {
-                                const sequentialNumber = arr.length - index;
-                                return (
-                                  <tr key={s.id} className="st-table-row">
-                                    <td style={{ fontWeight: '800', color: 'var(--ba-color-primary)', whiteSpace: 'nowrap' }}>#{sequentialNumber}</td>
-                                    <td style={{ whiteSpace: 'nowrap' }}>
-                                      <span style={{ fontWeight: 700, color: '#334155' }}>{s.healer}</span>
-                                    </td>
-                                    <td>
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#f1f5f9', padding: '6px 10px', borderRadius: '6px', border: '1px solid #cbd5e1' }}>
-                                        <IonIcon icon={shieldCheckmarkOutline} style={{ color: '#64748b', fontSize: '14px' }} title="Admin Notes Lock Enforced" />
-                                        <span style={{ fontSize: '11px', color: '#475569', fontStyle: 'italic', maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={s.notes}>
-                                          {s.notes}
-                                        </span>
-                                      </div>
-                                      {s.followUpDate && (
-                                        <div style={{ fontSize: '9px', fontWeight: 700, color: '#10b981', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                                          <IonIcon icon={calendarOutline} />
-                                          Follow-up triggered: {s.followUpDate}
-                                        </div>
-                                      )}
-                                    </td>
-                                    <td>
-                                      <select
-                                        value={s.status}
-                                        onChange={(e) => handleTransitionSessionStatus(s.id, e.target.value as any)}
-                                        style={{
-                                          padding: '4px 8px',
-                                          borderRadius: '6px',
-                                          fontSize: '11px',
-                                          fontWeight: 700,
-                                          background:
-                                            s.status === 'Completed' ? '#ecfdf5' :
-                                            s.status === 'Ongoing' ? '#eff6ff' :
-                                            s.status === 'Cancelled' ? '#fef2f2' : '#fffbeb',
-                                          color:
-                                            s.status === 'Completed' ? '#047857' :
-                                            s.status === 'Ongoing' ? '#1d4ed8' :
-                                            s.status === 'Cancelled' ? '#ef4444' : '#b45309',
-                                          border: '1px solid #cbd5e1',
-                                          outline: 'none',
-                                        }}
-                                      >
-                                        <option value="Scheduled">Scheduled</option>
-                                        <option value="Ongoing">Ongoing</option>
-                                        <option value="Completed">Completed</option>
-                                        <option value="Cancelled">Cancelled</option>
-                                      </select>
-                                    </td>
-                                  </tr>
-                                );
-                              })
-                            ) : (
-                              <tr>
-                                <td colSpan={4} className="st-table-empty">
-                                  No sequential sessions registered yet.
-                                </td>
-                              </tr>
-                            )}
-                          </tbody>
-                        </table>
+                      {/* Timeline List Nodes */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', position: 'relative', paddingLeft: '12px', borderLeft: '2px solid #e2e8f0', marginLeft: '12px' }}>
+                        {selectedPatient.sessions.length > 0 ? (
+                          [...selectedPatient.sessions].reverse().map((s, index, arr) => {
+                            const seqNo = `S-${String(arr.length - index).padStart(4, '0')}`;
+                            return (
+                              <div key={s.id} style={{ position: 'relative', paddingLeft: '16px' }}>
+                                {/* Timeline Bullet Circle */}
+                                <div 
+                                  style={{ 
+                                    position: 'absolute', 
+                                    left: '-24px', 
+                                    top: '2px', 
+                                    width: '12px', 
+                                    height: '12px', 
+                                    borderRadius: '50%', 
+                                    background: s.status === 'Completed' ? '#10b981' : '#f59e0b',
+                                    border: '3px solid #ffffff',
+                                    boxShadow: '0 0 0 2px #e2e8f0'
+                                  }} 
+                                />
+
+                                {/* Session Timeline Card */}
+                                <div style={{ background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '10px', padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <strong style={{ color: 'var(--ba-color-primary)', fontSize: '13px' }}>{seqNo}</strong>
+                                    <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>{s.followUpDate ? `📅 Follow-up: ${s.followUpDate}` : 'Date: TBD'}</span>
+                                  </div>
+
+                                  <div style={{ fontSize: '12px', color: '#1e293b' }}>
+                                    Healer: <strong>{s.healer}</strong> • Status:{' '}
+                                    <span style={{ fontWeight: 'bold', color: s.status === 'Completed' ? '#10b981' : '#b45309' }}>
+                                      {s.status}
+                                    </span>
+                                  </div>
+
+                                  {/* observations Notes */}
+                                  <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: '8px 12px', borderRadius: '6px', marginTop: '4px' }}>
+                                    <div style={{ fontSize: '10px', textTransform: 'uppercase', color: '#94a3b8', fontWeight: 800, marginBottom: '2px' }}>
+                                      Chakra observations
+                                    </div>
+                                    <p style={{ margin: 0, fontSize: '11px', color: '#475569', fontStyle: 'italic' }}>
+                                      {s.notes || 'No observations logged for this session.'}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <div style={{ textAlign: 'center', padding: '24px 0', color: '#94a3b8' }}>
+                            <p style={{ margin: 0, fontSize: '13px' }}>No session logs logged for this patient profile timeline.</p>
+                          </div>
+                        )}
                       </div>
                     </div>
 

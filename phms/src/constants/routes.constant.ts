@@ -5,7 +5,7 @@
 export const ROUTES = {
   // Auth Routes
   AUTH: {
-    LOGIN: '/auth/signin',
+    LOGIN: '/auth/login',
     SIGNUP: '/auth/signup',
     FORGOT_PASSWORD: '/auth/forgot-password',
     RESET_PASSWORD: '/auth/reset-password',
@@ -53,10 +53,13 @@ export const ROUTES = {
     DASHBOARD: '/branch-admin/dashboard',
     HEALERS: '/branch-admin/healers',
     CREATE_HEALER: '/branch-admin/healers/create',
+    DETAIL_HEALER: '/branch-admin/healers/detail/:id',
+    EDIT_HEALER: '/branch-admin/healers/edit/:id',
     PATIENTS: '/branch-admin/patients',
     REGISTER_PATIENT: '/branch-admin/patients/register',
     EDIT_PATIENT: '/branch-admin/patients/edit/:id',
     SESSIONS: '/branch-admin/sessions',
+    DETAIL_SESSION: '/branch-admin/sessions/detail/:id',
     ATTENDANCE: '/branch-admin/attendance',
     VISITOR_LOG: '/branch-admin/visitor-log',
     VISITOR_CHECKIN: '/branch-admin/visitor-log/check-in',

@@ -36,10 +36,13 @@ import BADashboardPage from './pages/branch-admin/DashboardPage';
 import BAFinancePage from './pages/branch-admin/FinancePage';
 import BAHealersPage from './pages/branch-admin/HealersPage';
 import BACreateHealerPage from './pages/branch-admin/CreateHealerPage';
+import InfoHealersPage from './pages/branch-admin/InfoHealersPage';
+import BAEditHealerPage from './pages/branch-admin/Edithealerspage';
 import BAPatientsPage from './pages/branch-admin/PatientsPage';
 import BARegisterPatientPage from './pages/branch-admin/RegisterPatientPage';
-import BAEditPatientPage from './pages/branch-admin/EditPatientPage';
+import EditPatientPages from './pages/branch-admin/EditPatientPages';
 import BASessionsPage from './pages/branch-admin/SessionsPage';
+import BADetialsSessionsPages from './pages/branch-admin/DetialsSessionsPages';
 import SARevenuePage from './pages/super-admin/RevenuePage';
 import SADailyFinancePage from './pages/super-admin/DailyFinancePage';
 import BAVisitorLogPage from './pages/branch-admin/VisitorLogPage';
@@ -227,13 +230,19 @@ const AppContent: React.FC = () => {
           <BARegisterPatientPage />
         </Route>
         <Route path={ROUTES.BRANCH_ADMIN.EDIT_PATIENT} exact={true}>
-          <BAEditPatientPage />
+          <EditPatientPages />
         </Route>
         <Route path={ROUTES.BRANCH_ADMIN.HEALERS} exact={true}>
           <BAHealersPage />
         </Route>
         <Route path={ROUTES.BRANCH_ADMIN.CREATE_HEALER} exact={true}>
           <BACreateHealerPage />
+        </Route>
+        <Route path={ROUTES.BRANCH_ADMIN.DETAIL_HEALER} exact={true}>
+          <InfoHealersPage />
+        </Route>
+        <Route path={ROUTES.BRANCH_ADMIN.EDIT_HEALER} exact={true}>
+          <BAEditHealerPage />
         </Route>
         <Route path={ROUTES.BRANCH_ADMIN.ATTENDANCE} exact={true}>
           <BAAttendancePage />
@@ -249,6 +258,9 @@ const AppContent: React.FC = () => {
         </Route>
         <Route path={ROUTES.BRANCH_ADMIN.SESSIONS} exact={true}>
           <BASessionsPage />
+        </Route>
+        <Route path={ROUTES.BRANCH_ADMIN.DETAIL_SESSION} exact={true}>
+          <BADetialsSessionsPages />
         </Route>
         <Route path={ROUTES.BRANCH_ADMIN.DOCUMENTS} exact={true}>
           <BADocumentManagementPage />

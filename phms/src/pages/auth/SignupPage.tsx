@@ -230,7 +230,7 @@ const SignupPage: React.FC = () => {
                   {/* Login Link */}
                   <div className="signup-page__login-section ion-text-center">
                     <IonText className="signup-page__login-text">
-                      Already have an account? <IonRouterLink routerLink="/auth/signin" className="signup-page__login-link">Login</IonRouterLink>
+                      Already have an account? <IonRouterLink routerLink="/auth/login" className="signup-page__login-link">Login</IonRouterLink>
                     </IonText>
                   </div>
                 </form>

@@ -306,15 +306,12 @@ const DashboardPage: React.FC = () => {
                 <button className="db-corp-nav-icon-btn" title="Help Hub">
                   <IonIcon icon={helpCircleOutline} />
                 </button>
-
                 <div className="db-corp-nav-avatar">{userInitials}</div>
               </div>
             </header>
 
-            <div className="db-hc-layout" style={{ padding: '24px' }}>
-
-              {/* =========================================================================
-                  HEADER METRIC SUMMARY STRIP: 10 WIDGETS
+            <div className="db-hc-layout" style={{ padding: '24px' }}>              {/* =========================================================================
+                  HEADER METRIC SUMMARY STRIP: BRD WIDGETS
                   ========================================================================= */}
               <div className="db-hc-metrics-grid-10" style={{ marginBottom: '12px' }}>
                 
@@ -362,25 +359,49 @@ const DashboardPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Widget 4: Today's Visitor Count */}
+                {/* Widget 4: Today's Sessions */}
                 <div className="db-hc-metric-card db-hc-card-accent-blue">
                   <div className="db-hc-card-header">
                     <div className="db-hc-card-icon-wrapper db-hc-icon-blue">
                       <IonIcon icon={peopleOutline} />
                     </div>
                     <span className="st-panel-badge st-panel-badge--green" style={{ fontSize: '9px', background: '#eff6ff', color: '#1d4ed8' }}>
-                      {visitors.filter(v => v.status === 'Inside').length} Inside
+                      4 Today
                     </span>
                   </div>
                   <div className="db-hc-card-body">
-                    <span className="db-hc-card-label">TODAY VISITORS</span>
-                    <h3 className="db-hc-card-value">{visitors.length}</h3>
+                    <span className="db-hc-card-label">TODAY'S SESSIONS</span>
+                    <h3 className="db-hc-card-value">4</h3>
                   </div>
                 </div>
 
-                
+                {/* Widget 5: Pending Notes */}
+                <div className="db-hc-metric-card db-hc-card-accent-orange">
+                  <div className="db-hc-card-header">
+                    <div className="db-hc-card-icon-wrapper db-hc-icon-orange">
+                      <IonIcon icon={medkitOutline} />
+                    </div>
+                    <span className="sa-badge sa-badge--pending" style={{ fontSize: '9px' }}>Missing observations</span>
+                  </div>
+                  <div className="db-hc-card-body">
+                    <span className="db-hc-card-label">PENDING NOTES</span>
+                    <h3 className="db-hc-card-value" style={{ color: '#b45309' }}>3</h3>
+                  </div>
+                </div>
 
-
+                {/* Widget 6: Follow-up Alerts */}
+                <div className="db-hc-metric-card db-hc-card-accent-red">
+                  <div className="db-hc-card-header">
+                    <div className="db-hc-card-icon-wrapper db-hc-icon-red">
+                      <IonIcon icon={alertCircleOutline} />
+                    </div>
+                    <span className="sa-badge sa-badge--inactive" style={{ fontSize: '9px' }}>Urgent Action</span>
+                  </div>
+                  <div className="db-hc-card-body">
+                    <span className="db-hc-card-label">FOLLOW-UP ALERTS</span>
+                    <h3 className="db-hc-card-value" style={{ color: '#dc2626' }}>{urgentFollowsCount}</h3>
+                  </div>
+                </div>
 
                 {/* Widget 7: Pending Payments */}
                 <div className="db-hc-metric-card db-hc-card-accent-red">
@@ -396,7 +417,7 @@ const DashboardPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Widget 8: Active Healers */}
+                {/* Widget 8: Healer Workload */}
                 <div className="db-hc-metric-card db-hc-card-accent-blue">
                   <div className="db-hc-card-header">
                     <div className="db-hc-card-icon-wrapper db-hc-icon-blue">
@@ -405,27 +426,10 @@ const DashboardPage: React.FC = () => {
                     <span className="db-hc-card-label" style={{ fontSize: '9px', color: '#1d4ed8' }}>Healers</span>
                   </div>
                   <div className="db-hc-card-body">
-                    <span className="db-hc-card-label">ACTIVE HEALERS</span>
+                    <span className="db-hc-card-label">HEALER WORKLOAD</span>
                     <h3 className="db-hc-card-value">{activeHealersCount}</h3>
                   </div>
                 </div>
-
-                {/* Widget 9: Attendance Status */}
-                <div className="db-hc-metric-card db-hc-card-accent-orange">
-                  <div className="db-hc-card-header">
-                    <div className="db-hc-card-icon-wrapper db-hc-icon-orange">
-                      <IonIcon icon={shieldCheckmarkOutline} />
-                    </div>
-                    <span className="db-hc-card-label" style={{ fontSize: '9px', color: '#b45309' }}>Roster</span>
-                  </div>
-                  <div className="db-hc-card-body">
-                    <span className="db-hc-card-label">ATTENDANCE</span>
-                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#334155' }}>
-                      {presentWorkersCount} Pres • {halfDayWorkersCount} Half • {absentWorkersCount} Abs
-                    </span>
-                  </div>
-                </div>
-
 
               </div>
 
@@ -541,9 +545,99 @@ const DashboardPage: React.FC = () => {
                         </div>
                       </div>
 
+                      {/* Healer Workload & Performance Table */}
+                      <div className="db-corp-card" style={{ marginTop: '4px' }}>
+                        <div className="sa-section__header" style={{ marginBottom: '16px' }}>
+                          <div>
+                            <h2 className="sa-section__title" style={{ fontSize: '20px', fontWeight: 'bold' }}>Healer Workload &amp; Workforce Performance</h2>
+                            <p className="sa-section__subtitle" style={{ fontSize: '14px', color: '#64748b', margin: '4px 0 0 0' }}>Cumulative healed logs and active patient cases per healer</p>
+                          </div>
+                        </div>
+
+                        <div className="st-table-container">
+                          <table className="st-table">
+                            <thead>
+                              <tr>
+                                <th>Healer Name</th>
+                                <th>Specialization</th>
+                                <th>Active Cases</th>
+                                <th>Cumulative Healings</th>
+                                <th>Pending Observations</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {healersList.map((healer, i) => (
+                                <tr key={i}>
+                                  <td style={{ fontWeight: 'bold', color: '#0d5c46' }}>{healer.name}</td>
+                                  <td>{healer.specialization}</td>
+                                  <td>
+                                    <span className="st-panel-badge st-panel-badge--green">{healer.activePatientsCount} Patients</span>
+                                  </td>
+                                  <td style={{ fontWeight: 'bold' }}>{healer.cumulativeHealingCount} Healed</td>
+                                  <td>
+                                    {healer.sessionsPendingNotes > 0 ? (
+                                      <span className="sa-badge sa-badge--pending">⚠️ {healer.sessionsPendingNotes} Notes Pending</span>
+                                    ) : (
+                                      <span className="st-panel-badge st-panel-badge--green">✓ Up to Date</span>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      {/* Urgent Tasks, Follow-ups, and Payments Collections */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                        
+                        {/* Urgent Follow-ups */}
+                        <div className="db-corp-card">
+                          <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', fontWeight: 800, color: '#dc2626', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <IonIcon icon={alertCircleOutline} /> Urgent Follow-up Alerts
+                          </h3>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            <div style={{ background: '#fdf2f2', border: '1px solid #fecaca', padding: '10px 14px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <div>
+                                <strong style={{ color: '#991b1b', fontSize: '13px' }}>Elena Gilbert</strong>
+                                <div style={{ fontSize: '11px', color: '#b91c1c' }}>Pranic Psychotherapy • Today</div>
+                              </div>
+                              <span style={{ fontSize: '11px', background: '#dc2626', color: '#ffffff', padding: '2px 8px', borderRadius: '9999px', fontWeight: 'bold' }}>Urgent</span>
+                            </div>
+                            <div style={{ background: '#fffbeb', border: '1px solid #fde68a', padding: '10px 14px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <div>
+                                <strong style={{ color: '#92400e', fontSize: '13px' }}>Stefan Salvatore</strong>
+                                <div style={{ fontSize: '11px', color: '#b45309' }}>Advanced Pranic Healing • Today</div>
+                              </div>
+                              <span style={{ fontSize: '11px', background: '#d97706', color: '#ffffff', padding: '2px 8px', borderRadius: '9999px', fontWeight: 'bold' }}>Pending</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Pending Collections */}
+                        <div className="db-corp-card">
+                          <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', fontWeight: 800, color: '#b45309', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <IonIcon icon={cashOutline} /> Pending Collections Ledger
+                          </h3>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            {payments.filter(p => p.status !== 'Paid').map((pay, i) => (
+                              <div key={i} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '10px 14px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div>
+                                  <strong style={{ color: '#1e293b', fontSize: '13px' }}>{pay.patientName}</strong>
+                                  <div style={{ fontSize: '11px', color: '#64748b' }}>Outstanding: ₹{pay.outstandingBalance}</div>
+                                </div>
+                                <span className={`st-panel-badge ${pay.status === 'Partial' ? 'st-panel-badge--orange' : 'sa-badge--inactive'}`}>
+                                  {pay.status}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                      </div>
+
                     </div>
                   )}
-
 
                 </div>
 

@@ -49,7 +49,7 @@ const ForgotPasswordPage: React.FC = () => {
         position: 'top',
         color: 'success',
       });
-      history.push('/auth/signin');
+      history.push('/auth/login');
     }, 1500);
   };
 
@@ -117,7 +117,7 @@ const ForgotPasswordPage: React.FC = () => {
                   {/* Login Link */}
                   <div className="forgot-password-page__login-section ion-text-center">
                     <IonText className="forgot-password-page__login-text">
-                      Remembered your password? <IonRouterLink routerLink="/auth/signin" className="forgot-password-page__login-link">Login</IonRouterLink>
+                      Remembered your password? <IonRouterLink routerLink="/auth/login" className="forgot-password-page__login-link">Login</IonRouterLink>
                     </IonText>
                   </div>
                 </form>
