@@ -629,6 +629,25 @@ const FinancePage: React.FC = () => {
       setTransactions([newTx, ...transactions]);
     }
 
+    // Sync payment back to the session record in phms_sessions (Sessions Page Update Integration)
+    const savedSessions = localStorage.getItem('phms_sessions');
+    if (savedSessions) {
+      const sessionList = JSON.parse(savedSessions);
+      const sessionIndex = sessionList.findIndex((s: any) => 
+        s.sessionNo === paymentForm.sessionNo && 
+        s.patient.toLowerCase().trim() === paymentForm.patientId.toLowerCase().trim()
+      );
+      if (sessionIndex > -1) {
+        const finalSessionStatus = (existingIndex > -1 ? updatedPayments[existingIndex].status : autoStatus) === 'Paid' ? 'Paid' as const : 'Pending' as const;
+        sessionList[sessionIndex] = {
+          ...sessionList[sessionIndex],
+          paymentStatus: finalSessionStatus,
+          paymentMethod: paymentForm.paymentMode === 'Bank Transfer' ? 'UPI' : paymentForm.paymentMode
+        };
+        localStorage.setItem('phms_sessions', JSON.stringify(sessionList));
+      }
+    }
+
     setShowRecordPaymentModal(false);
     triggerToast(`Payment of ₹${paidVal} successfully recorded for ${paymentForm.patientId}.`);
   };
