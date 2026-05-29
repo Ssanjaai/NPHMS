@@ -226,6 +226,61 @@ export default function EditSessionsPages() {
       return s;
     });
 
+    // Auto-bookkeeping transition when Session is Completed
+    if (formData.status === 'Completed' && targetSession && targetSession.status !== 'Completed') {
+      const totalBilled = formData.type === 'Pranic Psychotherapy' ? 2500 : formData.type === 'Crystal Healing' ? 3000 : formData.type === 'Advanced Pranic Healing' ? 2000 : 1200;
+      const amountPaid = formData.paymentStatus === 'Paid' ? totalBilled : 0;
+      const outstanding = totalBilled - amountPaid;
+      const autoStatus = amountPaid === totalBilled ? 'Paid' : amountPaid === 0 ? 'Pending' : 'Partial';
+
+      // 1. Write to phms_patient_payments in localStorage
+      const savedPayments = localStorage.getItem('phms_patient_payments') || '[]';
+      const payments = JSON.parse(savedPayments);
+
+      const existingPayIndex = payments.findIndex((p: any) => p.sessionNo === formData.sessionNo);
+      const newPaymentHistory = amountPaid > 0 ? [{
+        date: new Date().toISOString().split('T')[0],
+        amount: amountPaid,
+        mode: formData.paymentMethod || 'UPI',
+        status: 'Paid' as const
+      }] : [];
+
+      if (existingPayIndex === -1) {
+        const newPayment = {
+          id: `P-${Math.floor(1000 + Math.random() * 9000)}`,
+          patientName: formData.patientName,
+          sessionNo: formData.sessionNo,
+          totalBilled: totalBilled,
+          paid: amountPaid,
+          outstanding: outstanding,
+          status: autoStatus,
+          assignedHealer: healerFullName,
+          caseId: `C-${Math.floor(1000 + Math.random() * 9000)}`,
+          history: newPaymentHistory
+        };
+        localStorage.setItem('phms_patient_payments', JSON.stringify([newPayment, ...payments]));
+      }
+
+      // 2. Write an Income Entry to general finance ledger
+      if (amountPaid > 0) {
+        const savedTx = localStorage.getItem('phms_finance_transactions') || '[]';
+        const transactionsList = JSON.parse(savedTx);
+
+        const newTx = {
+          id: Date.now(),
+          timestamp: `${new Date().toISOString().split('T')[0]}, ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+          category: 'Session Fee',
+          type: 'income',
+          amount: amountPaid,
+          mode: formData.paymentMethod || 'UPI',
+          recordedBy: user?.name || 'Admin - Anjali Rao',
+          description: `${formData.patientName} - Session fee for ${formData.sessionNo} (${formData.type})`,
+          dateStr: new Date().toISOString().split('T')[0]
+        };
+        localStorage.setItem('phms_finance_transactions', JSON.stringify([newTx, ...transactionsList]));
+      }
+    }
+
     localStorage.setItem('phms_sessions', JSON.stringify(updatedSessions));
 
     // Audit Log recording

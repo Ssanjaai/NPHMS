@@ -592,7 +592,7 @@ const SessionsPage: React.FC = () => {
                               <IonIcon icon={eyeOutline} />
                             </button>
 
-                            {/* Edit Session Scoped for non-patients */}
+                             {/* Edit Session Scoped for non-patients */}
                              {rawRole !== 'PATIENT' && (
                               <button
                                 className="pa-doc-action-btn"
@@ -600,6 +600,20 @@ const SessionsPage: React.FC = () => {
                                 onClick={() => history.push(ROUTES.BRANCH_ADMIN.EDIT_SESSION.replace(':id', session.id.toString()))}
                               >
                                 <IonIcon icon={pencilOutline} style={{ color: '#6366f1' }} />
+                              </button>
+                            )}
+
+                            {/* Record Payment Action Scoped for non-patients */}
+                            {rawRole !== 'PATIENT' && session.paymentStatus === 'Pending' && (
+                              <button
+                                className="pa-doc-action-btn"
+                                title="Record Payment"
+                                style={{ background: '#ecfdf5', borderColor: '#a7f3d0' }}
+                                onClick={() => {
+                                  history.push(`/branch-admin/finance?tab=payments&recordPayment=true&patientName=${encodeURIComponent(session.patient)}&sessionNo=${encodeURIComponent(session.sessionNo)}`);
+                                }}
+                              >
+                                <IonIcon icon={cashOutline} style={{ color: '#0d5c46' }} />
                               </button>
                             )}
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   IonPage,
   IonContent,
@@ -9,6 +9,7 @@ import {
   IonIcon,
   IonMenuButton,
   IonModal,
+  useIonToast,
 } from '@ionic/react';
 import {
   downloadOutline,
@@ -50,11 +51,33 @@ interface Transaction {
   dateStr: string; // YYYY-MM-DD
 }
 
+interface PatientPayment {
+  id: string;
+  patientName: string;
+  sessionNo: string;
+  totalBilled: number;
+  paid: number;
+  outstanding: number;
+  status: 'Paid' | 'Partial' | 'Pending';
+  assignedHealer: string;
+  caseId: string;
+  history: Array<{
+    date: string;
+    amount: number;
+    mode: 'Cash' | 'UPI' | 'Bank Transfer';
+    status: 'Paid';
+  }>;
+}
+
 const FinancePage: React.FC = () => {
   const { user } = useAuthStore();
+  const [present] = useIonToast();
   
-  // Dynamic Branch State (Super Admin readiness)
+  // Dynamic Branch State
   const [selectedBranch, setSelectedBranch] = useState('Mumbai Branch');
+
+  // Tab control state
+  const [activeTab, setActiveTab] = useState<'transactions' | 'payments' | 'reports'>('transactions');
 
   // Modals & States
   const [showAddModal, setShowAddModal] = useState(false);
@@ -62,7 +85,7 @@ const FinancePage: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
 
-  // Search & Filter States
+  // Search & Filter States for Transactions
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('All');
   const [filterMode, setFilterMode] = useState('All');
@@ -75,53 +98,189 @@ const FinancePage: React.FC = () => {
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [receiptTx, setReceiptTx] = useState<Transaction | null>(null);
 
-  // Core Mock Transactions Ledger
-  const [transactions, setTransactions] = useState<Transaction[]>([
-    {
-      id: 1,
-      timestamp: '2026-05-28, 09:15 AM',
-      category: 'Session Fee',
-      type: 'income',
-      amount: 1200,
-      mode: 'UPI (GPay)',
-      recordedBy: 'Admin - Anjali Rao',
-      description: 'Elena Gilbert Pranic Psychotherapy',
-      dateStr: '2026-05-28',
-    },
-    {
-      id: 2,
-      timestamp: '2026-05-27, 10:30 AM',
-      category: 'Utilities',
-      type: 'expense',
-      amount: 4500,
-      mode: 'Bank Trans',
-      recordedBy: 'Admin - Anjali Rao',
-      description: 'Monthly electricity bill',
-      dateStr: '2026-05-27',
-    },
-    {
-      id: 3,
-      timestamp: '2026-05-26, 11:00 AM',
-      category: 'Camp Fee',
-      type: 'income',
-      amount: 8500,
-      mode: 'Cash',
-      recordedBy: 'Admin - Anjali Rao',
-      description: 'Summer healing camp registration',
-      dateStr: '2026-05-26',
-    },
-    {
-      id: 4,
-      timestamp: '2026-05-25, 01:45 PM',
-      category: 'Session Fee',
-      type: 'income',
-      amount: 1200,
-      mode: 'UPI (PhonePe)',
-      recordedBy: 'Admin - Anjali Rao',
-      description: 'Stefan Salvatore Advanced Healing',
-      dateStr: '2026-05-25',
-    },
-  ]);
+  // Patient Payments States
+  const [patientPayments, setPatientPayments] = useState<PatientPayment[]>(() => {
+    const saved = localStorage.getItem('phms_patient_payments');
+    if (saved) return JSON.parse(saved);
+    const initial: PatientPayment[] = [
+      {
+        id: 'P-1092',
+        patientName: 'Ravi Kumar',
+        sessionNo: 'S-0012',
+        totalBilled: 5000,
+        paid: 3000,
+        outstanding: 2000,
+        status: 'Partial',
+        assignedHealer: 'Dr. Aris Varma',
+        caseId: 'C-4091',
+        history: [
+          { date: '2026-05-12', amount: 3000, mode: 'UPI', status: 'Paid' }
+        ]
+      },
+      {
+        id: 'P-1093',
+        patientName: 'Meena Devi',
+        sessionNo: 'S-0013',
+        totalBilled: 4000,
+        paid: 4000,
+        outstanding: 0,
+        status: 'Paid',
+        assignedHealer: 'Dr. Maya Rose',
+        caseId: 'C-4092',
+        history: [
+          { date: '2026-05-18', amount: 4000, mode: 'Cash', status: 'Paid' }
+        ]
+      },
+      {
+        id: 'P-1094',
+        patientName: 'Arjun',
+        sessionNo: 'S-0014',
+        totalBilled: 2500,
+        paid: 0,
+        outstanding: 2500,
+        status: 'Pending',
+        assignedHealer: 'Dr. Julian Mars',
+        caseId: 'C-4093',
+        history: []
+      }
+    ];
+    localStorage.setItem('phms_patient_payments', JSON.stringify(initial));
+    return initial;
+  });
+
+  // Sync payments to localStorage
+  useEffect(() => {
+    localStorage.setItem('phms_patient_payments', JSON.stringify(patientPayments));
+  }, [patientPayments]);
+
+  // Record Payment Modal & Form State
+  const [showRecordPaymentModal, setShowRecordPaymentModal] = useState(false);
+  const [paymentForm, setPaymentForm] = useState({
+    patientId: '',
+    sessionNo: '',
+    amountBilled: 0,
+    amountPaid: '',
+    paymentMode: 'UPI' as 'UPI' | 'Cash' | 'Bank Transfer',
+    remarks: ''
+  });
+
+  // Patient Billing Summary Drawer States
+  const [showDrawer, setShowDrawer] = useState(false);
+  const [drawerPayment, setDrawerPayment] = useState<PatientPayment | null>(null);
+
+  // Search & Filters for Patient Payments
+  const [paySearchQuery, setPaySearchQuery] = useState('');
+  const [payFilterStatus, setPayFilterStatus] = useState('All');
+  const [payFilterHealer, setPayFilterHealer] = useState('');
+  const [payFilterSession, setPayFilterSession] = useState('');
+  const [payStartDate, setPayStartDate] = useState('');
+  const [payEndDate, setPayEndDate] = useState('');
+
+  // Active Patients & Sessions loaded from localStorage
+  const [activePatients] = useState<any[]>(() => {
+    const saved = localStorage.getItem('phms_patients');
+    return saved ? JSON.parse(saved) : [
+      { id: 'P-101', name: 'Ravi Kumar', assignedHealerId: 'H-2091', status: 'Active', caseType: 'Crystal Healing' },
+      { id: 'P-102', name: 'Meena Devi', assignedHealerId: 'H-1822', status: 'Active', caseType: 'Basic Pranic Healing' },
+      { id: 'P-103', name: 'Arjun', assignedHealerId: 'H-2104', status: 'Active', caseType: 'Pranic Psychotherapy' },
+    ];
+  });
+
+  const [activeSessions] = useState<any[]>(() => {
+    const saved = localStorage.getItem('phms_sessions');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  // Pre-fill modal from URL parameters (Session Integration)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const openRecordPay = params.get('recordPayment');
+    const patientName = params.get('patientName');
+    const sessionNo = params.get('sessionNo');
+    
+    if (openRecordPay === 'true') {
+      setActiveTab('payments');
+      setShowRecordPaymentModal(true);
+      
+      let sessionType = 'Basic Pranic Healing';
+      const patientSessions = activeSessions.filter(s => s.patient.toLowerCase().trim() === (patientName || '').toLowerCase().trim());
+      if (patientSessions.length > 0) {
+        sessionType = patientSessions[0].type;
+      }
+      const billed = sessionType === 'Pranic Psychotherapy' ? 2500 : sessionType === 'Crystal Healing' ? 3000 : sessionType === 'Advanced Pranic Healing' ? 2000 : 1200;
+      
+      setPaymentForm({
+        patientId: patientName || '',
+        sessionNo: sessionNo || '',
+        amountBilled: billed,
+        amountPaid: '',
+        paymentMode: 'UPI',
+        remarks: `Recorded via Session Manager (${sessionNo || ''})`
+      });
+
+      // Clear search params to prevent reopening on reload
+      window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+    }
+  }, [activeSessions]);
+
+  // General transactions ledger sync with localStorage
+  const [transactions, setTransactions] = useState<Transaction[]>(() => {
+    const saved = localStorage.getItem('phms_finance_transactions');
+    if (saved) return JSON.parse(saved);
+    const initial = [
+      {
+        id: 1,
+        timestamp: '2026-05-28, 09:15 AM',
+        category: 'Session Fee',
+        type: 'income',
+        amount: 1200,
+        mode: 'UPI (GPay)',
+        recordedBy: 'Admin - Anjali Rao',
+        description: 'Elena Gilbert Pranic Psychotherapy',
+        dateStr: '2026-05-28',
+      },
+      {
+        id: 2,
+        timestamp: '2026-05-27, 10:30 AM',
+        category: 'Utilities',
+        type: 'expense',
+        amount: 4500,
+        mode: 'Bank Trans',
+        recordedBy: 'Admin - Anjali Rao',
+        description: 'Monthly electricity bill',
+        dateStr: '2026-05-27',
+      },
+      {
+        id: 3,
+        timestamp: '2026-05-26, 11:00 AM',
+        category: 'Camp Fee',
+        type: 'income',
+        amount: 8500,
+        mode: 'Cash',
+        recordedBy: 'Admin - Anjali Rao',
+        description: 'Summer healing camp registration',
+        dateStr: '2026-05-26',
+      },
+      {
+        id: 4,
+        timestamp: '2026-05-25, 01:45 PM',
+        category: 'Session Fee',
+        type: 'income',
+        amount: 1200,
+        mode: 'UPI (PhonePe)',
+        recordedBy: 'Admin - Anjali Rao',
+        description: 'Stefan Salvatore Advanced Healing',
+        dateStr: '2026-05-25',
+      },
+    ];
+    localStorage.setItem('phms_finance_transactions', JSON.stringify(initial));
+    return initial;
+  });
+
+  // Sync general ledger to localStorage
+  useEffect(() => {
+    localStorage.setItem('phms_finance_transactions', JSON.stringify(transactions));
+  }, [transactions]);
 
   // Form input states
   const [newTx, setNewTx] = useState({
@@ -137,6 +296,16 @@ const FinancePage: React.FC = () => {
     mode: 'UPI (GPay)',
     description: '',
   });
+
+  // Toast helper
+  const triggerToast = (msg: string, color: 'success' | 'danger' = 'success') => {
+    present({
+      message: msg,
+      duration: 3000,
+      position: 'top',
+      color: color,
+    });
+  };
 
   // Super Admin readiness dynamic baseline aggregation
   const getBranchBaselines = (branch: string) => {
@@ -155,7 +324,7 @@ const FinancePage: React.FC = () => {
 
   const baselines = getBranchBaselines(selectedBranch);
 
-  // Compute live real-time totals dynamically (Dashboard Sync)
+  // Compute live real-time totals dynamically
   const incomeFromTransactions = transactions
     .filter((t) => t.type === 'income')
     .reduce((sum, t) => sum + t.amount, 0);
@@ -201,11 +370,10 @@ const FinancePage: React.FC = () => {
     setShowAddModal(true);
   };
 
-  // Transaction Validation & Submit (Rule 7 Validation)
+  // Transaction Validation & Submit
   const handleRecordTx = () => {
     const parsedAmount = parseFloat(newTx.amount);
     
-    // Validation Rules
     if (!newTx.amount.trim() || isNaN(parsedAmount) || parsedAmount <= 0) {
       alert('Validation Error: Transaction amount must be a positive number greater than zero.');
       return;
@@ -237,7 +405,7 @@ const FinancePage: React.FC = () => {
 
     setTransactions([addedTx, ...transactions]);
     setShowAddModal(false);
-    alert(`Success: ${addModalType.toUpperCase()} transaction recorded under category "${newTx.category}". All analytics updated!`);
+    triggerToast(`${addModalType.toUpperCase()} transaction recorded under category "${newTx.category}". All analytics updated!`);
   };
 
   // Soft Edit Dialog Trigger
@@ -257,7 +425,6 @@ const FinancePage: React.FC = () => {
     if (!selectedTx) return;
     const parsedAmount = parseFloat(editTxState.amount);
 
-    // Validation Rules
     if (!editTxState.amount.trim() || isNaN(parsedAmount) || parsedAmount <= 0) {
       alert('Validation Error: Transaction amount must be a positive number greater than zero.');
       return;
@@ -288,14 +455,14 @@ const FinancePage: React.FC = () => {
 
     setShowEditModal(false);
     setSelectedTx(null);
-    alert('Success: Transaction record updated successfully.');
+    triggerToast('Transaction record updated successfully.');
   };
 
   // Delete/Archive Action
   const handleDeleteTx = (id: number) => {
     if (window.confirm('Are you sure you want to permanently delete this financial ledger record? This will alter active cash balances.')) {
       setTransactions(transactions.filter((t) => t.id !== id));
-      alert('Success: Transaction record removed from registry.');
+      triggerToast('Transaction record removed from registry.');
     }
   };
 
@@ -310,29 +477,23 @@ const FinancePage: React.FC = () => {
     alert(`Generating Consolidated financial report in ${format} format for selected filters...\nLedger, Revenue graphs, and Expense spreadsheets exported successfully.`);
   };
 
-  // Comprehensive Search & Advanced Filtering calculations (Rule 9 & Rule 3)
+  // Comprehensive Search & Advanced Filtering calculations
   const filteredTransactions = transactions.filter((tx) => {
-    // 1. Search filter
     const matchesSearch =
       tx.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (tx.description || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       tx.recordedBy.toLowerCase().includes(searchQuery.toLowerCase());
 
-    // 2. Transaction type filter
     const matchesType = filterType === 'All' || tx.type === filterType.toLowerCase();
-
-    // 3. Payment mode filter
     const matchesMode = filterMode === 'All' || tx.mode.toLowerCase().includes(filterMode.toLowerCase());
 
-    // 4. Monthly filter
     let matchesMonth = true;
     if (filterMonth !== 'All') {
-      const parts = tx.dateStr.split('-'); // [YYYY, MM, DD]
+      const parts = tx.dateStr.split('-');
       const yearMonth = `${parts[0]}-${parts[1]}`;
       matchesMonth = yearMonth === filterMonth;
     }
 
-    // 5. Quarterly filter
     let matchesQuarter = true;
     if (filterQuarter !== 'All') {
       const monthInt = parseInt(tx.dateStr.split('-')[1], 10);
@@ -347,7 +508,6 @@ const FinancePage: React.FC = () => {
       }
     }
 
-    // 6. Custom Date Range Pickers (From-To)
     let matchesCustomRange = true;
     if (startDate) {
       matchesCustomRange = matchesCustomRange && tx.dateStr >= startDate;
@@ -358,6 +518,130 @@ const FinancePage: React.FC = () => {
 
     return matchesSearch && matchesType && matchesMode && matchesMonth && matchesQuarter && matchesCustomRange;
   });
+
+  // Comprehensive Patient Payments search & filter calculations
+  const filteredPatientPayments = patientPayments.filter(p => {
+    const matchesSearch = p.patientName.toLowerCase().includes(paySearchQuery.toLowerCase());
+    const matchesStatus = payFilterStatus === 'All' || p.status === payFilterStatus;
+    const matchesHealer = !payFilterHealer.trim() || p.assignedHealer.toLowerCase().includes(payFilterHealer.toLowerCase());
+    const matchesSession = !payFilterSession.trim() || p.sessionNo.toLowerCase().includes(payFilterSession.toLowerCase());
+    
+    let matchesDate = true;
+    if (payStartDate || payEndDate) {
+      matchesDate = p.history.some(h => {
+        let isAfter = true;
+        let isBefore = true;
+        if (payStartDate) isAfter = h.date >= payStartDate;
+        if (payEndDate) isBefore = h.date <= payEndDate;
+        return isAfter && isBefore;
+      });
+      if (p.history.length === 0) matchesDate = false;
+    }
+    
+    return matchesSearch && matchesStatus && matchesHealer && matchesSession && matchesDate;
+  });
+
+  // Handle patient autocomplete / billing defaults inside modal
+  const handlePaymentFormPatientChange = (patientName: string) => {
+    const patientSessions = activeSessions.filter(s => s.patient.toLowerCase().trim() === patientName.toLowerCase().trim());
+    const nextSessionNo = patientSessions.length > 0 ? patientSessions[0].sessionNo : `S-${String(10 + Math.floor(Math.random() * 900)).padStart(4, '0')}`;
+    const sessionType = patientSessions.length > 0 ? patientSessions[0].type : 'Basic Pranic Healing';
+    const billed = sessionType === 'Pranic Psychotherapy' ? 2500 : sessionType === 'Crystal Healing' ? 3000 : sessionType === 'Advanced Pranic Healing' ? 2000 : 1200;
+
+    setPaymentForm(prev => ({
+      ...prev,
+      patientId: patientName,
+      sessionNo: nextSessionNo,
+      amountBilled: billed,
+      amountPaid: ''
+    }));
+  };
+
+  // Submit recorded patient payment
+  const handleRecordPaymentSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const paidVal = parseFloat(paymentForm.amountPaid);
+    if (isNaN(paidVal) || paidVal < 0) {
+      alert('Error: Please enter a valid non-negative payment amount.');
+      return;
+    }
+    if (paidVal > paymentForm.amountBilled) {
+      alert(`Error: Amount paid (₹${paidVal}) cannot exceed amount billed (₹${paymentForm.amountBilled}).`);
+      return;
+    }
+
+    const autoStatus = paidVal === paymentForm.amountBilled ? 'Paid' : paidVal === 0 ? 'Pending' : 'Partial';
+    const outstanding = paymentForm.amountBilled - paidVal;
+
+    const historyItem = paidVal > 0 ? [{
+      date: new Date().toISOString().split('T')[0],
+      amount: paidVal,
+      mode: paymentForm.paymentMode,
+      status: 'Paid' as const
+    }] : [];
+
+    const existingIndex = patientPayments.findIndex(p => p.sessionNo === paymentForm.sessionNo);
+    let updatedPayments = [...patientPayments];
+    
+    if (existingIndex > -1) {
+      const existing = patientPayments[existingIndex];
+      const newPaid = existing.paid + paidVal;
+      const newOutstanding = Math.max(0, existing.totalBilled - newPaid);
+      const newStatus = newPaid >= existing.totalBilled ? 'Paid' : newPaid === 0 ? 'Pending' : 'Partial';
+
+      updatedPayments[existingIndex] = {
+        ...existing,
+        paid: newPaid,
+        outstanding: newOutstanding,
+        status: newStatus,
+        history: [...existing.history, ...historyItem]
+      };
+    } else {
+      const newPayment: PatientPayment = {
+        id: `P-${Math.floor(1000 + Math.random() * 9000)}`,
+        patientName: paymentForm.patientId,
+        sessionNo: paymentForm.sessionNo,
+        totalBilled: paymentForm.amountBilled,
+        paid: paidVal,
+        outstanding: outstanding,
+        status: autoStatus,
+        assignedHealer: 'Dr. Aris Varma',
+        caseId: `C-${Math.floor(1000 + Math.random() * 9000)}`,
+        history: historyItem
+      };
+      updatedPayments = [newPayment, ...updatedPayments];
+    }
+
+    setPatientPayments(updatedPayments);
+
+    if (paidVal > 0) {
+      const newTx: Transaction = {
+        id: Date.now(),
+        timestamp: `${new Date().toISOString().split('T')[0]}, ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+        category: 'Session Fee',
+        type: 'income',
+        amount: paidVal,
+        mode: paymentForm.paymentMode,
+        recordedBy: user?.name || 'Admin - Anjali Rao',
+        description: `${paymentForm.patientId} - Dynamic payment recorded for ${paymentForm.sessionNo} (${paymentForm.remarks || 'No remarks'})`,
+        dateStr: new Date().toISOString().split('T')[0]
+      };
+      setTransactions([newTx, ...transactions]);
+    }
+
+    setShowRecordPaymentModal(false);
+    triggerToast(`Payment of ₹${paidVal} successfully recorded for ${paymentForm.patientId}.`);
+  };
+
+  // Patient Payments Billed & Paid aggregates calculation
+  const dynamicBilled = patientPayments.reduce((sum, p) => sum + p.totalBilled, 0);
+  const dynamicPaid = patientPayments.reduce((sum, p) => sum + p.paid, 0);
+  const totalPatientBilled = 438500 + dynamicBilled;
+  const totalPatientPaid = 378000 + dynamicPaid;
+  const totalPatientOutstanding = totalPatientBilled - totalPatientPaid;
+
+  const dynamicPendingCount = patientPayments.filter(p => p.status !== 'Paid' && p.patientName !== 'Ravi Kumar' && p.patientName !== 'Arjun').length;
+  const totalPendingCases = 24 + dynamicPendingCount;
 
   return (
     <IonPage className="sa-page">
@@ -401,389 +685,687 @@ const FinancePage: React.FC = () => {
                 >
                   <option value="Mumbai Branch">Mumbai Branch</option>
                   <option value="Pune Branch">Pune Branch</option>
-                  <option value="Delhi Branch">Delhi Branch</option>
                   <option value="All Branches (Consolidated)">All Branches (Consolidated)</option>
                 </select>
               </div>
             </div>
           </div>
 
-          {/* Stats Analytics Cards Panel with dynamic balances */}
-          <div className="bf-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginTop: '20px' }}>
-            
-            {/* Revenue card */}
-            <div className="bf-stat-card bf-stat-card--revenue">
-              <div className="bf-stat-label">TOTAL REVENUE</div>
-              <div className="bf-stat-value">₹{totalRevenue.toLocaleString()}</div>
-              <div className="bf-stat-trend bf-stat-trend--up">
-                <IonIcon icon={trendingUpOutline} /> +12.5% vs last month
-              </div>
-            </div>
-
-            {/* Expenses card */}
-            <div className="bf-stat-card bf-stat-card--expenses">
-              <div className="bf-stat-label">TOTAL EXPENSES</div>
-              <div className="bf-stat-value">₹{totalExpenses.toLocaleString()}</div>
-              <div className="bf-stat-trend bf-stat-trend--down">
-                <IonIcon icon={trendingDownOutline} /> -2.4% vs last week
-              </div>
-            </div>
-
-            {/* NEW Net Balance card (Rule 1) */}
-            <div className="bf-stat-card" style={{ background: 'linear-gradient(135deg, #0f766e 0%, #115e59 100%)', color: 'white' }}>
-              <div className="bf-stat-label" style={{ color: 'rgba(255,255,255,0.8)' }}>NET TREASURY BALANCE</div>
-              <div className="bf-stat-value" style={{ color: 'white' }}>₹{netBalance.toLocaleString()}</div>
-              <div style={{ fontSize: '11px', fontWeight: 600, color: '#e6fffa', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <IonIcon icon={checkmarkCircleOutline} /> Dynamic Balance Sheet Clear
-              </div>
-            </div>
-
-            {/* Target card */}
-            <div className="bf-stat-card bf-stat-card--target">
-              <div className="bf-stat-label">MONTHLY TARGET</div>
-              <div className="bf-stat-value">₹2,80,000</div>
-              <div className="bf-stat-progress-bar">
-                <div 
-                  className="bf-stat-progress-fill" 
-                  style={{ '--progress-pct': `${Math.min(100, Math.round((totalRevenue / 280000) * 100))}%` } as React.CSSProperties}
-                />
-              </div>
-              <div className="bf-stat-subtext">
-                {Math.round((totalRevenue / 280000) * 100)}% of goal reached
-              </div>
-            </div>
-
-            {/* Insights card */}
-            <div className="bf-stat-card" style={{ background: '#f8fafc', border: '1px solid #cbd5e1' }}>
-              <div className="bf-stat-label" style={{ color: '#475569' }}>PROFIT RATIO INSIGHTS</div>
-              <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-                <div>
-                  <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 700 }}>MARGIN</div>
-                  <strong style={{ fontSize: '16px', color: '#0f766e' }}>{profitMarginPct}%</strong>
-                </div>
-                <div>
-                  <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 700 }}>EXPENSE RATIO</div>
-                  <strong style={{ fontSize: '16px', color: '#b91c1c' }}>{expenseRatioPct}%</strong>
-                </div>
-              </div>
-              <div className="bf-stat-subtext" style={{ color: '#64748b', fontSize: '10px', marginTop: '6px' }}>
-                Based on active operational margins
-              </div>
-            </div>
-
+          {/* Premium Tab Bar for BRD compliant navigation */}
+          <div className="bf-tabs" style={{ display: 'flex', borderBottom: '2px solid #cbd5e1', gap: '24px', margin: '20px 0' }}>
+            <button 
+              type="button"
+              onClick={() => setActiveTab('transactions')}
+              style={{
+                background: 'none', border: 'none', padding: '12px 4px', fontSize: '14px', fontWeight: activeTab === 'transactions' ? 800 : 500,
+                color: activeTab === 'transactions' ? '#0D5C46' : '#64748b',
+                borderBottom: activeTab === 'transactions' ? '3px solid #0D5C46' : 'none',
+                cursor: 'pointer', outline: 'none', transition: 'all 0.15s ease'
+              }}
+            >
+              Transactions
+            </button>
+            <button 
+              type="button"
+              onClick={() => setActiveTab('payments')}
+              style={{
+                background: 'none', border: 'none', padding: '12px 4px', fontSize: '14px', fontWeight: activeTab === 'payments' ? 800 : 500,
+                color: activeTab === 'payments' ? '#0D5C46' : '#64748b',
+                borderBottom: activeTab === 'payments' ? '3px solid #0D5C46' : 'none',
+                cursor: 'pointer', outline: 'none', transition: 'all 0.15s ease'
+              }}
+            >
+              Patient Payments
+            </button>
+            <button 
+              type="button"
+              onClick={() => setActiveTab('reports')}
+              style={{
+                background: 'none', border: 'none', padding: '12px 4px', fontSize: '14px', fontWeight: activeTab === 'reports' ? 800 : 500,
+                color: activeTab === 'reports' ? '#0D5C46' : '#64748b',
+                borderBottom: activeTab === 'reports' ? '3px solid #0D5C46' : 'none',
+                cursor: 'pointer', outline: 'none', transition: 'all 0.15s ease'
+              }}
+            >
+              Reports
+            </button>
           </div>
 
-          {/* Advanced Filtering Controls Block */}
-          <div className="sa-section" style={{ marginTop: '24px', padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1', background: 'white' }}>
-            <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 800, color: '#334155', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <IonIcon icon={filterOutline} style={{ color: 'var(--ba-color-primary)' }} /> Advanced Query Search Filters
-            </h3>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
-              {/* Category/Remarks Search */}
-              <div className="sa-search" style={{ margin: 0, width: '100%' }}>
-                <IonIcon icon={searchOutline} />
-                <input
-                  placeholder="Search by category, remarks, or creator..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+          {activeTab === 'transactions' && (
+            <>
+              {/* Stats Analytics Cards Panel with dynamic balances */}
+              <div className="bf-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginTop: '20px' }}>
+                
+                {/* Revenue card */}
+                <div className="bf-stat-card bf-stat-card--revenue">
+                  <div className="bf-stat-label">TOTAL REVENUE</div>
+                  <div className="bf-stat-value">₹{totalRevenue.toLocaleString()}</div>
+                  <div className="bf-stat-trend bf-stat-trend--up">
+                    <IonIcon icon={trendingUpOutline} /> +12.5% vs last month
+                  </div>
+                </div>
+
+                {/* Expenses card */}
+                <div className="bf-stat-card bf-stat-card--expenses">
+                  <div className="bf-stat-label">TOTAL EXPENSES</div>
+                  <div className="bf-stat-value">₹{totalExpenses.toLocaleString()}</div>
+                  <div className="bf-stat-trend bf-stat-trend--down">
+                    <IonIcon icon={trendingDownOutline} /> -2.4% vs last week
+                  </div>
+                </div>
+
+                {/* NEW Net Balance card (Rule 1) */}
+                <div className="bf-stat-card" style={{ background: 'linear-gradient(135deg, #0f766e 0%, #115e59 100%)', color: 'white' }}>
+                  <div className="bf-stat-label" style={{ color: 'rgba(255,255,255,0.8)' }}>NET TREASURY BALANCE</div>
+                  <div className="bf-stat-value" style={{ color: 'white' }}>₹{netBalance.toLocaleString()}</div>
+                  <div style={{ fontSize: '11px', fontWeight: 600, color: '#e6fffa', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <IonIcon icon={checkmarkCircleOutline} /> Dynamic Balance Sheet Clear
+                  </div>
+                </div>
+
+                {/* Target card */}
+                <div className="bf-stat-card bf-stat-card--target">
+                  <div className="bf-stat-label">MONTHLY TARGET</div>
+                  <div className="bf-stat-value">₹2,80,000</div>
+                  <div className="bf-stat-progress-bar">
+                    <div 
+                      className="bf-stat-progress-fill" 
+                      style={{ '--progress-pct': `${Math.min(100, Math.round((totalRevenue / 280000) * 100))}%` } as React.CSSProperties}
+                    />
+                  </div>
+                  <div className="bf-stat-subtext">
+                    {Math.round((totalRevenue / 280000) * 100)}% of goal reached
+                  </div>
+                </div>
+
+                {/* Insights card */}
+                <div className="bf-stat-card" style={{ background: '#f8fafc', border: '1px solid #cbd5e1' }}>
+                  <div className="bf-stat-label" style={{ color: '#475569' }}>PROFIT RATIO INSIGHTS</div>
+                  <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                    <div>
+                      <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 700 }}>MARGIN</div>
+                      <strong style={{ fontSize: '16px', color: '#0f766e' }}>{profitMarginPct}%</strong>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 700 }}>EXPENSE RATIO</div>
+                      <strong style={{ fontSize: '16px', color: '#b91c1c' }}>{expenseRatioPct}%</strong>
+                    </div>
+                  </div>
+                  <div className="bf-stat-subtext" style={{ color: '#64748b', fontSize: '10px', marginTop: '6px' }}>
+                    Based on active operational margins
+                  </div>
+                </div>
+
               </div>
 
-              {/* Type Select */}
-              <select
-                className="sa-input"
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value)}
-              >
-                <option value="All">All Types</option>
-                <option value="Income">Income (Cash In)</option>
-                <option value="Expense">Expense (Cash Out)</option>
-              </select>
+              {/* Advanced Filtering Controls Block */}
+              <div className="sa-section" style={{ marginTop: '24px', padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1', background: 'white' }}>
+                <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 800, color: '#334155', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <IonIcon icon={filterOutline} style={{ color: 'var(--ba-color-primary)' }} /> Advanced Query Search Filters
+                </h3>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+                  {/* Category/Remarks Search */}
+                  <div className="sa-search" style={{ margin: 0, width: '100%' }}>
+                    <IonIcon icon={searchOutline} />
+                    <input
+                      placeholder="Search by category, remarks, or creator..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
 
-              {/* Mode Select */}
-              <select
-                className="sa-input"
-                value={filterMode}
-                onChange={(e) => setFilterMode(e.target.value)}
-              >
-                <option value="All">All Payment Modes</option>
-                <option value="Cash">Cash</option>
-                <option value="UPI">UPI / Online</option>
-                <option value="Bank">Bank Transfers</option>
-              </select>
+                  {/* Type Select */}
+                  <select
+                    className="sa-input"
+                    value={filterType}
+                    onChange={(e) => setFilterType(e.target.value)}
+                  >
+                    <option value="All">All Types</option>
+                    <option value="Income">Income (Cash In)</option>
+                    <option value="Expense">Expense (Cash Out)</option>
+                  </select>
 
-              {/* Monthly Filter */}
-              <select
-                className="sa-input"
-                value={filterMonth}
-                onChange={(e) => setFilterMonth(e.target.value)}
-              >
-                <option value="All">All Months (2026)</option>
-                <option value="2026-05">May 2026</option>
-                <option value="2026-04">April 2026</option>
-                <option value="2026-03">March 2026</option>
-              </select>
+                  {/* Mode Select */}
+                  <select
+                    className="sa-input"
+                    value={filterMode}
+                    onChange={(e) => setFilterMode(e.target.value)}
+                  >
+                    <option value="All">All Payment Modes</option>
+                    <option value="Cash">Cash</option>
+                    <option value="UPI">UPI / Online</option>
+                    <option value="Bank">Bank Transfers</option>
+                  </select>
 
-              {/* Quarterly Filter */}
-              <select
-                className="sa-input"
-                value={filterQuarter}
-                onChange={(e) => setFilterQuarter(e.target.value)}
-              >
-                <option value="All">All Quarters (YTD)</option>
-                <option value="Q1">Q1 (Jan - Mar)</option>
-                <option value="Q2">Q2 (Apr - Jun)</option>
-                <option value="Q3">Q3 (Jul - Sep)</option>
-                <option value="Q4">Q4 (Oct - Dec)</option>
-              </select>
-            </div>
+                  {/* Monthly Filter */}
+                  <select
+                    className="sa-input"
+                    value={filterMonth}
+                    onChange={(e) => setFilterMonth(e.target.value)}
+                  >
+                    <option value="All">All Months (2026)</option>
+                    <option value="2026-05">May 2026</option>
+                    <option value="2026-04">April 2026</option>
+                    <option value="2026-03">March 2026</option>
+                  </select>
 
-            {/* Custom From-To Picker Block */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginTop: '12px', borderTop: '1px dashed #e2e8f0', paddingTop: '12px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569' }}>CUSTOM FROM:</span>
-              <input
-                type="date"
-                className="sa-input"
-                style={{ width: '150px', padding: '6px 10px', fontSize: '12px' }}
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-              />
-              <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569' }}>TO:</span>
-              <input
-                type="date"
-                className="sa-input"
-                style={{ width: '150px', padding: '6px 10px', fontSize: '12px' }}
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
-              <button 
-                className="sa-btn sa-btn--outline"
-                style={{ padding: '6px 12px', fontSize: '12px' }}
-                onClick={() => {
-                  setSearchQuery('');
-                  setFilterType('All');
-                  setFilterMode('All');
-                  setFilterMonth('All');
-                  setFilterQuarter('All');
-                  setStartDate('');
-                  setEndDate('');
-                }}
-              >
-                Reset Filters
-              </button>
+                  {/* Quarterly Filter */}
+                  <select
+                    className="sa-input"
+                    value={filterQuarter}
+                    onChange={(e) => setFilterQuarter(e.target.value)}
+                  >
+                    <option value="All">All Quarters (YTD)</option>
+                    <option value="Q1">Q1 (Jan - Mar)</option>
+                    <option value="Q2">Q2 (Apr - Jun)</option>
+                    <option value="Q3">Q3 (Jul - Sep)</option>
+                    <option value="Q4">Q4 (Oct - Dec)</option>
+                  </select>
+                </div>
 
-              <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
-                <button className="bf-btn-export" style={{ margin: 0 }} onClick={() => handleExportReport('PDF')}>
-                  <IonIcon icon={downloadOutline} style={{ marginRight: '4px' }} /> Export PDF
-                </button>
-                <button className="bf-btn-export" style={{ margin: 0, background: '#16a34a', borderColor: '#16a34a', color: 'white' }} onClick={() => handleExportReport('Excel')}>
-                  <IonIcon icon={downloadOutline} style={{ marginRight: '4px' }} /> Export Excel
-                </button>
+                {/* Custom From-To Picker Block */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginTop: '12px', borderTop: '1px dashed #e2e8f0', paddingTop: '12px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569' }}>CUSTOM FROM:</span>
+                  <input
+                    type="date"
+                    className="sa-input"
+                    style={{ width: '150px', padding: '6px 10px', fontSize: '12px' }}
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                  />
+                  <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569' }}>TO:</span>
+                  <input
+                    type="date"
+                    className="sa-input"
+                    style={{ width: '150px', padding: '6px 10px', fontSize: '12px' }}
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                  />
+                  <button 
+                    className="sa-btn sa-btn--outline"
+                    style={{ padding: '6px 12px', fontSize: '12px' }}
+                    onClick={() => {
+                      setSearchQuery('');
+                      setFilterType('All');
+                      setFilterMode('All');
+                      setFilterMonth('All');
+                      setFilterQuarter('All');
+                      setStartDate('');
+                      setEndDate('');
+                    }}
+                  >
+                    Reset Filters
+                  </button>
+
+                  <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
+                    <button className="bf-btn-export" style={{ margin: 0 }} onClick={() => handleExportReport('PDF')}>
+                      <IonIcon icon={downloadOutline} style={{ marginRight: '4px' }} /> Export PDF
+                    </button>
+                    <button className="bf-btn-export" style={{ margin: 0, background: '#16a34a', borderColor: '#16a34a', color: 'white' }} onClick={() => handleExportReport('Excel')}>
+                      <IonIcon icon={downloadOutline} style={{ marginRight: '4px' }} /> Export Excel
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
 
-          {/* Daily Transactions Card - Full Width */}
-          <div className="bf-card" style={{ marginTop: '24px' }}>
-            <div className="bf-card-header" style={{ flexWrap: 'wrap', gap: '12px' }}>
-              <div>
-                <h2 className="bf-card-title">Daily Transactions</h2>
-                <p className="bf-card-subtitle">Detailed ledger of active operational collections</p>
-              </div>
-              <div className="bf-card-header-actions" style={{ display: 'flex', gap: '8px' }}>
-                <button 
-                  className="bf-btn-add-income"
-                  onClick={() => handleOpenAddModal('income')}
-                >
-                  <IonIcon icon={addCircleOutline} /> Add Income
-                </button>
-                <button 
-                  className="bf-btn-add-expense"
-                  style={{ background: '#ef4444', borderColor: '#ef4444', color: 'white' }}
-                  onClick={() => handleOpenAddModal('expense')}
-                >
-                  <IonIcon icon={removeCircleOutline} /> Add Expense
-                </button>
-              </div>
-            </div>
+              {/* Daily Transactions Card - Full Width */}
+              <div className="bf-card" style={{ marginTop: '24px' }}>
+                <div className="bf-card-header" style={{ flexWrap: 'wrap', gap: '12px' }}>
+                  <div>
+                    <h2 className="bf-card-title">Daily Transactions</h2>
+                    <p className="bf-card-subtitle">Detailed ledger of active operational collections</p>
+                  </div>
+                  <div className="bf-card-header-actions" style={{ display: 'flex', gap: '8px' }}>
+                    <button 
+                      className="bf-btn-add-income"
+                      onClick={() => handleOpenAddModal('income')}
+                    >
+                      <IonIcon icon={addCircleOutline} /> Add Income
+                    </button>
+                    <button 
+                      className="bf-btn-add-expense"
+                      style={{ background: '#ef4444', borderColor: '#ef4444', color: 'white' }}
+                      onClick={() => handleOpenAddModal('expense')}
+                    >
+                      <IonIcon icon={removeCircleOutline} /> Add Expense
+                    </button>
+                  </div>
+                </div>
 
-            {/* Ledger Table */}
-            <div className="sa-table-responsive" style={{ border: 'none', overflowX: 'auto' }}>
-              <table className="bf-table" style={{ width: '100%', minWidth: '700px' }}>
-                <thead>
-                  <tr>
-                    <th>TIMESTAMP</th>
-                    <th>CATEGORY</th>
-                    <th>REMARKS</th>
-                    <th>TYPE</th>
-                    <th>AMOUNT</th>
-                    <th>MODE</th>
-                    <th>RECORDED BY</th>
-                    <th>ACTIONS</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredTransactions.length > 0 ? (
-                    filteredTransactions.map((tx) => (
-                      <tr key={tx.id}>
-                        <td style={{ fontWeight: 600 }}>{tx.timestamp}</td>
-                        <td style={{ fontWeight: 700, color: 'var(--ba-color-primary)' }}>{tx.category}</td>
-                        <td style={{ fontSize: '12px', color: '#64748b' }}>{tx.description || '—'}</td>
-                        <td>
-                          <span className={tx.type === 'income' ? 'bf-badge-income' : 'bf-badge-expense'} style={{ textTransform: 'uppercase', fontSize: '10px', padding: '2px 8px', borderRadius: '12px', fontWeight: 800 }}>
-                            {tx.type}
-                          </span>
-                        </td>
-                        <td>
-                          <strong className={tx.type === 'income' ? 'bf-amount-income' : 'bf-amount-expense'} style={{ fontSize: '14px' }}>
-                            ₹{tx.amount.toLocaleString()}
-                          </strong>
-                        </td>
-                        <td style={{ fontWeight: 500 }}>{tx.mode}</td>
-                        <td style={{ fontSize: '11px', color: '#475569', fontWeight: 600 }}>{tx.recordedBy}</td>
-                        <td>
-                          <div style={{ display: 'flex', gap: '6px' }}>
-                            <button
-                              className="pa-doc-action-btn"
-                              title="Print Receipt"
-                              onClick={() => handlePrintReceipt(tx)}
-                            >
-                              <IonIcon icon={printOutline} />
-                            </button>
-                            <button
-                              className="pa-doc-action-btn"
-                              title="Edit Entry"
-                              onClick={() => handleOpenEditModal(tx)}
-                            >
-                              <IonIcon icon={pencilOutline} style={{ color: '#4f46e5' }} />
-                            </button>
-                            <button
-                              className="pa-doc-action-btn pa-doc-action-btn--delete"
-                              title="Delete Record"
-                              onClick={() => handleDeleteTx(tx.id)}
-                            >
-                              <IonIcon icon={trashOutline} />
-                            </button>
-                          </div>
-                        </td>
+                {/* Ledger Table */}
+                <div className="sa-table-responsive" style={{ border: 'none', overflowX: 'auto' }}>
+                  <table className="bf-table" style={{ width: '100%', minWidth: '700px' }}>
+                    <thead>
+                      <tr>
+                        <th>TIMESTAMP</th>
+                        <th>CATEGORY</th>
+                        <th>REMARKS</th>
+                        <th>TYPE</th>
+                        <th>AMOUNT</th>
+                        <th>MODE</th>
+                        <th>RECORDED BY</th>
+                        <th>ACTIONS</th>
                       </tr>
-                    ))
-                  ) : (
-                    /* Beautiful Empty State Graphic (Rule 8) */
-                    <tr>
-                      <td colSpan={8} style={{ textAlign: 'center', padding: '50px 0' }}>
-                        <div className="sa-empty-state" style={{ border: 'none', background: 'transparent', margin: '0' }}>
-                          <div className="sa-empty-state__icon" style={{ background: '#f1f5f9', color: '#94a3b8' }}>
-                            <IonIcon icon={alertCircleOutline} />
-                          </div>
-                          <h3 className="sa-empty-state__title" style={{ color: '#475569', fontWeight: 700 }}>
-                            No transactions matching filters
-                          </h3>
-                          <p className="sa-empty-state__text" style={{ color: '#64748b', fontSize: '13px' }}>
-                            There are currently no recorded transactions found for the selected query, date range, or category filter.
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Lower Grid: Auditing Control, Heatmap, Ledger Operations */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginTop: '24px' }}>
-            
-            {/* Auditing Control Card */}
-            <div className="bf-card" style={{ margin: 0 }}>
-              <div className="bf-card-header" style={{ marginBottom: '16px' }}>
-                <div>
-                  <h2 className="bf-card-title">Auditing Control</h2>
-                  <p className="bf-card-subtitle">Real-time payment mode cash balances</p>
+                    </thead>
+                    <tbody>
+                      {filteredTransactions.length > 0 ? (
+                        filteredTransactions.map((tx) => (
+                          <tr key={tx.id}>
+                            <td style={{ fontWeight: 600 }}>{tx.timestamp}</td>
+                            <td style={{ fontWeight: 700, color: 'var(--ba-color-primary)' }}>{tx.category}</td>
+                            <td style={{ fontSize: '12px', color: '#64748b' }}>{tx.description || '—'}</td>
+                            <td>
+                              <span className={tx.type === 'income' ? 'bf-badge-income' : 'bf-badge-expense'} style={{ textTransform: 'uppercase', fontSize: '10px', padding: '2px 8px', borderRadius: '12px', fontWeight: 800 }}>
+                                {tx.type}
+                              </span>
+                            </td>
+                            <td>
+                              <strong className={tx.type === 'income' ? 'bf-amount-income' : 'bf-amount-expense'} style={{ fontSize: '14px' }}>
+                                ₹{tx.amount.toLocaleString()}
+                              </strong>
+                            </td>
+                            <td style={{ fontWeight: 500 }}>{tx.mode}</td>
+                            <td style={{ fontSize: '11px', color: '#475569', fontWeight: 600 }}>{tx.recordedBy}</td>
+                            <td>
+                              <div style={{ display: 'flex', gap: '6px' }}>
+                                <button
+                                  className="pa-doc-action-btn"
+                                  title="Print Receipt"
+                                  onClick={() => handlePrintReceipt(tx)}
+                                >
+                                  <IonIcon icon={printOutline} />
+                                </button>
+                                <button
+                                  className="pa-doc-action-btn"
+                                  title="Edit Entry"
+                                  onClick={() => handleOpenEditModal(tx)}
+                                >
+                                  <IonIcon icon={pencilOutline} style={{ color: '#4f46e5' }} />
+                                </button>
+                                <button
+                                  className="pa-doc-action-btn pa-doc-action-btn--delete"
+                                  title="Delete Record"
+                                  onClick={() => handleDeleteTx(tx.id)}
+                                >
+                                  <IonIcon icon={trashOutline} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        /* Beautiful Empty State Graphic (Rule 8) */
+                        <tr>
+                          <td colSpan={8} style={{ textAlign: 'center', padding: '50px 0' }}>
+                            <div className="sa-empty-state" style={{ border: 'none', background: 'transparent', margin: '0' }}>
+                              <div className="sa-empty-state__icon" style={{ background: '#f1f5f9', color: '#94a3b8' }}>
+                                <IonIcon icon={alertCircleOutline} />
+                              </div>
+                              <h3 className="sa-empty-state__title" style={{ color: '#475569', fontWeight: 700 }}>
+                                No transactions matching filters
+                              </h3>
+                              <p className="sa-empty-state__text" style={{ color: '#64748b', fontSize: '13px' }}>
+                                There are currently no recorded transactions found for the selected query, date range, or category filter.
+                              </p>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
 
-              <div className="bf-audit-item">
-                <div className="bf-audit-icon-wrapper" style={{ background: '#ecfdf5', color: '#10b981' }}>
-                  <IonIcon icon={cardOutline} />
+              {/* Lower Grid: Auditing Control, Heatmap, Ledger Operations */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginTop: '24px' }}>
+                
+                {/* Auditing Control Card */}
+                <div className="bf-card" style={{ margin: 0 }}>
+                  <div className="bf-card-header" style={{ marginBottom: '16px' }}>
+                    <div>
+                      <h2 className="bf-card-title">Auditing Control</h2>
+                      <p className="bf-card-subtitle">Real-time payment mode cash balances</p>
+                    </div>
+                  </div>
+
+                  <div className="bf-audit-item">
+                    <div className="bf-audit-icon-wrapper" style={{ background: '#ecfdf5', color: '#10b981' }}>
+                      <IonIcon icon={cardOutline} />
+                    </div>
+                    <div className="bf-audit-info">
+                      <span className="bf-audit-label">CASH BALANCE</span>
+                      <span className="bf-audit-val">₹{cashInHand.toLocaleString()}</span>
+                    </div>
+                    <IonIcon icon={swapHorizontalOutline} className="bf-audit-swap" />
+                  </div>
+
+                  <div className="bf-audit-item" style={{ marginTop: '12px' }}>
+                    <div className="bf-audit-icon-wrapper" style={{ background: '#eff6ff', color: '#3b82f6' }}>
+                      <IonIcon icon={walletOutline} />
+                    </div>
+                    <div className="bf-audit-info">
+                      <span className="bf-audit-label">ONLINE BANK/UPI</span>
+                      <span className="bf-audit-val">₹{onlineBalance.toLocaleString()}</span>
+                    </div>
+                    <IonIcon icon={swapHorizontalOutline} className="bf-audit-swap" />
+                  </div>
+
+                  {/* Splitting progress distribution */}
+                  <div className="bf-dist-section" style={{ marginTop: '20px' }}>
+                    <div className="bf-dist-header">
+                      <span className="bf-dist-title">Split Ledger Share</span>
+                      <span className="bf-dist-total">₹{totalBalance.toLocaleString()} Total</span>
+                    </div>
+                    <div className="bf-dist-bar">
+                      <div 
+                        className="bf-dist-bar-cash"
+                        style={{ '--cash-pct': `${cashPct}%` } as React.CSSProperties}
+                      >
+                        CASH {cashPct}%
+                      </div>
+                      <div 
+                        className="bf-dist-bar-upi"
+                        style={{ '--upi-pct': `${upiPct}%` } as React.CSSProperties}
+                      >
+                        UPI {upiPct}%
+                      </div>
+                    </div>
+                    <div className="bf-dist-legend">
+                      <div className="bf-dist-legend-item">
+                        <span className="bf-dist-dot bf-dist-dot--cash" /> Cash Balance
+                      </div>
+                      <div className="bf-dist-legend-item">
+                        <span className="bf-dist-dot bf-dist-dot--upi" /> Online Deposits
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="bf-audit-info">
-                  <span className="bf-audit-label">CASH BALANCE</span>
-                  <span className="bf-audit-val">₹{cashInHand.toLocaleString()}</span>
+
+                {/* Financial Actions Grid / Ledger Operations */}
+                <div className="bf-actions-card" style={{ margin: 0, padding: '20px' }}>
+                  <h3 className="bf-actions-title" style={{ margin: '0 0 14px 0', fontSize: '14px' }}>Ledger Operations</h3>
+                  <div className="bf-actions-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
+                    <button className="bf-action-item" style={{ padding: '12px' }} onClick={() => alert('Simulator: Opening Raise Invoice portal...')}>
+                      <IonIcon icon={documentTextOutline} className="bf-action-icon" />
+                      <span>Raise Invoice</span>
+                    </button>
+                    <button className="bf-action-item" style={{ padding: '12px' }} onClick={() => alert('Simulator: Fetching outstanding patient dues ledger...')}>
+                      <IonIcon icon={peopleOutline} className="bf-action-icon" />
+                      <span>Dues List</span>
+                    </button>
+                    <button className="bf-action-item" style={{ padding: '12px' }} onClick={() => alert('Simulator: Opening stock supplies cost registry...')}>
+                      <IonIcon icon={businessOutline} className="bf-action-icon" />
+                      <span>Stock Cost</span>
+                    </button>
+                    <button className="bf-action-item" style={{ padding: '12px' }} onClick={() => alert('Simulator: Opening tax archives...')}>
+                      <IonIcon icon={receiptOutline} className="bf-action-icon" />
+                      <span>Tax Records</span>
+                    </button>
+                  </div>
                 </div>
-                <IonIcon icon={swapHorizontalOutline} className="bf-audit-swap" />
+
+              </div>
+            </>
+          )}
+
+          {activeTab === 'payments' && (
+            <>
+              {/* New Patient Payments Analytics Cards Panel */}
+              <div className="bf-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginTop: '20px' }}>
+                
+                {/* Total Billed card */}
+                <div className="bf-stat-card" style={{ background: '#f8fafc', border: '1px solid #cbd5e1' }}>
+                  <div className="bf-stat-label" style={{ color: '#475569' }}>TOTAL BILLED</div>
+                  <div className="bf-stat-value" style={{ color: '#1e293b' }}>₹{totalPatientBilled.toLocaleString()}</div>
+                  <div style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <IonIcon icon={checkmarkCircleOutline} style={{ color: '#16a34a' }} /> Dynamic Session Invoicing
+                  </div>
+                </div>
+
+                {/* Total Paid card */}
+                <div className="bf-stat-card" style={{ background: '#f8fafc', border: '1px solid #cbd5e1' }}>
+                  <div className="bf-stat-label" style={{ color: '#475569' }}>TOTAL PAID</div>
+                  <div className="bf-stat-value" style={{ color: '#16a34a' }}>₹{totalPatientPaid.toLocaleString()}</div>
+                  <div style={{ fontSize: '11px', fontWeight: 600, color: '#16a34a', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <IonIcon icon={trendingUpOutline} /> Live ledger tracking
+                  </div>
+                </div>
+
+                {/* Outstanding Balance card */}
+                <div className="bf-stat-card" style={{ background: '#fef2f2', border: '1px solid #fecaca' }}>
+                  <div className="bf-stat-label" style={{ color: '#991b1b' }}>OUTSTANDING BALANCE</div>
+                  <div className="bf-stat-value" style={{ color: '#ef4444' }}>₹{totalPatientOutstanding.toLocaleString()}</div>
+                  <div style={{ fontSize: '11px', fontWeight: 600, color: '#b91c1c', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <IonIcon icon={alertCircleOutline} /> Pending outstanding collections
+                  </div>
+                </div>
+
+                {/* Pending Cases card */}
+                <div className="bf-stat-card" style={{ background: '#fffbeb', border: '1px solid #fde68a' }}>
+                  <div className="bf-stat-label" style={{ color: '#92400e' }}>PENDING CASES</div>
+                  <div className="bf-stat-value" style={{ color: '#d97706' }}>{totalPendingCases} Patients</div>
+                  <div style={{ fontSize: '11px', fontWeight: 600, color: '#b45309', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <IonIcon icon={peopleOutline} /> Action required shortly
+                  </div>
+                </div>
+
               </div>
 
-              <div className="bf-audit-item" style={{ marginTop: '12px' }}>
-                <div className="bf-audit-icon-wrapper" style={{ background: '#eff6ff', color: '#3b82f6' }}>
-                  <IonIcon icon={walletOutline} />
-                </div>
-                <div className="bf-audit-info">
-                  <span className="bf-audit-label">ONLINE BANK/UPI</span>
-                  <span className="bf-audit-val">₹{onlineBalance.toLocaleString()}</span>
-                </div>
-                <IonIcon icon={swapHorizontalOutline} className="bf-audit-swap" />
-              </div>
+              {/* Advanced Filtering Controls Block for Patient Payments */}
+              <div className="sa-section" style={{ marginTop: '24px', padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1', background: 'white' }}>
+                <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 800, color: '#334155', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <IonIcon icon={filterOutline} style={{ color: '#0d5c46' }} /> Patient Payments Search Filters
+                </h3>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+                  
+                  {/* Patient Name Search */}
+                  <div className="sa-search" style={{ margin: 0, width: '100%' }}>
+                    <IonIcon icon={searchOutline} />
+                    <input
+                      placeholder="Search patient name..."
+                      value={paySearchQuery}
+                      onChange={(e) => setPaySearchQuery(e.target.value)}
+                    />
+                  </div>
 
-              {/* Splitting progress distribution */}
-              <div className="bf-dist-section" style={{ marginTop: '20px' }}>
-                <div className="bf-dist-header">
-                  <span className="bf-dist-title">Split Ledger Share</span>
-                  <span className="bf-dist-total">₹{totalBalance.toLocaleString()} Total</span>
-                </div>
-                <div className="bf-dist-bar">
-                  <div 
-                    className="bf-dist-bar-cash"
-                    style={{ '--cash-pct': `${cashPct}%` } as React.CSSProperties}
+                  {/* Payment Status Filter */}
+                  <select
+                    className="sa-input"
+                    value={payFilterStatus}
+                    onChange={(e) => setPayFilterStatus(e.target.value)}
                   >
-                    CASH {cashPct}%
+                    <option value="All">All Statuses</option>
+                    <option value="Paid">Paid</option>
+                    <option value="Partial">Partial</option>
+                    <option value="Pending">Pending</option>
+                  </select>
+
+                  {/* Healer Filter */}
+                  <div className="sa-search" style={{ margin: 0, width: '100%' }}>
+                    <IonIcon icon={peopleOutline} style={{ fontSize: '16px', color: '#64748b' }} />
+                    <input
+                      placeholder="Search assigned healer..."
+                      value={payFilterHealer}
+                      onChange={(e) => setPayFilterHealer(e.target.value)}
+                      style={{ paddingLeft: '28px' }}
+                    />
                   </div>
-                  <div 
-                    className="bf-dist-bar-upi"
-                    style={{ '--upi-pct': `${upiPct}%` } as React.CSSProperties}
+
+                  {/* Session No Filter */}
+                  <div className="sa-search" style={{ margin: 0, width: '100%' }}>
+                    <IonIcon icon={calendarOutline} style={{ fontSize: '16px', color: '#64748b' }} />
+                    <input
+                      placeholder="Search Session No..."
+                      value={payFilterSession}
+                      onChange={(e) => setPayFilterSession(e.target.value)}
+                      style={{ paddingLeft: '28px' }}
+                    />
+                  </div>
+                </div>
+
+                {/* Custom From-To Date Picker */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginTop: '12px', borderTop: '1px dashed #e2e8f0', paddingTop: '12px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569' }}>TRANSACTION FROM:</span>
+                  <input
+                    type="date"
+                    className="sa-input"
+                    style={{ width: '150px', padding: '6px 10px', fontSize: '12px' }}
+                    value={payStartDate}
+                    onChange={(e) => setPayStartDate(e.target.value)}
+                  />
+                  <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569' }}>TO:</span>
+                  <input
+                    type="date"
+                    className="sa-input"
+                    style={{ width: '150px', padding: '6px 10px', fontSize: '12px' }}
+                    value={payEndDate}
+                    onChange={(e) => setPayEndDate(e.target.value)}
+                  />
+                  <button 
+                    className="sa-btn sa-btn--outline"
+                    style={{ padding: '6px 12px', fontSize: '12px' }}
+                    onClick={() => {
+                      setPaySearchQuery('');
+                      setPayFilterStatus('All');
+                      setPayFilterHealer('');
+                      setPayFilterSession('');
+                      setPayStartDate('');
+                      setPayEndDate('');
+                    }}
                   >
-                    UPI {upiPct}%
+                    Reset Filters
+                  </button>
+                </div>
+              </div>
+
+              {/* Patient Payments Ledger Card */}
+              <div className="bf-card" style={{ marginTop: '24px' }}>
+                <div className="bf-card-header" style={{ flexWrap: 'wrap', gap: '12px' }}>
+                  <div>
+                    <h2 className="bf-card-title">Patient Payment Ledger</h2>
+                    <p className="bf-card-subtitle">Detailed tracking of patient invoicing, installments, and status logs</p>
+                  </div>
+                  <div className="bf-card-header-actions" style={{ display: 'flex', gap: '8px' }}>
+                    <button 
+                      className="bf-btn-add-income"
+                      style={{ background: '#0D5C46', borderColor: '#0D5C46', color: 'white' }}
+                      onClick={() => {
+                        const defaultPatient = activePatients[0]?.name || '';
+                        handlePaymentFormPatientChange(defaultPatient);
+                        setShowRecordPaymentModal(true);
+                      }}
+                    >
+                      <IonIcon icon={addCircleOutline} /> Record Payment
+                    </button>
                   </div>
                 </div>
-                <div className="bf-dist-legend">
-                  <div className="bf-dist-legend-item">
-                    <span className="bf-dist-dot bf-dist-dot--cash" /> Cash Balance
-                  </div>
-                  <div className="bf-dist-legend-item">
-                    <span className="bf-dist-dot bf-dist-dot--upi" /> Online Deposits
-                  </div>
+
+                {/* Ledger Table */}
+                <div className="sa-table-responsive" style={{ border: 'none', overflowX: 'auto' }}>
+                  <table className="bf-table" style={{ width: '100%', minWidth: '700px' }}>
+                    <thead>
+                      <tr>
+                        <th>PATIENT</th>
+                        <th>SESSION NO</th>
+                        <th>TOTAL BILLED</th>
+                        <th>PAID</th>
+                        <th>OUTSTANDING</th>
+                        <th>STATUS</th>
+                        <th>ACTIONS</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredPatientPayments.length > 0 ? (
+                        filteredPatientPayments.map((p) => (
+                          <tr key={p.id}>
+                            <td style={{ fontWeight: 700 }}>{p.patientName}</td>
+                            <td style={{ fontWeight: 600 }}>{p.sessionNo}</td>
+                            <td><strong style={{ color: '#475569' }}>₹{p.totalBilled.toLocaleString()}</strong></td>
+                            <td><strong style={{ color: '#16a34a' }}>₹{p.paid.toLocaleString()}</strong></td>
+                            <td>
+                              <strong style={{ color: p.outstanding > 0 ? '#ef4444' : '#64748b' }}>
+                                ₹{p.outstanding.toLocaleString()}
+                              </strong>
+                            </td>
+                            <td>
+                              <span 
+                                style={{ 
+                                  textTransform: 'uppercase', fontSize: '9px', padding: '2px 8px', borderRadius: '12px', fontWeight: 800,
+                                  background: p.status === 'Paid' ? '#ecfdf5' : p.status === 'Pending' ? '#fef2f2' : '#fffbeb',
+                                  color: p.status === 'Paid' ? '#10b981' : p.status === 'Pending' ? '#ef4444' : '#f59e0b',
+                                  border: `1px solid ${p.status === 'Paid' ? '#a7f3d0' : p.status === 'Pending' ? '#fecaca' : '#fde68a'}`
+                                }}
+                              >
+                                {p.status}
+                              </span>
+                            </td>
+                            <td>
+                              <button
+                                className="sa-btn sa-btn--primary"
+                                style={{ fontSize: '11px', padding: '4px 12px', background: '#0D5C46', border: 'none', justifyContent: 'center' }}
+                                onClick={() => {
+                                  setDrawerPayment(p);
+                                  setShowDrawer(true);
+                                }}
+                              >
+                                View
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={7} style={{ textAlign: 'center', padding: '50px 0' }}>
+                            <div className="sa-empty-state" style={{ border: 'none', background: 'transparent', margin: '0' }}>
+                              <div className="sa-empty-state__icon" style={{ background: '#f1f5f9', color: '#94a3b8' }}>
+                                <IonIcon icon={alertCircleOutline} />
+                              </div>
+                              <h3 className="sa-empty-state__title" style={{ color: '#475569', fontWeight: 700 }}>
+                                No payments matching query
+                              </h3>
+                              <p className="sa-empty-state__text" style={{ color: '#64748b', fontSize: '13px' }}>
+                                We couldn't find any patient payment invoices corresponding to the selected search and status filters.
+                              </p>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
+          )}
+
+          {activeTab === 'reports' && (
+            <div className="bf-card" style={{ marginTop: '20px', padding: '32px', textAlign: 'center' }}>
+              <div style={{ fontSize: '48px', color: '#0d5c46', marginBottom: '16px' }}><IonIcon icon={pieChartOutline} /></div>
+              <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#1e293b', margin: 0 }}>Executive Reporting Suite</h2>
+              <p style={{ fontSize: '13px', color: '#64748b', marginTop: '8px', maxWidth: '500px', marginInline: 'auto', lineHeight: 1.6 }}>
+                Generate consolidated operational records, financial spreadsheets, tax summaries, and patient dues logs.
+              </p>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', maxWidth: '680px', margin: '32px auto 0 auto' }}>
+                <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', textAlign: 'left' }}>
+                  <h4 style={{ margin: '0 0 6px 0', fontSize: '13px', fontWeight: 800, color: '#0d5c46' }}>Operational Ledger</h4>
+                  <p style={{ margin: '0 0 16px 0', fontSize: '11px', color: '#64748b', lineHeight: 1.4 }}>Complete record of cash inflows and branch utility/supplies costs.</p>
+                  <button className="sa-btn sa-btn--primary" style={{ width: '100%', fontSize: '11px', background: '#0d5c46', border: 'none', justifyContent: 'center' }} onClick={() => handleExportReport('PDF')}>
+                    Export PDF
+                  </button>
+                </div>
+
+                <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', textAlign: 'left' }}>
+                  <h4 style={{ margin: '0 0 6px 0', fontSize: '13px', fontWeight: 800, color: '#0d5c46' }}>Patient Accounts Outstanding</h4>
+                  <p style={{ margin: '0 0 16px 0', fontSize: '11px', color: '#64748b', lineHeight: 1.4 }}>Summary spreadsheet of outstanding dues, billed totals, and paid cases.</p>
+                  <button className="sa-btn sa-btn--primary" style={{ width: '100%', fontSize: '11px', background: '#16a34a', border: 'none', justifyContent: 'center' }} onClick={() => handleExportReport('Excel')}>
+                    Export Excel
+                  </button>
                 </div>
               </div>
             </div>
-
-  
-            {/* Financial Actions Grid / Ledger Operations */}
-            <div className="bf-actions-card" style={{ margin: 0, padding: '20px' }}>
-              <h3 className="bf-actions-title" style={{ margin: '0 0 14px 0', fontSize: '14px' }}>Ledger Operations</h3>
-              <div className="bf-actions-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                <button className="bf-action-item" style={{ padding: '12px' }} onClick={() => alert('Simulator: Opening Raise Invoice portal...')}>
-                  <IonIcon icon={documentTextOutline} className="bf-action-icon" />
-                  <span>Raise Invoice</span>
-                </button>
-                <button className="bf-action-item" style={{ padding: '12px' }} onClick={() => alert('Simulator: Fetching outstanding patient dues ledger...')}>
-                  <IonIcon icon={peopleOutline} className="bf-action-icon" />
-                  <span>Dues List</span>
-                </button>
-                <button className="bf-action-item" style={{ padding: '12px' }} onClick={() => alert('Simulator: Opening stock supplies cost registry...')}>
-                  <IonIcon icon={businessOutline} className="bf-action-icon" />
-                  <span>Stock Cost</span>
-                </button>
-                <button className="bf-action-item" style={{ padding: '12px' }} onClick={() => alert('Simulator: Opening tax archives...')}>
-                  <IonIcon icon={receiptOutline} className="bf-action-icon" />
-                  <span>Tax Records</span>
-                </button>
-              </div>
-            </div>
-
-          </div>
-
-         
+          )}
 
         </div>
       </IonContent>
@@ -855,7 +1437,7 @@ const FinancePage: React.FC = () => {
               </div>
 
               <div className="sa-settings__form-group">
-                <label className="sa-settings__label">Payment Mode *</label>
+                <label className="sa-settings__label">Mode of Payment</label>
                 <select
                   className="sa-input"
                   value={newTx.mode}
@@ -865,14 +1447,14 @@ const FinancePage: React.FC = () => {
                     <>
                       <option value="UPI (GPay)">UPI (GPay)</option>
                       <option value="UPI (PhonePe)">UPI (PhonePe)</option>
-                      <option value="Cash">Cash</option>
-                      <option value="Card">Card</option>
+                      <option value="Cash">Cash Ledger</option>
+                      <option value="Bank Trans">Bank NetBanking</option>
                     </>
                   ) : (
                     <>
-                      <option value="Bank Trans">Bank Trans</option>
-                      <option value="Cash">Cash</option>
-                      <option value="UPI">UPI</option>
+                      <option value="Bank Trans">Bank NetBanking</option>
+                      <option value="Cash">Cash Ledger</option>
+                      <option value="Card Payment">Debit/Credit Card</option>
                     </>
                   )}
                 </select>
@@ -880,11 +1462,11 @@ const FinancePage: React.FC = () => {
             </div>
 
             <div className="sa-settings__form-group">
-              <label className="sa-settings__label">Description / Remarks</label>
+              <label className="sa-settings__label">Remarks / Description</label>
               <textarea
                 className="sa-input"
-                style={{ resize: 'none', height: '60px' }}
-                placeholder="Details of the transaction..."
+                rows={2}
+                placeholder="Details of dynamic ledger entry"
                 value={newTx.description}
                 onChange={(e) => setNewTx({ ...newTx, description: e.target.value })}
               />
@@ -897,38 +1479,21 @@ const FinancePage: React.FC = () => {
         </div>
       </IonModal>
 
-      {/* ── DIALOG: EDIT TRANSACTION ──────────────────────────────── */}
+      {/* ── DIALOG: EDIT TRANSACTION ────────────────────────────── */}
       <IonModal isOpen={showEditModal} onDidDismiss={() => setShowEditModal(false)} className="sa-modal sa-modal--sm">
         <div className="sa-modal__content">
           <div className="sa-modal__header">
-            <h2>Edit Transaction Ledger</h2>
+            <h2>Edit Transaction</h2>
             <button className="sa-modal__close-btn" onClick={() => setShowEditModal(false)}>×</button>
           </div>
           <div className="sa-modal__body">
             <div className="sa-settings__form-group">
               <label className="sa-settings__label">Category *</label>
-              <select
+              <input
                 className="sa-input"
                 value={editTxState.category}
                 onChange={(e) => setEditTxState({ ...editTxState, category: e.target.value })}
-              >
-                {selectedTx?.type === 'income' ? (
-                  <>
-                    <option value="Session Fee">Session Fee</option>
-                    <option value="Camp Fee">Camp Fee</option>
-                    <option value="Consultation">Consultation</option>
-                    <option value="Misc">Miscellaneous</option>
-                  </>
-                ) : (
-                  <>
-                    <option value="Utilities">Utilities</option>
-                    <option value="Supplies">Supplies</option>
-                    <option value="Salaries">Salaries</option>
-                    <option value="Rent">Rent</option>
-                    <option value="Misc">Miscellaneous</option>
-                  </>
-                )}
-              </select>
+              />
             </div>
 
             <div className="sa-settings__form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -943,35 +1508,26 @@ const FinancePage: React.FC = () => {
               </div>
 
               <div className="sa-settings__form-group">
-                <label className="sa-settings__label">Payment Mode *</label>
+                <label className="sa-settings__label">Mode of Payment</label>
                 <select
                   className="sa-input"
                   value={editTxState.mode}
                   onChange={(e) => setEditTxState({ ...editTxState, mode: e.target.value })}
                 >
-                  {selectedTx?.type === 'income' ? (
-                    <>
-                      <option value="UPI (GPay)">UPI (GPay)</option>
-                      <option value="UPI (PhonePe)">UPI (PhonePe)</option>
-                      <option value="Cash">Cash</option>
-                      <option value="Card">Card</option>
-                    </>
-                  ) : (
-                    <>
-                      <option value="Bank Trans">Bank Trans</option>
-                      <option value="Cash">Cash</option>
-                      <option value="UPI">UPI</option>
-                    </>
-                  )}
+                  <option value="UPI (GPay)">UPI (GPay)</option>
+                  <option value="UPI (PhonePe)">UPI (PhonePe)</option>
+                  <option value="Cash">Cash Ledger</option>
+                  <option value="Bank Trans">Bank NetBanking</option>
+                  <option value="Card Payment">Debit/Credit Card</option>
                 </select>
               </div>
             </div>
 
             <div className="sa-settings__form-group">
-              <label className="sa-settings__label">Description / Remarks</label>
+              <label className="sa-settings__label">Remarks / Description</label>
               <textarea
                 className="sa-input"
-                style={{ resize: 'none', height: '60px' }}
+                rows={2}
                 value={editTxState.description}
                 onChange={(e) => setEditTxState({ ...editTxState, description: e.target.value })}
               />
@@ -984,19 +1540,26 @@ const FinancePage: React.FC = () => {
         </div>
       </IonModal>
 
-      {/* ── DIALOG: PRINT RECEIPT INVOICE ──────────────────────────── */}
+      {/* ── DIALOG: PRINT RECEIPT ────────────────────────────────── */}
       <IonModal isOpen={showReceiptModal} onDidDismiss={() => setShowReceiptModal(false)} className="sa-modal sa-modal--sm">
-        <div className="sa-modal__content" style={{ padding: '24px' }}>
-          <div style={{ border: '2px dashed #cbd5e1', padding: '20px', borderRadius: '8px', background: '#faf5ff', fontFamily: 'monospace' }}>
-            <div style={{ textAlign: 'center', borderBottom: '1px dashed #cbd5e1', paddingBottom: '12px', marginBottom: '12px' }}>
-              <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: 'var(--ba-color-primary)' }}>NPHMS TREASURY</h2>
-              <span style={{ fontSize: '10px', color: '#64748b' }}>BRANCH COLLECTION RECEIPT</span>
-            </div>
-            
+        <div className="sa-modal__content" style={{ background: '#f8fafc' }}>
+          <div className="sa-modal__header" style={{ borderBottom: '1px solid #cbd5e1' }}>
+            <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#0d5c46' }}>
+              <IonIcon icon={receiptOutline} /> Transaction Receipt
+            </h2>
+            <button className="sa-modal__close-btn" onClick={() => setShowReceiptModal(false)}>×</button>
+          </div>
+          
+          <div className="sa-modal__body" style={{ maxHeight: '65vh', overflowY: 'auto' }}>
             {receiptTx && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px' }}>
+              <div style={{ background: '#fff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '16px', fontFamily: 'monospace', fontSize: '11px', color: '#1e293b', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ textAlign: 'center', borderBottom: '2px dashed #cbd5e1', paddingBottom: '10px', marginBottom: '4px' }}>
+                  <strong style={{ fontSize: '14px', color: '#0d5c46' }}>PHMS WELLNESS CENTER</strong><br/>
+                  <span>Treasury Collection Node</span><br/>
+                  <span>Receipt No: REC-{Math.floor(100000 + Math.random() * 900000)}</span>
+                </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>RECEIPT ID:</span>
+                  <span>REFERENCE ID:</span>
                   <strong>#TX-{receiptTx.id}</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -1046,6 +1609,218 @@ const FinancePage: React.FC = () => {
           </div>
         </div>
       </IonModal>
+
+      {/* ── DIALOG: RECORD PATIENT PAYMENT ────────────────────────────── */}
+      <IonModal isOpen={showRecordPaymentModal} onDidDismiss={() => setShowRecordPaymentModal(false)} className="sa-modal sa-modal--sm">
+        <form onSubmit={handleRecordPaymentSubmit} className="sa-modal__content">
+          <div className="sa-modal__header">
+            <h2>Record Patient Payment</h2>
+            <button type="button" className="sa-modal__close-btn" onClick={() => setShowRecordPaymentModal(false)}>×</button>
+          </div>
+          
+          <div className="sa-modal__body">
+            
+            {/* Patient selector */}
+            <div className="sa-settings__form-group">
+              <label className="sa-settings__label">Patient *</label>
+              <select
+                className="sa-input"
+                required
+                value={paymentForm.patientId}
+                onChange={(e) => handlePaymentFormPatientChange(e.target.value)}
+              >
+                <option value="">-- Choose Patient --</option>
+                {activePatients.map(p => (
+                  <option key={p.id} value={p.name}>{p.name} ({p.id})</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Session No selector */}
+            <div className="sa-settings__form-group">
+              <label className="sa-settings__label">Session Number *</label>
+              <input
+                type="text"
+                className="sa-input"
+                required
+                placeholder="e.g. S-0012"
+                value={paymentForm.sessionNo}
+                onChange={(e) => setPaymentForm({ ...paymentForm, sessionNo: e.target.value })}
+              />
+            </div>
+
+            {/* Billing calculations grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div className="sa-settings__form-group">
+                <label className="sa-settings__label">Amount Billed (Read-only)</label>
+                <input
+                  type="text"
+                  disabled
+                  className="sa-input"
+                  style={{ background: '#e2e8f0', color: '#64748b', cursor: 'not-allowed' }}
+                  value={`₹${paymentForm.amountBilled}`}
+                />
+              </div>
+
+              <div className="sa-settings__form-group">
+                <label className="sa-settings__label">Amount Paid *</label>
+                <input
+                  type="number"
+                  className="sa-input"
+                  required
+                  placeholder="₹0.00"
+                  value={paymentForm.amountPaid}
+                  onChange={(e) => setPaymentForm({ ...paymentForm, amountPaid: e.target.value })}
+                />
+              </div>
+            </div>
+
+            {/* Payment Mode Selector */}
+            <div className="sa-settings__form-group">
+              <label className="sa-settings__label">Payment Mode *</label>
+              <select
+                className="sa-input"
+                required
+                value={paymentForm.paymentMode}
+                onChange={(e) => setPaymentForm({ ...paymentForm, paymentMode: e.target.value as any })}
+              >
+                <option value="UPI">UPI</option>
+                <option value="Cash">Cash</option>
+                <option value="Bank Transfer">Bank NetBanking</option>
+              </select>
+            </div>
+
+            {/* Remarks Textarea */}
+            <div className="sa-settings__form-group">
+              <label className="sa-settings__label">Remarks / Notes</label>
+              <textarea
+                className="sa-input"
+                rows={2}
+                placeholder="Log therapist notes regarding cash installment..."
+                value={paymentForm.remarks}
+                onChange={(e) => setPaymentForm({ ...paymentForm, remarks: e.target.value })}
+              />
+            </div>
+
+          </div>
+
+          <div className="sa-modal__footer">
+            <button type="button" className="sa-btn sa-btn--outline" onClick={() => setShowRecordPaymentModal(false)}>Cancel</button>
+            <button type="submit" className="sa-btn sa-btn--primary" style={{ background: '#0D5C46', borderColor: '#0D5C46' }}>Record Payment</button>
+          </div>
+        </form>
+      </IonModal>
+
+      {/* ── DRAWER: PATIENT BILLING SUMMARY ────────────────────────────── */}
+      {showDrawer && drawerPayment && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.4)', zIndex: 100000, display: 'flex', justifyContent: 'flex-end' }} onClick={() => setShowDrawer(false)}>
+          <div 
+            style={{ background: '#fff', width: '100%', maxWidth: '480px', height: '100%', boxShadow: '-5px 0 25px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Drawer Header */}
+            <div style={{ padding: '24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#0D5C46', color: '#fff' }}>
+              <div>
+                <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 800 }}>Billing Summary</h2>
+                <span style={{ fontSize: '12px', opacity: 0.8 }}>Case ID: {drawerPayment.caseId} • {drawerPayment.sessionNo}</span>
+              </div>
+              <button 
+                onClick={() => setShowDrawer(false)}
+                style={{ background: 'none', border: 'none', color: '#fff', fontSize: '24px', cursor: 'pointer', outline: 'none' }}
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Drawer Content */}
+            <div style={{ padding: '24px', flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              
+              {/* Patient Info */}
+              <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1' }}>
+                <h3 style={{ margin: '0 0 12px 0', fontSize: '13px', fontWeight: 800, color: '#0d5c46', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Patient Information</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#64748b' }}>Patient Name:</span>
+                    <strong style={{ color: '#334155' }}>{drawerPayment.patientName}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#64748b' }}>Assigned Healer:</span>
+                    <strong style={{ color: '#334155' }}>{drawerPayment.assignedHealer}</strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* Billing Summary */}
+              <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1' }}>
+                <h3 style={{ margin: '0 0 12px 0', fontSize: '13px', fontWeight: 800, color: '#0d5c46', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Billing Summary</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#64748b' }}>Total Billed:</span>
+                    <strong style={{ color: '#334155', fontSize: '14px' }}>₹{drawerPayment.totalBilled.toLocaleString()}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#64748b' }}>Total Paid:</span>
+                    <strong style={{ color: '#16a34a', fontSize: '14px' }}>₹{drawerPayment.paid.toLocaleString()}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px dashed #cbd5e1', paddingTop: '8px', marginTop: '4px' }}>
+                    <span style={{ color: '#64748b', fontWeight: 700 }}>Outstanding Balance:</span>
+                    <strong style={{ color: '#ef4444', fontSize: '15px' }}>₹{drawerPayment.outstanding.toLocaleString()}</strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment History */}
+              <div>
+                <h3 style={{ margin: '0 0 12px 0', fontSize: '13px', fontWeight: 800, color: '#0d5c46', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Payment Installment History</h3>
+                {drawerPayment.history.length > 0 ? (
+                  <div className="sa-table-responsive" style={{ border: '1px solid #cbd5e1', borderRadius: '8px' }}>
+                    <table className="bf-table" style={{ width: '100%', fontSize: '12px' }}>
+                      <thead>
+                        <tr style={{ background: '#f1f5f9' }}>
+                          <th style={{ padding: '8px' }}>DATE</th>
+                          <th style={{ padding: '8px' }}>AMOUNT</th>
+                          <th style={{ padding: '8px' }}>MODE</th>
+                          <th style={{ padding: '8px' }}>STATUS</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {drawerPayment.history.map((h, i) => (
+                          <tr key={i}>
+                            <td style={{ padding: '8px', fontWeight: 600 }}>{h.date}</td>
+                            <td style={{ padding: '8px', fontWeight: 700, color: '#16a34a' }}>₹{h.amount.toLocaleString()}</td>
+                            <td style={{ padding: '8px' }}>{h.mode}</td>
+                            <td style={{ padding: '8px' }}>
+                              <span style={{ background: '#ecfdf5', color: '#10b981', padding: '2px 6px', borderRadius: '4px', fontWeight: 800, fontSize: '9px' }}>{h.status}</span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '20px', color: '#64748b', fontSize: '12px', background: '#f8fafc', borderRadius: '8px', border: '1px dashed #cbd5e1' }}>
+                    No payment transaction history logged yet.
+                  </div>
+                )}
+              </div>
+
+            </div>
+
+            {/* Drawer Footer */}
+            <div style={{ padding: '16px 24px', borderTop: '1px solid #e2e8f0', display: 'flex', gap: '12px', background: '#f8fafc' }}>
+              <button 
+                onClick={() => setShowDrawer(false)}
+                style={{
+                  background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '10px 20px',
+                  fontSize: '13px', fontWeight: 600, color: '#475569', cursor: 'pointer', flex: 1, textAlign: 'center'
+                }}
+              >
+                Close Drawer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </IonPage>
   );
