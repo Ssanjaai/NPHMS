@@ -9,6 +9,7 @@ import {
   IonIcon,
   IonMenuButton,
   IonModal,
+  useIonToast,
 } from '@ionic/react';
 import {
   searchOutline,
@@ -75,10 +76,19 @@ const SessionsPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   
   // Modals & States
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  
   const [selectedSession, setSelectedSession] = useState<HealingSession | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [sessionToDelete, setSessionToDelete] = useState<number | null>(null);
+  const [present] = useIonToast();
+
+  const triggerToast = (msg: string, color: 'success' | 'danger' = 'success') => {
+    present({
+      message: msg,
+      duration: 3000,
+      position: 'top',
+      color: color,
+    });
+  };
 
   const itemsPerPage = 5;
 
@@ -91,155 +101,135 @@ const SessionsPage: React.FC = () => {
   const todayStr = new Date().toISOString().split('T')[0];
   const yesterdayStr = new Date(Date.now() - 86400000).toISOString().split('T')[0];
 
-  // In-memory Mock data for branch sessions
-  const [sessions, setSessions] = useState<HealingSession[]>([
-    { 
-      id: 1, 
-      sessionNo: 'S-0001', 
-      date: todayStr, 
-      startTime: '09:00 AM', 
-      endTime: '10:00 AM', 
-      patient: 'Elena Gilbert', 
-      healer: 'Dr. Aris Varma', 
-      type: 'Pranic Psychotherapy', 
-      status: 'Completed',
-      paymentStatus: 'Paid',
-      paymentMethod: 'UPI',
-      followUp: { required: true, urgency: 'Urgent' },
-      notes: { treatmentType: 'Pranic Psychotherapy', observations: 'Solar plexus chakra cleared.', detailedNotes: 'Patient felt significant mental release from crown sweeps.', recommendation: 'Daily meditation logs' },
-      feedback: { rating: 5, comment: 'Incredible emotional release!' }
-    },
-    { 
-      id: 2, 
-      sessionNo: 'S-0001', 
-      date: todayStr, 
-      startTime: '11:30 AM', 
-      endTime: '12:30 PM', 
-      patient: 'Stefan Salvatore', 
-      healer: 'Julian Mars', 
-      type: 'Advanced Pranic Healing', 
-      status: 'Completed',
-      paymentStatus: 'Pending',
-      followUp: { required: true, urgency: 'Pending' },
-      notes: { treatmentType: 'Advanced Pranic Healing', observations: 'Congestion around heart chakra.', detailedNotes: 'Energy flow stabilizing. Next alignment session strongly recommended.', recommendation: 'Salt water baths twice weekly.' }
-    },
-    { 
-      id: 3, 
-      sessionNo: 'S-0001', 
-      date: todayStr, 
-      startTime: '03:00 PM', 
-      endTime: '04:00 PM', 
-      patient: 'Bonnie Bennett', 
-      healer: 'Julian Mars', 
-      type: 'Basic Pranic Healing', 
-      status: 'Scheduled',
-      paymentStatus: 'Pending',
-      followUp: { required: false, urgency: 'None' }
-    },
-    { 
-      id: 4, 
-      sessionNo: 'S-0002', 
-      date: todayStr, 
-      startTime: '04:30 PM', 
-      endTime: '05:30 PM', 
-      patient: 'Elena Gilbert', 
-      healer: 'Dr. Aris Varma', 
-      type: 'Crystal Healing', 
-      status: 'Scheduled',
-      paymentStatus: 'Pending',
-      followUp: { required: true, urgency: 'Urgent' }
-    },
-    { 
-      id: 5, 
-      sessionNo: 'S-0002', 
-      date: yesterdayStr, 
-      startTime: '09:30 AM', 
-      endTime: '10:30 AM', 
-      patient: 'Stefan Salvatore', 
-      healer: 'Dr. Aris Varma', 
-      type: 'Pranic Psychotherapy', 
-      status: 'Completed',
-      paymentStatus: 'Paid',
-      paymentMethod: 'Cash',
-      followUp: { required: false, urgency: 'None' },
-      notes: { treatmentType: 'Pranic Psychotherapy', observations: 'Emotional blockages dissolved.', detailedNotes: 'Patient sleeps much better.', recommendation: 'Continue weekly psychotherapy.' }
-    },
-    { 
-      id: 6, 
-      sessionNo: 'S-0001', 
-      date: yesterdayStr, 
-      startTime: '01:00 PM', 
-      endTime: '02:00 PM', 
-      patient: 'Matt Donovan', 
-      healer: 'Julian Mars', 
-      type: 'Advanced Pranic Healing', 
-      status: 'Cancelled',
-      paymentStatus: 'Pending',
-      followUp: { required: false, urgency: 'None' }
-    },
-    { 
-      id: 7, 
-      sessionNo: 'S-0001', 
-      date: '2026-05-20', 
-      startTime: '10:30 AM', 
-      endTime: '11:30 AM', 
-      patient: 'Tyler Lockwood', 
-      healer: 'Dr. Aris Varma', 
-      type: 'Basic Pranic Healing', 
-      status: 'Completed',
-      paymentStatus: 'Paid',
-      paymentMethod: 'UPI',
-      followUp: { required: false, urgency: 'None' },
-      notes: { treatmentType: 'Basic Pranic Healing', observations: 'Root chakra energized.', detailedNotes: 'Knee joint inflammation reduced.', recommendation: 'Follow-up in two weeks.' }
-    },
-    { 
-      id: 8, 
-      sessionNo: 'S-0001', 
-      date: '2026-05-19', 
-      startTime: '03:00 PM', 
-      endTime: '04:00 PM', 
-      patient: 'Jeremy Gilbert', 
-      healer: 'Julian Mars', 
-      type: 'Crystal Healing', 
-      status: 'Completed',
-      paymentStatus: 'Paid',
-      paymentMethod: 'Cash',
-      followUp: { required: false, urgency: 'None' },
-      notes: { treatmentType: 'Crystal Healing', observations: 'Aura sweeping performed.', detailedNotes: 'Energy flow maximized.', recommendation: 'Meditation weekly' }
-    },
-  ]);
-
-  // Form input states
-  const [newSession, setNewSession] = useState({
-    patient: '',
-    healer: 'Dr. Aris Varma',
-    date: todayStr,
-    startTime: '09:00 AM',
-    endTime: '10:00 AM',
-    type: 'Basic Pranic Healing',
-    followUpRequired: false,
-    followUpUrgency: 'None' as 'Urgent' | 'Pending' | 'None',
+  // Sync sessions from local storage
+  const [sessions, setSessions] = useState<HealingSession[]>(() => {
+    const saved = localStorage.getItem('phms_sessions');
+    if (saved) return JSON.parse(saved);
+    return [
+      { 
+        id: 1, 
+        sessionNo: 'S-0001', 
+        date: todayStr, 
+        startTime: '09:00 AM', 
+        endTime: '10:00 AM', 
+        patient: 'Elena Gilbert', 
+        healer: 'Dr. Aris Varma', 
+        type: 'Pranic Psychotherapy', 
+        status: 'Completed',
+        paymentStatus: 'Paid',
+        paymentMethod: 'UPI',
+        followUp: { required: true, urgency: 'Urgent' },
+        notes: { treatmentType: 'Pranic Psychotherapy', observations: 'Solar plexus chakra cleared.', detailedNotes: 'Patient felt significant mental release from crown sweeps.', recommendation: 'Daily meditation logs' },
+        feedback: { rating: 5, comment: 'Incredible emotional release!' }
+      },
+      { 
+        id: 2, 
+        sessionNo: 'S-0001', 
+        date: todayStr, 
+        startTime: '11:30 AM', 
+        endTime: '12:30 PM', 
+        patient: 'Stefan Salvatore', 
+        healer: 'Julian Mars', 
+        type: 'Advanced Pranic Healing', 
+        status: 'Completed',
+        paymentStatus: 'Pending',
+        followUp: { required: true, urgency: 'Pending' },
+        notes: { treatmentType: 'Advanced Pranic Healing', observations: 'Congestion around heart chakra.', detailedNotes: 'Energy flow stabilizing. Next alignment session strongly recommended.', recommendation: 'Salt water baths twice weekly.' }
+      },
+      { 
+        id: 3, 
+        sessionNo: 'S-0001', 
+        date: todayStr, 
+        startTime: '03:00 PM', 
+        endTime: '04:00 PM', 
+        patient: 'Bonnie Bennett', 
+        healer: 'Julian Mars', 
+        type: 'Basic Pranic Healing', 
+        status: 'Scheduled',
+        paymentStatus: 'Pending',
+        followUp: { required: false, urgency: 'None' }
+      },
+      { 
+        id: 4, 
+        sessionNo: 'S-0002', 
+        date: todayStr, 
+        startTime: '04:30 PM', 
+        endTime: '05:30 PM', 
+        patient: 'Elena Gilbert', 
+        healer: 'Dr. Aris Varma', 
+        type: 'Crystal Healing', 
+        status: 'Scheduled',
+        paymentStatus: 'Pending',
+        followUp: { required: true, urgency: 'Urgent' }
+      },
+      { 
+        id: 5, 
+        sessionNo: 'S-0002', 
+        date: yesterdayStr, 
+        startTime: '09:30 AM', 
+        endTime: '10:30 AM', 
+        patient: 'Stefan Salvatore', 
+        healer: 'Dr. Aris Varma', 
+        type: 'Pranic Psychotherapy', 
+        status: 'Completed',
+        paymentStatus: 'Paid',
+        paymentMethod: 'Cash',
+        followUp: { required: false, urgency: 'None' },
+        notes: { treatmentType: 'Pranic Psychotherapy', observations: 'Emotional blockages dissolved.', detailedNotes: 'Patient sleeps much better.', recommendation: 'Continue weekly psychotherapy.' }
+      },
+      { 
+        id: 6, 
+        sessionNo: 'S-0001', 
+        date: yesterdayStr, 
+        startTime: '01:00 PM', 
+        endTime: '02:00 PM', 
+        patient: 'Matt Donovan', 
+        healer: 'Julian Mars', 
+        type: 'Advanced Pranic Healing', 
+        status: 'Cancelled',
+        paymentStatus: 'Pending',
+        followUp: { required: false, urgency: 'None' }
+      },
+      { 
+        id: 7, 
+        sessionNo: 'S-0001', 
+        date: '2026-05-20', 
+        startTime: '10:30 AM', 
+        endTime: '11:30 AM', 
+        patient: 'Tyler Lockwood', 
+        healer: 'Dr. Aris Varma', 
+        type: 'Basic Pranic Healing', 
+        status: 'Completed',
+        paymentStatus: 'Paid',
+        paymentMethod: 'UPI',
+        followUp: { required: false, urgency: 'None' },
+        notes: { treatmentType: 'Basic Pranic Healing', observations: 'Root chakra energized.', detailedNotes: 'Knee joint inflammation reduced.', recommendation: 'Follow-up in two weeks.' }
+      },
+      { 
+        id: 8, 
+        sessionNo: 'S-0001', 
+        date: '2026-05-19', 
+        startTime: '03:00 PM', 
+        endTime: '04:00 PM', 
+        patient: 'Jeremy Gilbert', 
+        healer: 'Julian Mars', 
+        type: 'Crystal Healing', 
+        status: 'Completed',
+        paymentStatus: 'Paid',
+        paymentMethod: 'Cash',
+        followUp: { required: false, urgency: 'None' },
+        notes: { treatmentType: 'Crystal Healing', observations: 'Aura sweeping performed.', detailedNotes: 'Energy flow maximized.', recommendation: 'Meditation weekly' }
+      }
+    ];
   });
 
-  // Edit session form states
-  const [editSession, setEditSession] = useState({
-    patient: '',
-    healer: 'Dr. Aris Varma',
-    date: todayStr,
-    startTime: '09:00 AM',
-    endTime: '10:00 AM',
-    type: 'Basic Pranic Healing',
-    status: 'Scheduled' as 'Completed' | 'Scheduled' | 'Cancelled',
-    paymentStatus: 'Pending' as 'Paid' | 'Pending',
-    paymentMethod: 'UPI' as 'UPI' | 'Cash',
-    followUpRequired: false,
-    followUpUrgency: 'None' as 'Urgent' | 'Pending' | 'None',
-    observations: '',
-    detailedNotes: '',
-    recommendation: '',
-    rating: 5,
-    comment: '',
-  });
+  useEffect(() => {
+    localStorage.setItem('phms_sessions', JSON.stringify(sessions));
+  }, [sessions]);
+
+
+
+
 
   // Helper: Sequentially calculate S-XXXX per patient name
   const getNextSessionNo = (patientName: string): string => {
@@ -250,109 +240,43 @@ const SessionsPage: React.FC = () => {
     return `S-${String(nextSeq).padStart(4, '0')}`;
   };
 
-  // Add Session trigger
-  const handleAddSession = () => {
-    if (!newSession.patient.trim()) {
-      alert('Patient name is required.');
-      return;
-    }
 
-    const patientNo = getNextSessionNo(newSession.patient);
-    const added: HealingSession = {
-      id: Date.now(),
-      sessionNo: patientNo,
-      date: newSession.date,
-      startTime: newSession.startTime,
-      endTime: newSession.endTime,
-      patient: newSession.patient.trim(),
-      healer: newSession.healer,
-      type: newSession.type,
-      status: 'Scheduled',
-      paymentStatus: 'Pending',
-      followUp: {
-        required: newSession.followUpRequired,
-        urgency: newSession.followUpRequired ? newSession.followUpUrgency : 'None',
-      },
-    };
 
-    setSessions([added, ...sessions]);
-    setNewSession({
-      patient: '',
-      healer: 'Dr. Aris Varma',
-      date: todayStr,
-      startTime: '09:00 AM',
-      endTime: '10:00 AM',
-      type: 'Basic Pranic Healing',
-      followUpRequired: false,
-      followUpUrgency: 'None',
-    });
-    setShowAddModal(false);
-    alert(`Session ${patientNo} successfully scheduled! Reminder push notification & SMS simulated to patient.`);
-  };
-
-  // Delete Session
+  // Delete Session Trigger
   const handleDeleteSession = (id: number) => {
-    if (window.confirm('Are you sure you want to delete this session record?')) {
-      setSessions(sessions.filter(s => s.id !== id));
-      alert('Session record removed.');
+    setSessionToDelete(id);
+    setShowDeleteConfirm(true);
+  };
+
+  // Confirm Delete Handler
+  const confirmDeleteSession = () => {
+    if (sessionToDelete !== null) {
+      const session = sessions.find(s => s.id === sessionToDelete);
+      if (session) {
+        const updated = sessions.filter(s => s.id !== sessionToDelete);
+        setSessions(updated);
+        localStorage.setItem('phms_sessions', JSON.stringify(updated));
+
+        // Audit Log recording
+        const savedAudits = localStorage.getItem('phms_audits') || '[]';
+        const audits = JSON.parse(savedAudits);
+        const newAudit = {
+          id: `A-${Math.floor(1000 + Math.random() * 9000)}`,
+          action: 'SESSION_DELETION',
+          details: `Deleted Session record ${session.sessionNo} for Patient ${session.patient} assigned to Healer ${session.healer}.`,
+          changedBy: user?.name || user?.email || 'Aria Seraphina',
+          timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+        };
+        localStorage.setItem('phms_audits', JSON.stringify([newAudit, ...audits]));
+
+        triggerToast(`Session record ${session.sessionNo} removed successfully.`);
+      }
+      setShowDeleteConfirm(false);
+      setSessionToDelete(null);
     }
   };
 
-  // Save changes from Edit Session modal
-  const handleEditSessionSubmit = () => {
-    if (!selectedSession) return;
-    if (!editSession.patient.trim()) {
-      alert('Patient name is required.');
-      return;
-    }
 
-    let updatedNotes = selectedSession.notes;
-    if (editSession.status === 'Completed') {
-      updatedNotes = {
-        treatmentType: editSession.type,
-        observations: editSession.observations || 'No explicit observations logged.',
-        detailedNotes: editSession.detailedNotes || 'No detailed treatment logs.',
-        recommendation: editSession.recommendation || 'None',
-      };
-    }
-
-    setSessions(
-      sessions.map((s) => {
-        if (s.id === selectedSession.id) {
-          // Increment healer cumulative score logic mockup
-          if (editSession.status === 'Completed' && s.status !== 'Completed') {
-            console.log(`Healer ${s.healer} cumulative healing count incremented.`);
-          }
-          return {
-            ...s,
-            patient: editSession.patient.trim(),
-            healer: editSession.healer,
-            date: editSession.date,
-            startTime: editSession.startTime,
-            endTime: editSession.endTime,
-            type: editSession.type,
-            status: editSession.status,
-            paymentStatus: editSession.paymentStatus,
-            paymentMethod: editSession.paymentMethod,
-            followUp: {
-              required: editSession.followUpRequired,
-              urgency: editSession.followUpRequired ? editSession.followUpUrgency : 'None',
-            },
-            notes: updatedNotes,
-            feedback: editSession.status === 'Completed' ? {
-              rating: Number(editSession.rating),
-              comment: editSession.comment.trim(),
-            } : undefined,
-          };
-        }
-        return s;
-      })
-    );
-
-    setShowEditModal(false);
-    setSelectedSession(null);
-    alert('Session record updated successfully.');
-  };
 
   // Mock PDF & Excel Export triggers
   const handleExport = (format: 'PDF' | 'Excel') => {
@@ -485,7 +409,7 @@ const SessionsPage: React.FC = () => {
                   <IonIcon icon={downloadOutline} style={{ marginRight: '4px' }} /> Excel
                 </button>
                 {rawRole !== 'PATIENT' && (
-                  <button className="sa-btn sa-btn--primary" onClick={() => setShowAddModal(true)}>
+                  <button className="sa-btn sa-btn--primary" onClick={() => history.push(ROUTES.BRANCH_ADMIN.BOOK_SESSION)}>
                     <IonIcon icon={addOutline} style={{ marginRight: '4px' }} /> Book Session
                   </button>
                 )}
@@ -669,32 +593,11 @@ const SessionsPage: React.FC = () => {
                             </button>
 
                             {/* Edit Session Scoped for non-patients */}
-                            {rawRole !== 'PATIENT' && (
+                             {rawRole !== 'PATIENT' && (
                               <button
                                 className="pa-doc-action-btn"
                                 title="Edit Session"
-                                onClick={() => {
-                                  setSelectedSession(session);
-                                  setEditSession({
-                                    patient: session.patient,
-                                    healer: session.healer,
-                                    date: session.date,
-                                    startTime: session.startTime,
-                                    endTime: session.endTime,
-                                    type: session.type,
-                                    status: session.status,
-                                    paymentStatus: session.paymentStatus,
-                                    paymentMethod: session.paymentMethod || 'UPI',
-                                    followUpRequired: session.followUp?.required || false,
-                                    followUpUrgency: session.followUp?.urgency || 'None',
-                                    observations: session.notes?.observations || '',
-                                    detailedNotes: session.notes?.detailedNotes || '',
-                                    recommendation: session.notes?.recommendation || '',
-                                    rating: session.feedback?.rating || 5,
-                                    comment: session.feedback?.comment || '',
-                                  });
-                                  setShowEditModal(true);
-                                }}
+                                onClick={() => history.push(ROUTES.BRANCH_ADMIN.EDIT_SESSION.replace(':id', session.id.toString()))}
                               >
                                 <IonIcon icon={pencilOutline} style={{ color: '#6366f1' }} />
                               </button>
@@ -772,349 +675,32 @@ const SessionsPage: React.FC = () => {
             )}
           </div>
         </div>
+
+        {/* ── MODAL: CONFIRM DELETE SESSION ────────────────────────────── */}
+        {showDeleteConfirm && sessionToDelete !== null && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.6)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+            <div style={{ background: '#fff', borderRadius: '16px', padding: '32px', maxWidth: '450px', width: '100%', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', textAlign: 'center' }}>
+              <div style={{ fontSize: '50px', color: '#ef4444', marginBottom: '16px' }}><IonIcon icon={alertCircleOutline} /></div>
+              <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: '#1e293b' }}>Delete Session</h2>
+              
+              <p style={{ fontSize: '13px', color: '#64748b', marginTop: '10px', lineHeight: 1.6 }}>
+                Are you sure you want to delete this session record? This operation permanently removes all diagnostic observations, notes, and billing history from the branch database registry.
+              </p>
+
+              <div style={{ display: 'flex', gap: '10px', marginTop: '24px', justifyContent: 'center' }}>
+                <button onClick={() => { setShowDeleteConfirm(false); setSessionToDelete(null); }} className="sa-btn sa-btn--outline" style={{ fontSize: '12px', padding: '8px 20px', flex: 1 }}>Cancel</button>
+                <button 
+                  onClick={confirmDeleteSession} 
+                  className="sa-btn sa-btn--primary" 
+                  style={{ fontSize: '12px', padding: '8px 20px', flex: 1, background: '#ef4444', borderColor: '#ef4444' }}
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </IonContent>
-
-      {/* ── MODAL: BOOK HEALING SESSION ────────────────────────────── */}
-      <IonModal isOpen={showAddModal} onDidDismiss={() => setShowAddModal(false)} className="sa-modal sa-modal--sm">
-        <div className="sa-modal__content">
-          <div className="sa-modal__header">
-            <h2>Book Healing Session</h2>
-            <button className="sa-modal__close-btn" onClick={() => setShowAddModal(false)}>×</button>
-          </div>
-          <div className="sa-modal__body">
-            <div className="sa-settings__form-group">
-              <label className="sa-settings__label">Patient Name *</label>
-              <input
-                className="sa-input"
-                placeholder="Full Name"
-                value={newSession.patient}
-                onChange={(e) => setNewSession({ ...newSession, patient: e.target.value })}
-              />
-            </div>
-
-            <div className="sa-settings__form-group">
-              <label className="sa-settings__label">Assigned Healer</label>
-              <select
-                className="sa-input"
-                value={newSession.healer}
-                onChange={(e) => setNewSession({ ...newSession, healer: e.target.value })}
-              >
-                <option>Dr. Aris Varma</option>
-                <option>Julian Mars</option>
-                <option>Maya Rose</option>
-                <option>Lila Thorne</option>
-              </select>
-            </div>
-
-            <div className="sa-settings__form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <div className="sa-settings__form-group">
-                <label className="sa-settings__label">Session Type</label>
-                <select
-                  className="sa-input"
-                  value={newSession.type}
-                  onChange={(e) => setNewSession({ ...newSession, type: e.target.value })}
-                >
-                  <option>Basic Pranic Healing</option>
-                  <option>Advanced Pranic Healing</option>
-                  <option>Pranic Psychotherapy</option>
-                  <option>Crystal Healing</option>
-                </select>
-              </div>
-
-              <div className="sa-settings__form-group">
-                <label className="sa-settings__label">Session Date</label>
-                <input
-                  type="date"
-                  className="sa-input"
-                  value={newSession.date}
-                  onChange={(e) => setNewSession({ ...newSession, date: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <div className="sa-settings__form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <div className="sa-settings__form-group">
-                <label className="sa-settings__label">Start Time</label>
-                <input
-                  type="text"
-                  className="sa-input"
-                  placeholder="09:00 AM"
-                  value={newSession.startTime}
-                  onChange={(e) => setNewSession({ ...newSession, startTime: e.target.value })}
-                />
-              </div>
-
-              <div className="sa-settings__form-group">
-                <label className="sa-settings__label">End Time</label>
-                <input
-                  type="text"
-                  className="sa-input"
-                  placeholder="10:00 AM"
-                  value={newSession.endTime}
-                  onChange={(e) => setNewSession({ ...newSession, endTime: e.target.value })}
-                />
-              </div>
-            </div>
-
-            {/* Follow-up flag toggle */}
-            <div style={{ marginTop: '16px', background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <input 
-                  type="checkbox" 
-                  id="followUpRequired" 
-                  checked={newSession.followUpRequired} 
-                  onChange={(e) => setNewSession({ ...newSession, followUpRequired: e.target.checked })} 
-                />
-                <label htmlFor="followUpRequired" style={{ fontWeight: 'bold', fontSize: '13px', color: '#334155' }}>
-                  Mark Follow-up Required
-                </label>
-              </div>
-
-              {newSession.followUpRequired && (
-                <div className="sa-settings__form-group" style={{ marginTop: '10px' }}>
-                  <label className="sa-settings__label">Follow-up Urgency</label>
-                  <select 
-                    className="sa-input"
-                    value={newSession.followUpUrgency}
-                    onChange={(e) => setNewSession({ ...newSession, followUpUrgency: e.target.value as any })}
-                  >
-                    <option value="None">None</option>
-                    <option value="Pending">Pending (Orange)</option>
-                    <option value="Urgent">Urgent (Red)</option>
-                  </select>
-                </div>
-              )}
-            </div>
-
-          </div>
-          <div className="sa-modal__footer">
-            <button className="sa-btn sa-btn--outline" onClick={() => setShowAddModal(false)}>Cancel</button>
-            <button className="sa-btn sa-btn--primary" onClick={handleAddSession}>Book Session</button>
-          </div>
-        </div>
-      </IonModal>
-
-      {/* ── MODAL: EDIT HEALING SESSION ────────────────────────────── */}
-      <IonModal isOpen={showEditModal} onDidDismiss={() => setShowEditModal(false)} className="sa-modal sa-modal--sm">
-        <div className="sa-modal__content">
-          <div className="sa-modal__header">
-            <h2>Edit Healing Session</h2>
-            <button className="sa-modal__close-btn" onClick={() => setShowEditModal(false)}>×</button>
-          </div>
-          <div className="sa-modal__body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-            <div className="sa-settings__form-group">
-              <label className="sa-settings__label">Patient Name *</label>
-              <input
-                className="sa-input"
-                placeholder="Full Name"
-                value={editSession.patient}
-                onChange={(e) => setEditSession({ ...editSession, patient: e.target.value })}
-              />
-            </div>
-
-            <div className="sa-settings__form-group">
-              <label className="sa-settings__label">Assigned Healer</label>
-              <select
-                className="sa-input"
-                value={editSession.healer}
-                onChange={(e) => setEditSession({ ...editSession, healer: e.target.value })}
-              >
-                <option>Dr. Aris Varma</option>
-                <option>Julian Mars</option>
-                <option>Maya Rose</option>
-                <option>Lila Thorne</option>
-              </select>
-            </div>
-
-            <div className="sa-settings__form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <div className="sa-settings__form-group">
-                <label className="sa-settings__label">Session Type</label>
-                <select
-                  className="sa-input"
-                  value={editSession.type}
-                  onChange={(e) => setEditSession({ ...editSession, type: e.target.value })}
-                >
-                  <option>Basic Pranic Healing</option>
-                  <option>Advanced Pranic Healing</option>
-                  <option>Pranic Psychotherapy</option>
-                  <option>Crystal Healing</option>
-                </select>
-              </div>
-
-              <div className="sa-settings__form-group">
-                <label className="sa-settings__label">Session Date</label>
-                <input
-                  type="date"
-                  className="sa-input"
-                  value={editSession.date}
-                  onChange={(e) => setEditSession({ ...editSession, date: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <div className="sa-settings__form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <div className="sa-settings__form-group">
-                <label className="sa-settings__label">Start Time</label>
-                <input
-                  type="text"
-                  className="sa-input"
-                  placeholder="09:00 AM"
-                  value={editSession.startTime}
-                  onChange={(e) => setEditSession({ ...editSession, startTime: e.target.value })}
-                />
-              </div>
-
-              <div className="sa-settings__form-group">
-                <label className="sa-settings__label">End Time</label>
-                <input
-                  type="text"
-                  className="sa-input"
-                  placeholder="10:00 AM"
-                  value={editSession.endTime}
-                  onChange={(e) => setEditSession({ ...editSession, endTime: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <div className="sa-settings__form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <div className="sa-settings__form-group">
-                <label className="sa-settings__label">Session Status</label>
-                <select
-                  className="sa-input"
-                  value={editSession.status}
-                  onChange={(e) => setEditSession({ ...editSession, status: e.target.value as any })}
-                >
-                  <option value="Scheduled">Scheduled</option>
-                  <option value="Completed">Completed</option>
-                  <option value="Cancelled">Cancelled</option>
-                </select>
-              </div>
-
-              <div className="sa-settings__form-group">
-                <label className="sa-settings__label">Payment Status</label>
-                <select
-                  className="sa-input"
-                  value={editSession.paymentStatus}
-                  onChange={(e) => setEditSession({ ...editSession, paymentStatus: e.target.value as any })}
-                >
-                  <option value="Paid">Paid</option>
-                  <option value="Pending">Pending</option>
-                </select>
-              </div>
-            </div>
-
-            {editSession.paymentStatus === 'Paid' && (
-              <div className="sa-settings__form-group" style={{ marginTop: '12px' }}>
-                <label className="sa-settings__label">Payment Method</label>
-                <select
-                  className="sa-input"
-                  value={editSession.paymentMethod}
-                  onChange={(e) => setEditSession({ ...editSession, paymentMethod: e.target.value as any })}
-                >
-                  <option value="UPI">UPI</option>
-                  <option value="Cash">Cash</option>
-                </select>
-              </div>
-            )}
-
-            {/* Follow-up flag toggle */}
-            <div style={{ marginTop: '16px', background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <input 
-                  type="checkbox" 
-                  id="editFollowUpRequired" 
-                  checked={editSession.followUpRequired} 
-                  onChange={(e) => setEditSession({ ...editSession, followUpRequired: e.target.checked })} 
-                />
-                <label htmlFor="editFollowUpRequired" style={{ fontWeight: 'bold', fontSize: '13px', color: '#334155' }}>
-                  Mark Follow-up Required
-                </label>
-              </div>
-
-              {editSession.followUpRequired && (
-                <div className="sa-settings__form-group" style={{ marginTop: '10px' }}>
-                  <label className="sa-settings__label">Follow-up Urgency</label>
-                  <select 
-                    className="sa-input"
-                    value={editSession.followUpUrgency}
-                    onChange={(e) => setEditSession({ ...editSession, followUpUrgency: e.target.value as any })}
-                  >
-                    <option value="None">None</option>
-                    <option value="Pending">Pending (Orange)</option>
-                    <option value="Urgent">Urgent (Red)</option>
-                  </select>
-                </div>
-              )}
-            </div>
-
-            {/* observations Notes panel if Completed */}
-            {editSession.status === 'Completed' && (
-              <div style={{ marginTop: '16px', background: '#ecfdf5', padding: '16px', borderRadius: '8px', border: '1px solid #a7f3d0', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <h4 style={{ margin: 0, color: '#0d5c46', fontSize: '13px', fontWeight: 800 }}>Clinical Healing Records</h4>
-                
-                <div className="sa-settings__form-group">
-                  <label className="sa-settings__label" style={{ color: '#0d5c46' }}>Healing Observations</label>
-                  <textarea 
-                    className="sa-input" 
-                    rows={2} 
-                    value={editSession.observations}
-                    onChange={(e) => setEditSession({ ...editSession, observations: e.target.value })}
-                  />
-                </div>
-
-                <div className="sa-settings__form-group">
-                  <label className="sa-settings__label" style={{ color: '#0d5c46' }}>Detailed Clinical Notes</label>
-                  <textarea 
-                    className="sa-input" 
-                    rows={2} 
-                    value={editSession.detailedNotes}
-                    onChange={(e) => setEditSession({ ...editSession, detailedNotes: e.target.value })}
-                  />
-                </div>
-
-                <div className="sa-settings__form-group">
-                  <label className="sa-settings__label" style={{ color: '#0d5c46' }}>Next Recommendations</label>
-                  <input 
-                    type="text"
-                    className="sa-input" 
-                    value={editSession.recommendation}
-                    onChange={(e) => setEditSession({ ...editSession, recommendation: e.target.value })}
-                  />
-                </div>
-
-                <div className="sa-settings__form-group">
-                  <label className="sa-settings__label" style={{ color: '#0d5c46' }}>Feedback Stars</label>
-                  <div style={{ display: 'flex', gap: '6px', fontSize: '20px', color: '#f59e0b', marginTop: '2px' }}>
-                    {[1, 2, 3, 4, 5].map((starVal) => (
-                      <IonIcon
-                        key={starVal}
-                        icon={starVal <= editSession.rating ? star : starOutline}
-                        style={{ cursor: 'pointer' }}
-                        onClick={() => setEditSession({ ...editSession, rating: starVal })}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                <div className="sa-settings__form-group">
-                  <label className="sa-settings__label" style={{ color: '#0d5c46' }}>Feedback Comments</label>
-                  <input 
-                    type="text"
-                    className="sa-input" 
-                    value={editSession.comment}
-                    onChange={(e) => setEditSession({ ...editSession, comment: e.target.value })}
-                  />
-                </div>
-              </div>
-            )}
-
-          </div>
-          <div className="sa-modal__footer">
-            <button className="sa-btn sa-btn--outline" onClick={() => setShowEditModal(false)}>Cancel</button>
-            <button className="sa-btn sa-btn--primary" onClick={handleEditSessionSubmit}>Save Changes</button>
-          </div>
-        </div>
-      </IonModal>
     </IonPage>
   );
 };

@@ -42,6 +42,8 @@ import BAPatientsPage from './pages/branch-admin/PatientsPage';
 import BARegisterPatientPage from './pages/branch-admin/RegisterPatientPage';
 import EditPatientPages from './pages/branch-admin/EditPatientPages';
 import BASessionsPage from './pages/branch-admin/SessionsPage';
+import CreateBookSession from './pages/branch-admin/CreateBookSession';
+import EditSessionsPages from './pages/branch-admin/EditSessionsPages';
 import BADetialsSessionsPages from './pages/branch-admin/DetialsSessionsPages';
 import SARevenuePage from './pages/super-admin/RevenuePage';
 import SADailyFinancePage from './pages/super-admin/DailyFinancePage';
@@ -258,6 +260,12 @@ const AppContent: React.FC = () => {
         </Route>
         <Route path={ROUTES.BRANCH_ADMIN.SESSIONS} exact={true}>
           <BASessionsPage />
+        </Route>
+        <Route path={ROUTES.BRANCH_ADMIN.BOOK_SESSION} exact={true}>
+          <CreateBookSession />
+        </Route>
+        <Route path={ROUTES.BRANCH_ADMIN.EDIT_SESSION} exact={true}>
+          <EditSessionsPages />
         </Route>
         <Route path={ROUTES.BRANCH_ADMIN.DETAIL_SESSION} exact={true}>
           <BADetialsSessionsPages />

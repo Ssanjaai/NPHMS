@@ -59,6 +59,8 @@ export const ROUTES = {
     REGISTER_PATIENT: '/branch-admin/patients/register',
     EDIT_PATIENT: '/branch-admin/patients/edit/:id',
     SESSIONS: '/branch-admin/sessions',
+    BOOK_SESSION: '/branch-admin/sessions/book',
+    EDIT_SESSION: '/branch-admin/sessions/edit/:id',
     DETAIL_SESSION: '/branch-admin/sessions/detail/:id',
     ATTENDANCE: '/branch-admin/attendance',
     VISITOR_LOG: '/branch-admin/visitor-log',
