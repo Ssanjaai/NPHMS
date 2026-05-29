@@ -10,6 +10,7 @@ import {
   IonMenuButton,
   IonModal,
   useIonToast,
+  useIonViewWillEnter,
 } from '@ionic/react';
 import {
   searchOutline,
@@ -226,6 +227,14 @@ const SessionsPage: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('phms_sessions', JSON.stringify(sessions));
   }, [sessions]);
+
+  // Sync state with localStorage on view entering (fixes Ionic view cache dynamic stale states)
+  useIonViewWillEnter(() => {
+    const saved = localStorage.getItem('phms_sessions');
+    if (saved) {
+      setSessions(JSON.parse(saved));
+    }
+  });
 
 
 
