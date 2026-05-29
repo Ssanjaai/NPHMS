@@ -226,26 +226,35 @@ export default function EditSessionsPages() {
       return s;
     });
 
-    // Auto-bookkeeping transition when Session is Completed
-    if (formData.status === 'Completed' && targetSession && targetSession.status !== 'Completed') {
-      const totalBilled = formData.type === 'Pranic Psychotherapy' ? 2500 : formData.type === 'Crystal Healing' ? 3000 : formData.type === 'Advanced Pranic Healing' ? 2000 : 1200;
+    // Auto-bookkeeping: sync finance when session is Completed for the first time
+    // OR when payment status changes on an already-Completed session
+    const isNowCompleted = formData.status === 'Completed';
+    const wasAlreadyCompleted = targetSession && targetSession.status === 'Completed';
+    const paymentStatusChanged = targetSession && targetSession.paymentStatus !== formData.paymentStatus;
+
+    if (targetSession && isNowCompleted) {
+      const totalBilled = formData.type === 'Pranic Psychotherapy' ? 2500
+        : formData.type === 'Crystal Healing' ? 3000
+        : formData.type === 'Advanced Pranic Healing' ? 2000
+        : 1200;
       const amountPaid = formData.paymentStatus === 'Paid' ? totalBilled : 0;
       const outstanding = totalBilled - amountPaid;
       const autoStatus = amountPaid === totalBilled ? 'Paid' : amountPaid === 0 ? 'Pending' : 'Partial';
 
-      // 1. Write to phms_patient_payments in localStorage
+      // 1. Update or create Patient Payment record
       const savedPayments = localStorage.getItem('phms_patient_payments') || '[]';
-      const payments = JSON.parse(savedPayments);
-
+      const payments: any[] = JSON.parse(savedPayments);
       const existingPayIndex = payments.findIndex((p: any) => p.sessionNo === formData.sessionNo);
-      const newPaymentHistory = amountPaid > 0 ? [{
-        date: new Date().toISOString().split('T')[0],
-        amount: amountPaid,
-        mode: formData.paymentMethod || 'UPI',
-        status: 'Paid' as const
-      }] : [];
 
       if (existingPayIndex === -1) {
+        // First time: create new record
+        const newPaymentHistory = amountPaid > 0 ? [{
+          date: new Date().toISOString().split('T')[0],
+          amount: amountPaid,
+          mode: formData.paymentMethod || 'UPI',
+          status: 'Paid' as const
+        }] : [];
+
         const newPayment = {
           id: `P-${Math.floor(1000 + Math.random() * 9000)}`,
           patientName: formData.patientName,
@@ -258,11 +267,37 @@ export default function EditSessionsPages() {
           caseId: `C-${Math.floor(1000 + Math.random() * 9000)}`,
           history: newPaymentHistory
         };
-        localStorage.setItem('phms_patient_payments', JSON.stringify([newPayment, ...payments]));
-      }
+        payments.unshift(newPayment);
+      } else if (wasAlreadyCompleted && paymentStatusChanged) {
+        // Already completed: update payment fields in existing record
+        const existing = payments[existingPayIndex];
+        const updatedPaid = amountPaid;
+        const updatedOutstanding = totalBilled - updatedPaid;
+        const updatedAutoStatus = updatedPaid >= totalBilled ? 'Paid' : updatedPaid === 0 ? 'Pending' : 'Partial';
 
-      // 2. Write an Income Entry to general finance ledger
-      if (amountPaid > 0) {
+        const newHistoryEntry = updatedPaid > existing.paid ? [{
+          date: new Date().toISOString().split('T')[0],
+          amount: updatedPaid - existing.paid,
+          mode: (formData.paymentMethod || 'UPI') as 'Cash' | 'UPI' | 'Bank Transfer',
+          status: 'Paid' as const
+        }] : [];
+
+        payments[existingPayIndex] = {
+          ...existing,
+          paid: updatedPaid,
+          outstanding: updatedOutstanding,
+          status: updatedAutoStatus,
+          history: [...(newHistoryEntry), ...(existing.history || [])]
+        };
+      }
+      localStorage.setItem('phms_patient_payments', JSON.stringify(payments));
+
+      // 2. Write an Income Entry to general finance ledger if payment is received
+      //    Only add new transaction when switching to Paid for the first time
+      const justBecamePaid = formData.paymentStatus === 'Paid' &&
+        (!wasAlreadyCompleted || targetSession.paymentStatus !== 'Paid');
+
+      if (justBecamePaid && amountPaid > 0) {
         const savedTx = localStorage.getItem('phms_finance_transactions') || '[]';
         const transactionsList = JSON.parse(savedTx);
 

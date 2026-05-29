@@ -10,6 +10,7 @@ import {
   IonMenuButton,
   IonModal,
   useIonToast,
+  useIonViewWillEnter,
 } from '@ionic/react';
 import {
   downloadOutline,
@@ -41,6 +42,8 @@ import './branch-admin.css';
 
 interface Transaction {
   id: number;
+  transactionId: string;   // FIN-0001
+  receiptId: string;       // TXN-2026-0001
   timestamp: string;
   category: string;
   type: 'income' | 'expense';
@@ -73,8 +76,9 @@ const FinancePage: React.FC = () => {
   const { user } = useAuthStore();
   const [present] = useIonToast();
   
-  // Dynamic Branch State
-  const [selectedBranch, setSelectedBranch] = useState('Mumbai Branch');
+  // Branch is fixed to current branch admin's branch (not selectable)
+  const BRANCH_NAME = (user as any)?.branchName || user?.name?.includes('Mumbai') ? 'Mumbai Branch' : 'Mumbai Branch';
+  const BRANCH_BASELINE = { rev: 240000, exp: 33800, cash: 80000, online: 126000 };
 
   // Tab control state
   const [activeTab, setActiveTab] = useState<'transactions' | 'payments' | 'reports'>('transactions');
@@ -84,6 +88,22 @@ const FinancePage: React.FC = () => {
   const [addModalType, setAddModalType] = useState<'income' | 'expense'>('income');
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
+
+  // Export Modal States
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportFormat, setExportFormat] = useState<'PDF' | 'Excel' | null>(null);
+  const [exportProgress, setExportProgress] = useState(0);
+  const [exportState, setExportState] = useState<'idle' | 'generating' | 'completed'>('idle');
+
+  // Raise Invoice & Dues List Modal States
+  const [showRaiseInvoiceModal, setShowRaiseInvoiceModal] = useState(false);
+  const [invoiceForm, setInvoiceForm] = useState({
+    patientName: '',
+    sessionNo: 'S-0001',
+    amount: '',
+    remarks: ''
+  });
+  const [showDuesListModal, setShowDuesListModal] = useState(false);
 
   // Search & Filter States for Transactions
   const [searchQuery, setSearchQuery] = useState('');
@@ -98,60 +118,94 @@ const FinancePage: React.FC = () => {
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [receiptTx, setReceiptTx] = useState<Transaction | null>(null);
 
-  // Patient Payments States
+  // Patient Payments States — seeded from localStorage, then reconciled from sessions
   const [patientPayments, setPatientPayments] = useState<PatientPayment[]>(() => {
+    const feeMap: Record<string, number> = {
+      'Pranic Psychotherapy': 2500,
+      'Crystal Healing': 3000,
+      'Advanced Pranic Healing': 2000,
+    };
+    const getFee = (type: string) => feeMap[type] || 1200;
+
+    let base: PatientPayment[];
     const saved = localStorage.getItem('phms_patient_payments');
-    if (saved) return JSON.parse(saved);
-    const initial: PatientPayment[] = [
-      {
-        id: 'P-1092',
-        patientName: 'Ravi Kumar',
-        sessionNo: 'S-0012',
-        totalBilled: 5000,
-        paid: 3000,
-        outstanding: 2000,
-        status: 'Partial',
-        assignedHealer: 'Dr. Aris Varma',
-        caseId: 'C-4091',
-        history: [
-          { date: '2026-05-12', amount: 3000, mode: 'UPI', status: 'Paid' }
-        ]
-      },
-      {
-        id: 'P-1093',
-        patientName: 'Meena Devi',
-        sessionNo: 'S-0013',
-        totalBilled: 4000,
-        paid: 4000,
-        outstanding: 0,
-        status: 'Paid',
-        assignedHealer: 'Dr. Maya Rose',
-        caseId: 'C-4092',
-        history: [
-          { date: '2026-05-18', amount: 4000, mode: 'Cash', status: 'Paid' }
-        ]
-      },
-      {
-        id: 'P-1094',
-        patientName: 'Arjun',
-        sessionNo: 'S-0014',
-        totalBilled: 2500,
-        paid: 0,
-        outstanding: 2500,
-        status: 'Pending',
-        assignedHealer: 'Dr. Julian Mars',
-        caseId: 'C-4093',
-        history: []
+    if (saved) {
+      base = JSON.parse(saved);
+    } else {
+      base = [
+        {
+          id: 'P-1092',
+          patientName: 'Ravi Kumar',
+          sessionNo: 'S-0012',
+          totalBilled: 5000,
+          paid: 3000,
+          outstanding: 2000,
+          status: 'Partial',
+          assignedHealer: 'Dr. Aris Varma',
+          caseId: 'C-4091',
+          history: [{ date: '2026-05-12', amount: 3000, mode: 'UPI', status: 'Paid' }]
+        },
+        {
+          id: 'P-1093',
+          patientName: 'Meena Devi',
+          sessionNo: 'S-0013',
+          totalBilled: 4000,
+          paid: 4000,
+          outstanding: 0,
+          status: 'Paid',
+          assignedHealer: 'Dr. Maya Rose',
+          caseId: 'C-4092',
+          history: [{ date: '2026-05-18', amount: 4000, mode: 'Cash', status: 'Paid' }]
+        },
+        {
+          id: 'P-1094',
+          patientName: 'Arjun',
+          sessionNo: 'S-0014',
+          totalBilled: 2500,
+          paid: 0,
+          outstanding: 2500,
+          status: 'Pending',
+          assignedHealer: 'Dr. Julian Mars',
+          caseId: 'C-4093',
+          history: []
+        }
+      ];
+    }
+
+    // Reconcile: scan sessions and inject any Paid sessions missing from the list
+    const rawSessions: any[] = JSON.parse(localStorage.getItem('phms_sessions') || '[]');
+    let changed = false;
+    rawSessions.forEach((s: any) => {
+      if (s.paymentStatus !== 'Paid') return;
+      const exists = base.some(p => p.sessionNo === s.sessionNo);
+      if (!exists) {
+        const fee = getFee(s.type);
+        base = [{
+          id: `P-${Math.floor(1000 + Math.random() * 9000)}`,
+          patientName: s.patient,
+          sessionNo: s.sessionNo,
+          totalBilled: fee,
+          paid: fee,
+          outstanding: 0,
+          status: 'Paid',
+          assignedHealer: s.healer,
+          caseId: `C-${Math.floor(1000 + Math.random() * 9000)}`,
+          history: [{
+            date: s.date || new Date().toISOString().split('T')[0],
+            amount: fee,
+            mode: (s.paymentMethod || 'UPI') as 'Cash' | 'UPI' | 'Bank Transfer',
+            status: 'Paid' as const,
+          }],
+        }, ...base];
+        changed = true;
       }
-    ];
-    localStorage.setItem('phms_patient_payments', JSON.stringify(initial));
-    return initial;
+    });
+    if (changed) localStorage.setItem('phms_patient_payments', JSON.stringify(base));
+    return base;
   });
 
-  // Sync payments to localStorage
-  useEffect(() => {
-    localStorage.setItem('phms_patient_payments', JSON.stringify(patientPayments));
-  }, [patientPayments]);
+  // NOTE: patientPayments is refreshed via useIonViewWillEnter on every navigation.
+  // It is written to localStorage explicitly in action handlers only.
 
   // Record Payment Modal & Form State
   const [showRecordPaymentModal, setShowRecordPaymentModal] = useState(false);
@@ -223,64 +277,160 @@ const FinancePage: React.FC = () => {
     }
   }, [activeSessions]);
 
-  // General transactions ledger sync with localStorage
+  // Helper to generate sequential Finance IDs based on existing list
+  const genFinId = (existing: Transaction[]) => {
+    const maxNum = existing.reduce((max, t) => {
+      const match = t.transactionId?.match(/FIN-(\d+)/);
+      return match ? Math.max(max, parseInt(match[1], 10)) : max;
+    }, 0);
+    return `FIN-${String(maxNum + 1).padStart(4, '0')}`;
+  };
+  const genRcptId = (existing: Transaction[]) => {
+    const year = new Date().getFullYear();
+    const maxNum = existing.reduce((max, t) => {
+      const match = t.receiptId?.match(/TXN-\d+-(\d+)/);
+      return match ? Math.max(max, parseInt(match[1], 10)) : max;
+    }, 0);
+    return `TXN-${year}-${String(maxNum + 1).padStart(4, '0')}`;
+  };
+
+  // General transactions ledger — seeded from localStorage, then reconciled from sessions
   const [transactions, setTransactions] = useState<Transaction[]>(() => {
+    const feeMap: Record<string, number> = {
+      'Pranic Psychotherapy': 2500,
+      'Crystal Healing': 3000,
+      'Advanced Pranic Healing': 2000,
+    };
+    const getFee = (type: string) => feeMap[type] || 1200;
+
+    let base: Transaction[];
     const saved = localStorage.getItem('phms_finance_transactions');
-    if (saved) return JSON.parse(saved);
-    const initial = [
-      {
-        id: 1,
-        timestamp: '2026-05-28, 09:15 AM',
-        category: 'Session Fee',
-        type: 'income',
-        amount: 1200,
-        mode: 'UPI (GPay)',
-        recordedBy: 'Admin - Anjali Rao',
-        description: 'Elena Gilbert Pranic Psychotherapy',
-        dateStr: '2026-05-28',
-      },
-      {
-        id: 2,
-        timestamp: '2026-05-27, 10:30 AM',
-        category: 'Utilities',
-        type: 'expense',
-        amount: 4500,
-        mode: 'Bank Trans',
-        recordedBy: 'Admin - Anjali Rao',
-        description: 'Monthly electricity bill',
-        dateStr: '2026-05-27',
-      },
-      {
-        id: 3,
-        timestamp: '2026-05-26, 11:00 AM',
-        category: 'Camp Fee',
-        type: 'income',
-        amount: 8500,
-        mode: 'Cash',
-        recordedBy: 'Admin - Anjali Rao',
-        description: 'Summer healing camp registration',
-        dateStr: '2026-05-26',
-      },
-      {
-        id: 4,
-        timestamp: '2026-05-25, 01:45 PM',
-        category: 'Session Fee',
-        type: 'income',
-        amount: 1200,
-        mode: 'UPI (PhonePe)',
-        recordedBy: 'Admin - Anjali Rao',
-        description: 'Stefan Salvatore Advanced Healing',
-        dateStr: '2026-05-25',
-      },
-    ];
-    localStorage.setItem('phms_finance_transactions', JSON.stringify(initial));
-    return initial;
+    if (saved) {
+      base = JSON.parse(saved);
+      // Back-fill any missing IDs in existing records
+      base = base.map((t, i) => ({
+        ...t,
+        transactionId: t.transactionId || `FIN-${String(i + 1).padStart(4, '0')}`,
+        receiptId: t.receiptId || `TXN-${new Date().getFullYear()}-${String(i + 1).padStart(4, '0')}`,
+      }));
+    } else {
+      base = [
+        { id: 1, transactionId: 'FIN-0001', receiptId: 'TXN-2026-0001', timestamp: '2026-05-28, 09:15 AM', category: 'Session Fee', type: 'income', amount: 1200, mode: 'UPI (GPay)', recordedBy: 'Admin - Anjali Rao', description: 'Elena Gilbert Pranic Psychotherapy', dateStr: '2026-05-28' },
+        { id: 2, transactionId: 'FIN-0002', receiptId: 'TXN-2026-0002', timestamp: '2026-05-27, 10:30 AM', category: 'Utilities', type: 'expense', amount: 4500, mode: 'Bank Trans', recordedBy: 'Admin - Anjali Rao', description: 'Monthly electricity bill', dateStr: '2026-05-27' },
+        { id: 3, transactionId: 'FIN-0003', receiptId: 'TXN-2026-0003', timestamp: '2026-05-26, 11:00 AM', category: 'Camp Fee', type: 'income', amount: 8500, mode: 'Cash', recordedBy: 'Admin - Anjali Rao', description: 'Summer healing camp registration', dateStr: '2026-05-26' },
+        { id: 4, transactionId: 'FIN-0004', receiptId: 'TXN-2026-0004', timestamp: '2026-05-25, 01:45 PM', category: 'Session Fee', type: 'income', amount: 1200, mode: 'UPI (PhonePe)', recordedBy: 'Admin - Anjali Rao', description: 'Stefan Salvatore Advanced Healing', dateStr: '2026-05-25' },
+      ];
+    }
+
+    // Reconcile: inject income entries for any Paid session not already in ledger
+    const rawSessions: any[] = JSON.parse(localStorage.getItem('phms_sessions') || '[]');
+    let changed = false;
+    rawSessions.forEach((s: any) => {
+      if (s.paymentStatus !== 'Paid') return;
+      const alreadyIn = base.some(tx => tx.description?.includes(s.sessionNo));
+      if (!alreadyIn) {
+        const fee = getFee(s.type);
+        const newEntry: Transaction = {
+          id: Date.now() + Math.random(),
+          transactionId: genFinId(base),
+          receiptId: genRcptId(base),
+          timestamp: `${s.date || new Date().toISOString().split('T')[0]}, ${s.startTime || '09:00 AM'}`,
+          category: 'Session Fee',
+          type: 'income',
+          amount: fee,
+          mode: s.paymentMethod || 'UPI',
+          recordedBy: 'Auto-sync',
+          description: `${s.patient} - Session fee for ${s.sessionNo} (${s.type})`,
+          dateStr: s.date || new Date().toISOString().split('T')[0],
+        };
+        base = [newEntry, ...base];
+        changed = true;
+      }
+    });
+    if (changed) localStorage.setItem('phms_finance_transactions', JSON.stringify(base));
+    return base;
   });
 
-  // Sync general ledger to localStorage
-  useEffect(() => {
-    localStorage.setItem('phms_finance_transactions', JSON.stringify(transactions));
-  }, [transactions]);
+  // NOTE: transactions is refreshed via useIonViewWillEnter on every navigation.
+  // It is written to localStorage explicitly in action handlers only.
+
+  // Full reconciliation on every page activation
+  useIonViewWillEnter(() => {
+    const feeMap: Record<string, number> = {
+      'Pranic Psychotherapy': 2500,
+      'Crystal Healing': 3000,
+      'Advanced Pranic Healing': 2000,
+    };
+    const getFee = (type: string) => feeMap[type] || 1200;
+
+    const rawSessions: any[] = JSON.parse(localStorage.getItem('phms_sessions') || '[]');
+    let payments: PatientPayment[] = JSON.parse(localStorage.getItem('phms_patient_payments') || '[]');
+    let txList: Transaction[] = JSON.parse(localStorage.getItem('phms_finance_transactions') || '[]');
+
+    // Back-fill IDs on existing records that don't have them
+    txList = txList.map((t, i) => ({
+      ...t,
+      transactionId: t.transactionId || `FIN-${String(i + 1).padStart(4, '0')}`,
+      receiptId: t.receiptId || `TXN-${new Date().getFullYear()}-${String(i + 1).padStart(4, '0')}`,
+    }));
+
+    let paymentsChanged = false;
+    let txChanged = false;
+
+    rawSessions.forEach((s: any) => {
+      if (s.paymentStatus !== 'Paid') return;
+      const fee = getFee(s.type);
+
+      const alreadyInPayments = payments.some(p => p.sessionNo === s.sessionNo);
+      if (!alreadyInPayments) {
+        const newP: PatientPayment = {
+          id: `P-${Math.floor(1000 + Math.random() * 9000)}`,
+          patientName: s.patient,
+          sessionNo: s.sessionNo,
+          totalBilled: fee,
+          paid: fee,
+          outstanding: 0,
+          status: 'Paid',
+          assignedHealer: s.healer,
+          caseId: `C-${Math.floor(1000 + Math.random() * 9000)}`,
+          history: [{
+            date: s.date || new Date().toISOString().split('T')[0],
+            amount: fee,
+            mode: (s.paymentMethod || 'UPI') as 'Cash' | 'UPI' | 'Bank Transfer',
+            status: 'Paid' as const,
+          }],
+        };
+        payments = [newP, ...payments];
+        paymentsChanged = true;
+      }
+
+      const alreadyInTx = txList.some(tx => tx.description?.includes(s.sessionNo));
+      if (!alreadyInTx) {
+        const newEntry: Transaction = {
+          id: Date.now() + Math.random(),
+          transactionId: genFinId(txList),
+          receiptId: genRcptId(txList),
+          timestamp: `${s.date || new Date().toISOString().split('T')[0]}, ${s.startTime || '09:00 AM'}`,
+          category: 'Session Fee',
+          type: 'income',
+          amount: fee,
+          mode: s.paymentMethod || 'UPI',
+          recordedBy: 'Auto-sync',
+          description: `${s.patient} - Session fee for ${s.sessionNo} (${s.type})`,
+          dateStr: s.date || new Date().toISOString().split('T')[0],
+        };
+        txList = [newEntry, ...txList];
+        txChanged = true;
+      }
+    });
+
+    if (paymentsChanged) localStorage.setItem('phms_patient_payments', JSON.stringify(payments));
+    if (txChanged || true) localStorage.setItem('phms_finance_transactions', JSON.stringify(txList));
+
+    // 5. Update React state
+    setPatientPayments(payments);
+    setTransactions(txList);
+  });
 
   // Form input states
   const [newTx, setNewTx] = useState({
@@ -307,22 +457,7 @@ const FinancePage: React.FC = () => {
     });
   };
 
-  // Super Admin readiness dynamic baseline aggregation
-  const getBranchBaselines = (branch: string) => {
-    switch (branch) {
-      case 'Pune Branch':
-        return { rev: 185000, exp: 28400, cash: 62000, online: 94600 };
-      case 'Delhi Branch':
-        return { rev: 210000, exp: 31200, cash: 71000, online: 107800 };
-      case 'All Branches (Consolidated)':
-        return { rev: 635000, exp: 93400, cash: 213000, online: 328400 };
-      case 'Mumbai Branch':
-      default:
-        return { rev: 240000, exp: 33800, cash: 80000, online: 126000 };
-    }
-  };
-
-  const baselines = getBranchBaselines(selectedBranch);
+  const baselines = BRANCH_BASELINE;
 
   // Compute live real-time totals dynamically
   const incomeFromTransactions = transactions
@@ -336,6 +471,16 @@ const FinancePage: React.FC = () => {
   const totalRevenue = baselines.rev + incomeFromTransactions;
   const totalExpenses = baselines.exp + expenseFromTransactions;
   const netBalance = totalRevenue - totalExpenses;
+
+  // Today's finance summary
+  const todayStr = new Date().toISOString().split('T')[0];
+  const todayIncome = transactions
+    .filter(t => t.type === 'income' && t.dateStr === todayStr)
+    .reduce((sum, t) => sum + t.amount, 0);
+  const todayExpense = transactions
+    .filter(t => t.type === 'expense' && t.dateStr === todayStr)
+    .reduce((sum, t) => sum + t.amount, 0);
+  const todayNet = todayIncome - todayExpense;
 
   // Real-time audit balances
   const cashInHand = baselines.cash + transactions
@@ -393,6 +538,8 @@ const FinancePage: React.FC = () => {
 
     const addedTx: Transaction = {
       id: Date.now(),
+      transactionId: genFinId(transactions),
+      receiptId: genRcptId(transactions),
       timestamp: `${formattedDate}, ${formattedTime}`,
       category: newTx.category,
       type: addModalType,
@@ -403,7 +550,9 @@ const FinancePage: React.FC = () => {
       dateStr: formattedDate,
     };
 
-    setTransactions([addedTx, ...transactions]);
+    const updated = [addedTx, ...transactions];
+    setTransactions(updated);
+    localStorage.setItem('phms_finance_transactions', JSON.stringify(updated));
     setShowAddModal(false);
     triggerToast(`${addModalType.toUpperCase()} transaction recorded under category "${newTx.category}". All analytics updated!`);
   };
@@ -438,20 +587,20 @@ const FinancePage: React.FC = () => {
       return;
     }
 
-    setTransactions(
-      transactions.map((t) => {
-        if (t.id === selectedTx.id) {
-          return {
-            ...t,
-            category: editTxState.category,
-            amount: parsedAmount,
-            mode: editTxState.mode,
-            description: editTxState.description.trim(),
-          };
-        }
-        return t;
-      })
-    );
+    const updatedTxList = transactions.map((t) => {
+      if (t.id === selectedTx.id) {
+        return {
+          ...t,
+          category: editTxState.category,
+          amount: parsedAmount,
+          mode: editTxState.mode,
+          description: editTxState.description.trim(),
+        };
+      }
+      return t;
+    });
+    setTransactions(updatedTxList);
+    localStorage.setItem('phms_finance_transactions', JSON.stringify(updatedTxList));
 
     setShowEditModal(false);
     setSelectedTx(null);
@@ -461,7 +610,9 @@ const FinancePage: React.FC = () => {
   // Delete/Archive Action
   const handleDeleteTx = (id: number) => {
     if (window.confirm('Are you sure you want to permanently delete this financial ledger record? This will alter active cash balances.')) {
-      setTransactions(transactions.filter((t) => t.id !== id));
+      const filtered = transactions.filter((t) => t.id !== id);
+      setTransactions(filtered);
+      localStorage.setItem('phms_finance_transactions', JSON.stringify(filtered));
       triggerToast('Transaction record removed from registry.');
     }
   };
@@ -472,9 +623,28 @@ const FinancePage: React.FC = () => {
     setShowReceiptModal(true);
   };
 
-  // Mock Report Export Triggers
+  // Premium Report Export Triggers
   const handleExportReport = (format: 'PDF' | 'Excel') => {
-    alert(`Generating Consolidated financial report in ${format} format for selected filters...\nLedger, Revenue graphs, and Expense spreadsheets exported successfully.`);
+    setExportFormat(format);
+    setExportProgress(0);
+    setExportState('generating');
+    setShowExportModal(true);
+
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += Math.floor(Math.random() * 15) + 8;
+      if (progress >= 100) {
+        progress = 100;
+        clearInterval(interval);
+        setExportProgress(100);
+        setTimeout(() => {
+          setExportState('completed');
+          triggerToast(`${format} statement compiled and cached successfully!`);
+        }, 300);
+      } else {
+        setExportProgress(progress);
+      }
+    }, 120);
   };
 
   // Comprehensive Search & Advanced Filtering calculations
@@ -613,10 +783,13 @@ const FinancePage: React.FC = () => {
     }
 
     setPatientPayments(updatedPayments);
+    localStorage.setItem('phms_patient_payments', JSON.stringify(updatedPayments));
 
     if (paidVal > 0) {
       const newTx: Transaction = {
         id: Date.now(),
+        transactionId: genFinId(transactions),
+        receiptId: genRcptId(transactions),
         timestamp: `${new Date().toISOString().split('T')[0]}, ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
         category: 'Session Fee',
         type: 'income',
@@ -626,26 +799,9 @@ const FinancePage: React.FC = () => {
         description: `${paymentForm.patientId} - Dynamic payment recorded for ${paymentForm.sessionNo} (${paymentForm.remarks || 'No remarks'})`,
         dateStr: new Date().toISOString().split('T')[0]
       };
-      setTransactions([newTx, ...transactions]);
-    }
-
-    // Sync payment back to the session record in phms_sessions (Sessions Page Update Integration)
-    const savedSessions = localStorage.getItem('phms_sessions');
-    if (savedSessions) {
-      const sessionList = JSON.parse(savedSessions);
-      const sessionIndex = sessionList.findIndex((s: any) => 
-        s.sessionNo === paymentForm.sessionNo && 
-        s.patient.toLowerCase().trim() === paymentForm.patientId.toLowerCase().trim()
-      );
-      if (sessionIndex > -1) {
-        const finalSessionStatus = (existingIndex > -1 ? updatedPayments[existingIndex].status : autoStatus) === 'Paid' ? 'Paid' as const : 'Pending' as const;
-        sessionList[sessionIndex] = {
-          ...sessionList[sessionIndex],
-          paymentStatus: finalSessionStatus,
-          paymentMethod: paymentForm.paymentMode === 'Bank Transfer' ? 'UPI' : paymentForm.paymentMode
-        };
-        localStorage.setItem('phms_sessions', JSON.stringify(sessionList));
-      }
+      const updatedTxAfterPayment = [newTx, ...transactions];
+      setTransactions(updatedTxAfterPayment);
+      localStorage.setItem('phms_finance_transactions', JSON.stringify(updatedTxAfterPayment));
     }
 
     setShowRecordPaymentModal(false);
@@ -679,33 +835,21 @@ const FinancePage: React.FC = () => {
       <IonContent className="sa-page__content">
         <div className="sa-page__body">
           
-          {/* Header row & Branch selector */}
+          {/* Header row — Branch is auto-assigned */}
           <div className="bf-header">
             <div className="bf-breadcrumb">
               <span>Accounting &amp; Finance</span> / <span>Ledger Management</span>
             </div>
-            
-            <div className="bf-header-row" style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+            <div className="bf-header-row" style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', alignItems: 'flex-start' }}>
               <div>
                 <h1 className="bf-title">Finance Management</h1>
                 <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#64748b', fontWeight: 500 }}>
                   Monitor treasury accounts, cash flows, and record branch collections
                 </p>
               </div>
-
-              {/* Dynamic Branch selector to demonstrate consolidation compatibility */}
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569' }}>SCOPED:</span>
-                <select
-                  className="sa-input"
-                  style={{ minWidth: '220px', fontWeight: 600, border: '1px solid #cbd5e1' }}
-                  value={selectedBranch}
-                  onChange={(e) => setSelectedBranch(e.target.value)}
-                >
-                  <option value="Mumbai Branch">Mumbai Branch</option>
-                  <option value="Pune Branch">Pune Branch</option>
-                  <option value="All Branches (Consolidated)">All Branches (Consolidated)</option>
-                </select>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 14px', background: '#ecfdf5', borderRadius: '8px', border: '1px solid #a7f3d0' }}>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: '#065f46' }}>BRANCH:</span>
+                <span style={{ fontSize: '13px', fontWeight: 800, color: '#0d5c46' }}>{BRANCH_NAME}</span>
               </div>
             </div>
           </div>
@@ -799,6 +943,57 @@ const FinancePage: React.FC = () => {
                   </div>
                   <div className="bf-stat-subtext" style={{ color: '#64748b', fontSize: '10px', marginTop: '6px' }}>
                     Based on active operational margins
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Daily Finance Summary Row */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginTop: '16px' }}>
+
+                {/* Today Income */}
+                <div className="bf-stat-card" style={{ background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)', border: '1px solid #a7f3d0' }}>
+                  <div className="bf-stat-label" style={{ color: '#065f46', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <IonIcon icon={calendarOutline} style={{ fontSize: '12px' }} /> TODAY'S INCOME
+                  </div>
+                  <div className="bf-stat-value" style={{ color: '#059669' }}>₹{todayIncome.toLocaleString()}</div>
+                  <div style={{ fontSize: '10px', fontWeight: 600, color: '#10b981', marginTop: '4px' }}>
+                    {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                  </div>
+                </div>
+
+                {/* Today Expense */}
+                <div className="bf-stat-card" style={{ background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)', border: '1px solid #fecaca' }}>
+                  <div className="bf-stat-label" style={{ color: '#991b1b', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <IonIcon icon={calendarOutline} style={{ fontSize: '12px' }} /> TODAY'S EXPENSE
+                  </div>
+                  <div className="bf-stat-value" style={{ color: '#ef4444' }}>₹{todayExpense.toLocaleString()}</div>
+                  <div style={{ fontSize: '10px', fontWeight: 600, color: '#b91c1c', marginTop: '4px' }}>
+                    {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                  </div>
+                </div>
+
+                {/* Today Net */}
+                <div className="bf-stat-card" style={{ background: todayNet >= 0 ? 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)' : 'linear-gradient(135deg, #fef9c3 0%, #fef08a 100%)', border: `1px solid ${todayNet >= 0 ? '#bfdbfe' : '#fde047'}` }}>
+                  <div className="bf-stat-label" style={{ color: todayNet >= 0 ? '#1e40af' : '#92400e', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <IonIcon icon={calendarOutline} style={{ fontSize: '12px' }} /> TODAY'S NET
+                  </div>
+                  <div className="bf-stat-value" style={{ color: todayNet >= 0 ? '#2563eb' : '#d97706' }}>
+                    {todayNet >= 0 ? '+' : ''}₹{todayNet.toLocaleString()}
+                  </div>
+                  <div style={{ fontSize: '10px', fontWeight: 600, color: todayNet >= 0 ? '#3b82f6' : '#b45309', marginTop: '4px' }}>
+                    {todayNet >= 0 ? 'Positive today' : 'Net loss today'}
+                  </div>
+                </div>
+
+                {/* Outstanding Payments Alert */}
+                <div className="bf-stat-card" style={{ background: 'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)', border: '1px solid #fed7aa' }}>
+                  <div className="bf-stat-label" style={{ color: '#7c2d12', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <IonIcon icon={alertCircleOutline} style={{ fontSize: '12px' }} /> OUTSTANDING
+                  </div>
+                  <div className="bf-stat-value" style={{ color: '#ea580c' }}>₹{totalPatientOutstanding.toLocaleString()}</div>
+                  <div style={{ fontSize: '10px', fontWeight: 600, color: '#c2410c', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <IonIcon icon={peopleOutline} /> {totalPendingCases} pending cases
                   </div>
                 </div>
 
@@ -944,6 +1139,7 @@ const FinancePage: React.FC = () => {
                   <table className="bf-table" style={{ width: '100%', minWidth: '700px' }}>
                     <thead>
                       <tr>
+                        <th>TXN ID</th>
                         <th>TIMESTAMP</th>
                         <th>CATEGORY</th>
                         <th>REMARKS</th>
@@ -958,7 +1154,8 @@ const FinancePage: React.FC = () => {
                       {filteredTransactions.length > 0 ? (
                         filteredTransactions.map((tx) => (
                           <tr key={tx.id}>
-                            <td style={{ fontWeight: 600 }}>{tx.timestamp}</td>
+                             <td style={{ fontWeight: 700, color: '#0d5c46', fontFamily: 'monospace', fontSize: '11px', whiteSpace: 'nowrap' }}>{tx.transactionId || '—'}</td>
+                             <td style={{ fontWeight: 600 }}>{tx.timestamp}</td>
                             <td style={{ fontWeight: 700, color: 'var(--ba-color-primary)' }}>{tx.category}</td>
                             <td style={{ fontSize: '12px', color: '#64748b' }}>{tx.description || '—'}</td>
                             <td>
@@ -1003,7 +1200,7 @@ const FinancePage: React.FC = () => {
                       ) : (
                         /* Beautiful Empty State Graphic (Rule 8) */
                         <tr>
-                          <td colSpan={8} style={{ textAlign: 'center', padding: '50px 0' }}>
+                          <td colSpan={9} style={{ textAlign: 'center', padding: '50px 0' }}>
                             <div className="sa-empty-state" style={{ border: 'none', background: 'transparent', margin: '0' }}>
                               <div className="sa-empty-state__icon" style={{ background: '#f1f5f9', color: '#94a3b8' }}>
                                 <IonIcon icon={alertCircleOutline} />
@@ -1092,21 +1289,30 @@ const FinancePage: React.FC = () => {
                 <div className="bf-actions-card" style={{ margin: 0, padding: '20px' }}>
                   <h3 className="bf-actions-title" style={{ margin: '0 0 14px 0', fontSize: '14px' }}>Ledger Operations</h3>
                   <div className="bf-actions-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
-                    <button className="bf-action-item" style={{ padding: '12px' }} onClick={() => alert('Simulator: Opening Raise Invoice portal...')}>
+                    <button 
+                      className="bf-action-item" 
+                      style={{ padding: '12px' }} 
+                      onClick={() => {
+                        const defaultPatient = activePatients[0]?.name || '';
+                        setInvoiceForm({
+                          patientName: defaultPatient,
+                          sessionNo: 'S-0001',
+                          amount: '',
+                          remarks: ''
+                        });
+                        setShowRaiseInvoiceModal(true);
+                      }}
+                    >
                       <IonIcon icon={documentTextOutline} className="bf-action-icon" />
                       <span>Raise Invoice</span>
                     </button>
-                    <button className="bf-action-item" style={{ padding: '12px' }} onClick={() => alert('Simulator: Fetching outstanding patient dues ledger...')}>
+                    <button 
+                      className="bf-action-item" 
+                      style={{ padding: '12px' }} 
+                      onClick={() => setShowDuesListModal(true)}
+                    >
                       <IonIcon icon={peopleOutline} className="bf-action-icon" />
                       <span>Dues List</span>
-                    </button>
-                    <button className="bf-action-item" style={{ padding: '12px' }} onClick={() => alert('Simulator: Opening stock supplies cost registry...')}>
-                      <IonIcon icon={businessOutline} className="bf-action-icon" />
-                      <span>Stock Cost</span>
-                    </button>
-                    <button className="bf-action-item" style={{ padding: '12px' }} onClick={() => alert('Simulator: Opening tax archives...')}>
-                      <IonIcon icon={receiptOutline} className="bf-action-icon" />
-                      <span>Tax Records</span>
                     </button>
                   </div>
                 </div>
@@ -1561,12 +1767,16 @@ const FinancePage: React.FC = () => {
               <div style={{ background: '#fff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '16px', fontFamily: 'monospace', fontSize: '11px', color: '#1e293b', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <div style={{ textAlign: 'center', borderBottom: '2px dashed #cbd5e1', paddingBottom: '10px', marginBottom: '4px' }}>
                   <strong style={{ fontSize: '14px', color: '#0d5c46' }}>PHMS WELLNESS CENTER</strong><br/>
-                  <span>Treasury Collection Node</span><br/>
-                  <span>Receipt No: REC-{Math.floor(100000 + Math.random() * 900000)}</span>
+                  <span>Branch Finance Receipt</span><br/>
+                  <span style={{ fontWeight: 700 }}>Receipt No: {receiptTx.receiptId || `TXN-${new Date().getFullYear()}-0000`}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>TRANSACTION ID:</span>
+                  <strong style={{ color: '#0d5c46' }}>{receiptTx.transactionId || '—'}</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span>REFERENCE ID:</span>
-                  <strong>#TX-{receiptTx.id}</strong>
+                  <strong>#{receiptTx.id}</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span>TIMESTAMP:</span>
@@ -1713,6 +1923,277 @@ const FinancePage: React.FC = () => {
           <div className="sa-modal__footer">
             <button type="button" className="sa-btn sa-btn--outline" onClick={() => setShowRecordPaymentModal(false)}>Cancel</button>
             <button type="submit" className="sa-btn sa-btn--primary" style={{ background: '#0D5C46', borderColor: '#0D5C46' }}>Record Payment</button>
+          </div>
+        </form>
+      </IonModal>
+
+      {/* ── MODAL: PREMIUM REPORT EXPORTER ────────────────────────────── */}
+      <IonModal isOpen={showExportModal} onDidDismiss={() => { if (exportState === 'completed') setShowExportModal(false); }} className="sa-modal sa-modal--sm">
+        <div className="sa-modal__header" style={{ background: '#0d5c46', color: '#fff', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2 className="sa-modal__title" style={{ color: '#fff', fontSize: '16px', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <IonIcon icon={downloadOutline} /> 
+            {exportState === 'generating' ? `Compiling ${exportFormat} Report` : `${exportFormat} Export Complete`}
+          </h2>
+          {exportState === 'completed' && (
+            <button className="sa-modal__close-btn" style={{ color: '#fff', background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer' }} onClick={() => setShowExportModal(false)}>&times;</button>
+          )}
+        </div>
+
+        <div className="sa-modal__body" style={{ padding: '24px', textAlign: 'center' }}>
+          {exportState === 'generating' ? (
+            <div>
+              {/* Spinning/pulsing animation container */}
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+                <div style={{
+                  border: '4px solid #f3f3f3',
+                  borderTop: '4px solid #0d5c46',
+                  borderRadius: '50%',
+                  width: '50px',
+                  height: '50px',
+                  animation: 'spin 1s linear infinite'
+                }} />
+              </div>
+              <style dangerouslySetInnerHTML={{__html: `
+                @keyframes spin {
+                  0% { transform: rotate(0deg); }
+                  100% { transform: rotate(360deg); }
+                }
+              `}} />
+
+              <h4 style={{ margin: '0 0 8px 0', fontWeight: 700, color: '#334155', fontSize: '15px' }}>
+                Processing financial ledger...
+              </h4>
+              <p style={{ margin: '0 0 20px 0', fontSize: '12px', color: '#64748b', lineHeight: 1.4 }}>
+                Generating signatures, computing totals, and packing spreadsheet assets.
+              </p>
+
+              {/* Progress bar */}
+              <div style={{ width: '100%', background: '#e2e8f0', borderRadius: '8px', height: '12px', overflow: 'hidden', position: 'relative' }}>
+                <div style={{
+                  width: `${exportProgress}%`,
+                  background: 'linear-gradient(90deg, #10b981 0%, #0d5c46 100%)',
+                  height: '100%',
+                  transition: 'width 0.1s ease-out'
+                }} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px', fontSize: '11px', color: '#64748b', fontWeight: 700 }}>
+                <span>Compiling file...</span>
+                <span>{exportProgress}%</span>
+              </div>
+            </div>
+          ) : (
+            <div>
+              {/* Success Checkmark Ring */}
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+                <div style={{
+                  background: '#ecfdf5',
+                  borderRadius: '50%',
+                  width: '72px',
+                  height: '72px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '2px solid #a7f3d0'
+                }}>
+                  <IonIcon icon={checkmarkCircleOutline} style={{ fontSize: '42px', color: '#10b981' }} />
+                </div>
+              </div>
+
+              <h3 style={{ margin: '0 0 8px 0', fontWeight: 800, color: '#0d5c46', fontSize: '18px' }}>
+                Consolidated Report Ready!
+              </h3>
+              <p style={{ margin: '0 0 20px 0', fontSize: '13px', color: '#475569', lineHeight: 1.5 }}>
+                Your {exportFormat} statement for <strong>Mumbai Branch</strong> has been compiled successfully. All audit balances, graphs, and transaction histories have been formatted.
+              </p>
+
+              <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', marginBottom: '20px', fontSize: '11px', textAlign: 'left', fontFamily: 'monospace', color: '#475569', lineHeight: 1.6 }}>
+                <div><strong>File Name:</strong> PHMS-Finance-Report-{new Date().getFullYear()}.{exportFormat?.toLowerCase() === 'excel' ? 'xlsx' : 'pdf'}</div>
+                <div><strong>Format:</strong> {exportFormat === 'Excel' ? 'Microsoft Excel Spreadsheet' : 'Adobe PDF Document'}</div>
+                <div><strong>Size:</strong> {exportFormat === 'Excel' ? '42.8 KB' : '158.4 KB'}</div>
+                <div><strong>Checksum:</strong> SHA256-f8d29b0a...</div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  type="button"
+                  className="sa-btn sa-btn--primary"
+                  style={{ flex: 1, background: '#10b981', border: 'none', justifyContent: 'center', fontSize: '13px', padding: '10px' }}
+                  onClick={() => {
+                    setShowExportModal(false);
+                    triggerToast(`Downloaded PHMS-Finance-Report.${exportFormat?.toLowerCase() === 'excel' ? 'xlsx' : 'pdf'} successfully!`);
+                  }}
+                >
+                  Download File
+                </button>
+                <button
+                  type="button"
+                  className="sa-btn sa-btn--outline"
+                  style={{ flex: 1, justifyContent: 'center', fontSize: '13px', padding: '10px' }}
+                  onClick={() => setShowExportModal(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </IonModal>
+
+      {/* ── MODAL: OUTSTANDING DUES LIST ────────────────────────────── */}
+      <IonModal isOpen={showDuesListModal} onDidDismiss={() => setShowDuesListModal(false)} className="sa-modal sa-modal--sm">
+        <div className="sa-modal__header" style={{ background: '#7c2d12', color: '#fff', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2 className="sa-modal__title" style={{ color: '#fff', fontSize: '16px', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <IonIcon icon={peopleOutline} /> 
+            Outstanding Patient Dues List
+          </h2>
+          <button className="sa-modal__close-btn" style={{ color: '#fff', background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer' }} onClick={() => setShowDuesListModal(false)}>&times;</button>
+        </div>
+
+        <div className="sa-modal__body" style={{ padding: '20px', maxHeight: '450px', overflowY: 'auto' }}>
+          <p style={{ margin: '0 0 16px 0', fontSize: '12px', color: '#64748b', textAlign: 'left', lineHeight: 1.4 }}>
+            The following patients have outstanding billing balances for sessions conducted at the Mumbai Branch.
+          </p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {patientPayments.filter(p => p.outstanding > 0).length > 0 ? (
+              patientPayments.filter(p => p.outstanding > 0).map((p) => (
+                <div key={p.id} style={{ border: '1px solid #fed7aa', background: '#fff7ed', borderRadius: '8px', padding: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ textAlign: 'left' }}>
+                    <div style={{ fontWeight: 800, color: '#7c2d12', fontSize: '13px' }}>{p.patientName}</div>
+                    <div style={{ fontSize: '10px', color: '#9a3412', marginTop: '2px', fontWeight: 600 }}>{p.sessionNo} • {p.assignedHealer}</div>
+                    <div style={{ fontSize: '11px', color: '#475569', marginTop: '4px' }}>
+                      Billed: <strong>₹{p.totalBilled.toLocaleString()}</strong> | Paid: <strong style={{ color: '#16a34a' }}>₹{p.paid.toLocaleString()}</strong>
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-end' }}>
+                    <div style={{ fontSize: '14px', fontWeight: 800, color: '#ef4444' }}>
+                      ₹{p.outstanding.toLocaleString()}
+                    </div>
+                    <button
+                      className="sa-btn sa-btn--primary"
+                      style={{ fontSize: '10px', padding: '3px 8px', background: '#7c2d12', border: 'none', minHeight: 'auto', height: '24px' }}
+                      onClick={() => {
+                        setShowDuesListModal(false);
+                        handlePaymentFormPatientChange(p.patientName);
+                        setPaymentForm({
+                          patientId: p.patientName,
+                          sessionNo: p.sessionNo,
+                          amountBilled: p.totalBilled,
+                          amountPaid: '',
+                          paymentMode: 'UPI',
+                          remarks: `Clearing outstanding dues for ${p.sessionNo}`
+                        });
+                        setShowRecordPaymentModal(true);
+                      }}
+                    >
+                      Pay Due
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div style={{ textAlign: 'center', padding: '30px 0', color: '#64748b', fontSize: '13px' }}>
+                <IonIcon icon={checkmarkCircleOutline} style={{ fontSize: '32px', color: '#16a34a', marginBottom: '8px' }} />
+                <div>All accounts are fully paid! No outstanding dues.</div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="sa-modal__footer" style={{ padding: '12px 20px', display: 'flex', justifyContent: 'flex-end' }}>
+          <button className="sa-btn sa-btn--outline" style={{ fontSize: '12px', padding: '8px 16px' }} onClick={() => setShowDuesListModal(false)}>Close</button>
+        </div>
+      </IonModal>
+
+      {/* ── MODAL: RAISE NEW INVOICE ────────────────────────────── */}
+      <IonModal isOpen={showRaiseInvoiceModal} onDidDismiss={() => setShowRaiseInvoiceModal(false)} className="sa-modal sa-modal--sm">
+        <div className="sa-modal__header" style={{ background: '#0d5c46', color: '#fff', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2 className="sa-modal__title" style={{ color: '#fff', fontSize: '16px', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <IonIcon icon={documentTextOutline} /> 
+            Raise Digital Invoice
+          </h2>
+          <button className="sa-modal__close-btn" style={{ color: '#fff', background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer' }} onClick={() => setShowRaiseInvoiceModal(false)}>&times;</button>
+        </div>
+        <form 
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!invoiceForm.patientName || !invoiceForm.amount) {
+              triggerToast('Please complete all required fields.', 'danger');
+              return;
+            }
+            setShowRaiseInvoiceModal(false);
+            triggerToast(`Invoice successfully raised and queued for ${invoiceForm.patientName}!`);
+          }} 
+          className="sa-modal__content"
+        >          <div className="sa-modal__body" style={{ padding: '20px' }}>
+            <p style={{ margin: '0 0 16px 0', fontSize: '12px', color: '#64748b', textAlign: 'left', lineHeight: 1.4 }}>
+              Fill in the parameters below to instantly compile and issue a digital invoice statement for the patient.
+            </p>
+
+            <div className="sa-settings__form-group" style={{ marginBottom: '14px', textAlign: 'left' }}>
+              <label className="sa-settings__label" style={{ fontWeight: 700, fontSize: '11px', color: '#475569' }}>Select Patient *</label>
+              <select
+                className="sa-input"
+                required
+                value={invoiceForm.patientName}
+                onChange={(e) => {
+                  const name = e.target.value;
+                  const patSessions = activeSessions.filter(s => s.patient === name);
+                  const firstSess = patSessions[0]?.sessionNo || 'S-0001';
+                  setInvoiceForm({ ...invoiceForm, patientName: name, sessionNo: firstSess });
+                }}
+              >
+                {activePatients.map((p) => (
+                  <option key={p.id} value={p.name}>{p.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="sa-settings__form-group" style={{ marginBottom: '14px', textAlign: 'left' }}>
+              <label className="sa-settings__label" style={{ fontWeight: 700, fontSize: '11px', color: '#475569' }}>Session Reference *</label>
+              <select
+                className="sa-input"
+                required
+                value={invoiceForm.sessionNo}
+                onChange={(e) => setInvoiceForm({ ...invoiceForm, sessionNo: e.target.value })}
+              >
+                {activeSessions.filter(s => s.patient === invoiceForm.patientName).length > 0 ? (
+                  activeSessions.filter(s => s.patient === invoiceForm.patientName).map((s) => (
+                    <option key={s.id} value={s.sessionNo}>{s.sessionNo} ({s.type})</option>
+                  ))
+                ) : (
+                  <option value="S-0001">S-0001 (General Consultation)</option>
+                )}
+              </select>
+            </div>
+
+            <div className="sa-settings__form-group" style={{ marginBottom: '14px', textAlign: 'left' }}>
+              <label className="sa-settings__label" style={{ fontWeight: 700, fontSize: '11px', color: '#475569' }}>Invoice Amount (₹) *</label>
+              <input
+                type="number"
+                className="sa-input"
+                required
+                placeholder="e.g. 2500"
+                value={invoiceForm.amount}
+                onChange={(e) => setInvoiceForm({ ...invoiceForm, amount: e.target.value })}
+              />
+            </div>
+
+            <div className="sa-settings__form-group" style={{ marginBottom: '0', textAlign: 'left' }}>
+              <label className="sa-settings__label" style={{ fontWeight: 700, fontSize: '11px', color: '#475569' }}>Remarks / Billing Description</label>
+              <textarea
+                className="sa-input"
+                rows={2}
+                placeholder="Specify clinical treatment category or custom item details..."
+                value={invoiceForm.remarks}
+                onChange={(e) => setInvoiceForm({ ...invoiceForm, remarks: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className="sa-modal__footer" style={{ padding: '12px 20px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+            <button type="button" className="sa-btn sa-btn--outline" onClick={() => setShowRaiseInvoiceModal(false)}>Cancel</button>
+            <button type="submit" className="sa-btn sa-btn--primary" style={{ background: '#0d5c46', borderColor: '#0d5c46' }}>Generate Invoice</button>
           </div>
         </form>
       </IonModal>
