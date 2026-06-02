@@ -656,7 +656,7 @@ const DashboardPage: React.FC = () => {
                       <IonIcon icon={arrowForwardOutline} className="db-corp-action-icon" />
                     </div>
 
-                    <div className="db-corp-action-item" onClick={() => history.push(ROUTES.BRANCH_ADMIN.VISITOR_CHECKIN)}>
+                    <div className="db-corp-action-item" onClick={() => history.push('/visitor-log/check-in', { from: '/branch-admin/dashboard' })}>
                       <span className="db-corp-action-text">Log Check-In</span>
                       <IonIcon icon={arrowForwardOutline} className="db-corp-action-icon" />
                     </div>
@@ -691,7 +691,7 @@ const DashboardPage: React.FC = () => {
         <button className="db-hc-fab-btn" title="Add Transaction" onClick={() => setShowAddTransactionModal(true)}>
           <IonIcon icon={cashOutline} />
         </button>
-        <button className="db-hc-fab-btn" title="Check-In Visitor" onClick={() => history.push(ROUTES.BRANCH_ADMIN.VISITOR_CHECKIN)}>
+        <button className="db-hc-fab-btn" title="Check-In Visitor" onClick={() => history.push('/visitor-log/check-in', { from: '/branch-admin/dashboard' })}>
           <IonIcon icon={peopleOutline} />
         </button>
       </div>

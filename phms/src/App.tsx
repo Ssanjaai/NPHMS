@@ -255,6 +255,9 @@ const AppContent: React.FC = () => {
         <Route path={ROUTES.BRANCH_ADMIN.VISITOR_CHECKIN} exact={true}>
           <BAVisitorCheckInPage />
         </Route>
+        <Route path="/visitor-log/check-in" exact={true}>
+          <BAVisitorCheckInPage />
+        </Route>
         <Route path={ROUTES.BRANCH_ADMIN.FINANCE} exact={true}>
           <BAFinancePage />
         </Route>

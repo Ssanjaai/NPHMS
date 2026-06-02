@@ -18,13 +18,14 @@ import {
   businessOutline,
   shieldCheckmarkOutline,
 } from 'ionicons/icons';
-import { useHistory } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/auth.store';
 import { ROUTES } from '../../constants/routes.constant';
 import './branch-admin.css';
 
 export default function BAVisitorCheckInPage() {
   const history = useHistory();
+  const location = useLocation<{ from?: string }>();
   const { user } = useAuthStore();
   const isBranchAdmin = user?.role === 'BRANCH_ADMIN';
 
@@ -36,18 +37,18 @@ export default function BAVisitorCheckInPage() {
     day: 'numeric',
   });
 
-  // Form states with requested check-in defaults
+  // Form states initialized as empty
   const [formData, setFormData] = useState({
-    name: 'John Smith',
-    email: 'john.smith@example.com',
-    mobile: '+91 98765 43210',
+    name: '',
+    email: '',
+    mobile: '',
     gender: 'Male',
     visitorType: 'Session',
-    branchLocation: 'Uptown Sanctuary',
-    idProof: 'XXXX-XXXX-1234',
-    address: '123 Peace Ave, Downtown District',
-    entryDate: '2024-05-11',
-    notes: 'First time visitor, interested in basic healing.',
+    branchLocation: '',
+    idProof: '',
+    address: '',
+    entryDate: '',
+    notes: '',
   });
 
   // Success alert/modal control
@@ -76,15 +77,55 @@ export default function BAVisitorCheckInPage() {
       return;
     }
 
+    // Load existing visitor records from localStorage
+    const cached = localStorage.getItem('phms_visitor_logs');
+    let currentVisitors: any[] = [];
+    if (cached) {
+      try {
+        currentVisitors = JSON.parse(cached);
+      } catch (err) {
+        currentVisitors = [];
+      }
+    }
+
     // Generate random visitor pass ID
     const generatedId = `PHMS-V-${Math.floor(10000 + Math.random() * 90000)}`;
     setNewVisitorId(generatedId);
+
+    // Sequential code helper for VIS-XXXX
+    const maxNum = currentVisitors.reduce((max, v) => {
+      const match = v.visitorId?.match(/VIS-(\d+)/);
+      return match ? Math.max(max, parseInt(match[1], 10)) : max;
+    }, 0);
+    const sequentialVisId = `VIS-${String(maxNum + 1).padStart(4, '0')}`;
+
+    const now = new Date();
+    const formattedTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    const newRec = {
+      id: Date.now(),
+      visitorId: sequentialVisId,
+      name: formData.name,
+      type: formData.visitorType,
+      contact: formData.mobile,
+      entry: formattedTime,
+      exit: '—',
+      duration: '5m',
+      status: 'Inside' as const,
+      dateStr: formData.entryDate || now.toISOString().split('T')[0],
+    };
+
+    const updatedList = [newRec, ...currentVisitors];
+    localStorage.setItem('phms_visitor_logs', JSON.stringify(updatedList));
+
     setShowSuccessToast(true);
   };
 
+  const fromPath = location.state?.from || ROUTES.BRANCH_ADMIN.VISITOR_LOG;
+
   const closeAndRedirect = () => {
     setShowSuccessToast(false);
-    history.push(ROUTES.BRANCH_ADMIN.VISITOR_LOG);
+    history.push(fromPath);
   };
 
   if (!isBranchAdmin) {
@@ -179,18 +220,13 @@ export default function BAVisitorCheckInPage() {
             {/* Horizontal Header Navbar */}
             <header className="db-corp-navbar" style={{ background: '#ffffff', borderBottom: '1px solid #e2e8f0', padding: '16px 24px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <button className="db-corp-nav-icon-btn" onClick={() => history.push(ROUTES.BRANCH_ADMIN.DASHBOARD)} title="Back to Dashboard">
+                <button className="db-corp-nav-icon-btn" onClick={() => history.push(fromPath)} title="Back">
                   <IonIcon icon={arrowBackOutline} style={{ color: '#0D5C46', fontSize: '20px' }} />
                 </button>
                 <div className="db-corp-navbar-left">
                   <h1 className="db-corp-page-title" style={{ color: '#0d5c46', fontWeight: 800 }}>Visitor Check-In Log</h1>
                   <p className="db-corp-page-subtitle">Pranic Healing Management System • {formattedDate}</p>
                 </div>
-              </div>
-              
-              <div className="db-corp-navbar-right">
-                <div className="db-corp-badge-dot" style={{ background: '#10b981', position: 'relative', marginRight: '6px' }} />
-                <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>GATE OPERATIONS ACTIVE</span>
               </div>
             </header>
 
@@ -223,7 +259,7 @@ export default function BAVisitorCheckInPage() {
                               value={formData.name} 
                               onChange={handleInputChange} 
                               required 
-                              placeholder="John Smith"
+                              placeholder="Enter Full Name"
                             />
                           </div>
 
@@ -237,7 +273,7 @@ export default function BAVisitorCheckInPage() {
                                 value={formData.email} 
                                 onChange={handleInputChange} 
                                 required 
-                                placeholder="john.smith@example.com"
+                                placeholder="Enter Email Address"
                               />
                             </div>
 
@@ -250,7 +286,7 @@ export default function BAVisitorCheckInPage() {
                                 value={formData.mobile} 
                                 onChange={handleInputChange} 
                                 required 
-                                placeholder="+91 98765 43210"
+                                placeholder="Enter Contact Number"
                               />
                             </div>
                           </div>
@@ -281,10 +317,11 @@ export default function BAVisitorCheckInPage() {
                             <div className="st-form-group">
                               <label style={customStyles.label}>VISITOR TYPE</label>
                               <select name="visitorType" className="st-input" style={customStyles.grayInput} value={formData.visitorType} onChange={handleInputChange}>
-                                <option value="Session">Session</option>
+                                <option value="Walk-in">Walk-in</option>
                                 <option value="Meditation">Meditation</option>
-                                <option value="Consultation">Consultation</option>
+                                <option value="Session">Session</option>
                                 <option value="Camp">Camp</option>
+                                <option value="Healer">Healer</option>
                               </select>
                             </div>
 
@@ -296,7 +333,7 @@ export default function BAVisitorCheckInPage() {
                                 style={customStyles.grayInput}
                                 value={formData.branchLocation} 
                                 onChange={handleInputChange} 
-                                placeholder="Uptown Sanctuary"
+                                placeholder="Enter Branch Location"
                               />
                             </div>
                           </div>
@@ -309,7 +346,7 @@ export default function BAVisitorCheckInPage() {
                               style={customStyles.grayInput}
                               value={formData.idProof} 
                               onChange={handleInputChange} 
-                              placeholder="XXXX-XXXX-1234"
+                              placeholder="Enter ID Proof (e.g. Aadhar)"
                             />
                           </div>
 
@@ -321,7 +358,7 @@ export default function BAVisitorCheckInPage() {
                               style={customStyles.grayTextarea}
                               value={formData.address} 
                               onChange={handleInputChange} 
-                              placeholder="123 Peace Ave, Downtown District"
+                              placeholder="Enter Home Address"
                             />
                           </div>
                         </div>
@@ -362,7 +399,7 @@ export default function BAVisitorCheckInPage() {
                               style={customStyles.grayTextarea}
                               value={formData.notes} 
                               onChange={handleInputChange} 
-                              placeholder="First time visitor, interested in basic healing."
+                              placeholder="Enter visit remarks or notes..."
                             />
                           </div>
                         </div>
@@ -378,7 +415,7 @@ export default function BAVisitorCheckInPage() {
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px', marginTop: '12px', marginBottom: '28px' }}>
                   <button 
                     type="button" 
-                    onClick={() => history.push(ROUTES.BRANCH_ADMIN.DASHBOARD)} 
+                    onClick={() => history.push(fromPath)} 
                     style={{
                       background: '#ffffff',
                       border: '1px solid #cbd5e1',
