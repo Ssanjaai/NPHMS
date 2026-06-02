@@ -54,6 +54,20 @@ const AttendancePage: React.FC = () => {
   const [filterDate, setFilterDate] = useState('');
   const [filterRole, setFilterRole] = useState('All');
   const [filterStatus, setFilterStatus] = useState('All');
+  const [filterWorkerName, setFilterWorkerName] = useState('');
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 5;
+
+  const handleWorkerClick = (workerName: string) => {
+    setFilterWorkerName(workerName);
+    setCurrentPage(1);
+    const element = document.getElementById('historical-attendance-logs');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   // Modal / Modify States
   const [showStatusModal, setShowStatusModal] = useState(false);
@@ -67,22 +81,21 @@ const AttendancePage: React.FC = () => {
     { id: 4, name: 'Samuel Peterson', role: 'Physician', checkIn: '08:00 AM', checkOut: '--', status: 'Select...' },
   ]);
 
-  // Historical log items matching the screenshot!
+  // Historical log items matching the screenshot (expanded for pagination support)!
   const [historicalLogs] = useState<HistoricalLog[]>([
     { id: 1, date: 'Oct 24, 2023', workerName: 'David Park', status: 'Present', hours: '8.5h', remarks: 'Regular shift.' },
     { id: 2, date: 'Oct 24, 2023', workerName: 'Elena Rodriguez', status: 'Half Day', hours: '4.0h', remarks: "Doctor's appointment in the afternoon." },
     { id: 3, date: 'Oct 23, 2023', workerName: 'Samuel Peterson', status: 'Absent', hours: '0.0h', remarks: 'Medical leave (Cert submitted).' },
+    { id: 4, date: 'Oct 23, 2023', workerName: 'Ayesha Khan', status: 'Present', hours: '9.0h', remarks: 'Completed healer session logs.' },
+    { id: 5, date: 'Oct 22, 2023', workerName: 'Elena Rodriguez', status: 'Present', hours: '8.0h', remarks: 'Regular shift.' },
+    { id: 6, date: 'Oct 22, 2023', workerName: 'David Park', status: 'Present', hours: '8.5h', remarks: 'Regular shift.' },
+    { id: 7, date: 'Oct 21, 2023', workerName: 'Samuel Peterson', status: 'Present', hours: '8.0h', remarks: 'Regular shift.' },
+    { id: 8, date: 'Oct 21, 2023', workerName: 'Ayesha Khan', status: 'Half Day', hours: '4.5h', remarks: 'Left early for personal reasons.' },
+    { id: 9, date: 'Oct 20, 2023', workerName: 'David Park', status: 'Present', hours: '8.5h', remarks: 'Regular shift.' },
+    { id: 10, date: 'Oct 20, 2023', workerName: 'Elena Rodriguez', status: 'Present', hours: '8.0h', remarks: 'Regular shift.' },
+    { id: 11, date: 'Oct 19, 2023', workerName: 'Samuel Peterson', status: 'Present', hours: '8.0h', remarks: 'Regular shift.' },
+    { id: 12, date: 'Oct 19, 2023', workerName: 'Ayesha Khan', status: 'Present', hours: '8.5h', remarks: 'Regular shift.' },
   ]);
-
-  const handleBulkMarkPresent = () => {
-    setDailyAttendance(
-      dailyAttendance.map((w) =>
-        w.status === 'Select...' || w.status === 'Absent'
-          ? { ...w, status: 'Present', checkIn: '08:00 AM' }
-          : w
-      )
-    );
-  };
 
   const handleUpdateStatus = (status: 'Present' | 'Absent' | 'Half Day' | 'Select...') => {
     if (!selectedWorker) return;
@@ -108,19 +121,34 @@ const AttendancePage: React.FC = () => {
   );
 
   const filteredHistory = historicalLogs.filter((log) => {
-    const matchesDate = !filterDate || log.date.includes(filterDate);
+    let matchesDate = true;
+    if (filterDate) {
+      const [year, month, day] = filterDate.split('-');
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const monthStr = months[parseInt(month, 10) - 1];
+      const dayStr = parseInt(day, 10).toString(); // remove leading zero
+      const expectedDateStr = `${monthStr} ${dayStr}, ${year}`;
+      matchesDate = log.date === expectedDateStr;
+    }
     const matchesStatus = filterStatus === 'All' || log.status === filterStatus;
+    const matchesWorker = !filterWorkerName || log.workerName.toLowerCase().includes(filterWorkerName.toLowerCase());
     
-    // For role check in mock: David Park is Admin Staff, Elena Rodriguez is Senior Healer, Samuel Peterson is Physician
+    // For role check in mock: David Park is Admin Staff, Elena Rodriguez is Senior Healer, Samuel Peterson is Physician, Ayesha Khan is Lead Healer
     let matchesRole = true;
     if (filterRole !== 'All') {
-      if (filterRole === 'Healer' && !log.workerName.includes('Rodriguez')) matchesRole = false;
+      if (filterRole === 'Healer' && !log.workerName.includes('Rodriguez') && !log.workerName.includes('Khan')) matchesRole = false;
       if (filterRole === 'Staff' && !log.workerName.includes('Park')) matchesRole = false;
       if (filterRole === 'Physician' && !log.workerName.includes('Peterson')) matchesRole = false;
     }
 
-    return matchesDate && matchesStatus && matchesRole;
+    return matchesDate && matchesStatus && matchesRole && matchesWorker;
   });
+
+  const totalPages = Math.ceil(filteredHistory.length / ITEMS_PER_PAGE);
+  const activePage = Math.min(currentPage, Math.max(totalPages, 1));
+  const indexOfLastItem = activePage * ITEMS_PER_PAGE;
+  const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
+  const paginatedHistory = filteredHistory.slice(indexOfFirstItem, indexOfLastItem);
 
   return (
     <IonPage className="sa-page">
@@ -208,8 +236,8 @@ const AttendancePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Two-Column Grid */}
-          <div className="at-main-grid">
+          {/* Daily Attendance Grid (Full-Width) */}
+          <div className="at-main-grid" style={{ gridTemplateColumns: '1fr' }}>
             {/* Left Column: Mark Daily Attendance */}
             <div className="at-left-col">
               <div className="at-card">
@@ -217,9 +245,6 @@ const AttendancePage: React.FC = () => {
                   <div>
                     <h2 className="at-card-title">Mark Daily Attendance</h2>
                   </div>
-                  <button className="at-btn-bulk" onClick={handleBulkMarkPresent}>
-                    ✓ Bulk Mark Present
-                  </button>
                 </div>
 
                 <div className="sa-table-responsive" style={{ border: 'none' }}>
@@ -238,11 +263,13 @@ const AttendancePage: React.FC = () => {
                       {filteredDaily.map((worker) => (
                         <tr key={worker.id}>
                           <td>
-                            <div className="vl-avatar-wrapper">
-                              <div className="at-avatar">
-                                {worker.name.split(' ').map((n) => n[0]).join('')}
-                              </div>
-                              <span className="vl-visitor-name">{worker.name}</span>
+                            <div 
+                              className="vl-avatar-wrapper" 
+                              onClick={() => handleWorkerClick(worker.name)}
+                              style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
+                              title={`Click to view ${worker.name}'s attendance history`}
+                            >
+                              <span className="vl-visitor-name" style={{ color: '#0d5c46', textDecoration: 'underline', fontWeight: 700 }}>{worker.name}</span>
                             </div>
                           </td>
                           <td>{worker.role}</td>
@@ -291,73 +318,10 @@ const AttendancePage: React.FC = () => {
                 </div>
               </div>
             </div>
-
-            {/* Right Column: Monthly Summary */}
-            <div className="at-right-col">
-              <div className="at-card">
-                <div className="at-card-header" style={{ marginBottom: '16px' }}>
-                  <h2 className="at-card-title">Monthly Summary</h2>
-                </div>
-
-                {/* Donut Rate chart */}
-                <div className="at-donut-container">
-                  <div className="at-donut">
-                    <svg viewBox="0 0 36 36" style={{ width: '100%', height: '100%' }}>
-                      <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" style={{ stroke: '#f1f5f9', strokeWidth: '3.2', fill: 'none' }} />
-                      <path strokeDasharray="94, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" style={{ stroke: '#1f7a6a', strokeWidth: '3.2', fill: 'none', strokeLinecap: 'round' }} />
-                    </svg>
-                    <div className="at-donut-val">
-                      <span className="at-donut-label">94%</span>
-                      <span className="at-donut-sub">RATE</span>
-                    </div>
-                  </div>
-                  <span className="vl-visitor-sub" style={{ marginTop: '12px', fontWeight: 700 }}>Attendance Rate</span>
-                </div>
-
-                {/* Trend Section */}
-                <div className="at-trend-section">
-                  <div className="at-trend-header">
-                    <span className="at-card-title" style={{ fontSize: '12px' }}>ATTENDANCE TREND (30 DAYS)</span>
-                    <span className="vl-visitor-sub" style={{ fontWeight: 700 }}>Last 30 Days</span>
-                  </div>
-
-                  <div className="at-trend-bars">
-                    <div className="at-trend-bar" style={{ '--bar-height': '60%' } as React.CSSProperties} />
-                    <div className="at-trend-bar" style={{ '--bar-height': '75%' } as React.CSSProperties} />
-                    <div className="at-trend-bar" style={{ '--bar-height': '50%' } as React.CSSProperties} />
-                    <div className="at-trend-bar" style={{ '--bar-height': '85%' } as React.CSSProperties} />
-                    <div className="at-trend-bar" style={{ '--bar-height': '92%' } as React.CSSProperties} />
-                    <div className="at-trend-bar" style={{ '--bar-height': '94%' } as React.CSSProperties} />
-                  </div>
-                </div>
-
-                {/* Consistent Staff list */}
-                <div className="at-consistent-section">
-                  <span className="at-card-title" style={{ fontSize: '12px' }}>TOP CONSISTENT STAFF</span>
-                  <div className="at-consistent-list">
-                    <div className="at-consistent-item">
-                      <div className="at-consistent-avatar">ER</div>
-                      <span className="at-consistent-name">Elena Rodriguez</span>
-                      <span className="at-consistent-val">100%</span>
-                    </div>
-                    <div className="at-consistent-item">
-                      <div className="at-consistent-avatar">SP</div>
-                      <span className="at-consistent-name">Samuel Peterson</span>
-                      <span className="at-consistent-val">98%</span>
-                    </div>
-                    <div className="at-consistent-item">
-                      <div className="at-consistent-avatar">AK</div>
-                      <span className="at-consistent-name">Ayesha Khan</span>
-                      <span className="at-consistent-val">97%</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Historical Logs Full-Width Section */}
-          <div className="bf-card at-history-section">
+          <div className="bf-card at-history-section" id="historical-attendance-logs">
             <div className="at-history-header">
               <div>
                 <h2 className="bf-card-title">Historical Attendance Logs</h2>
@@ -376,21 +340,39 @@ const AttendancePage: React.FC = () => {
             {/* Filter Panel */}
             <div className="at-filter-panel">
               <div className="at-filter-group">
-                <span className="at-filter-label">Date Range:</span>
                 <input
-                  type="date"
+                  type="text"
+                  placeholder="Search Worker Name..."
                   className="at-filter-input"
-                  value={filterDate}
-                  onChange={(e) => setFilterDate(e.target.value)}
+                  value={filterWorkerName}
+                  onChange={(e) => {
+                    setFilterWorkerName(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', color: '#1e293b' }}
                 />
               </div>
 
               <div className="at-filter-group">
-                <span className="at-filter-label">Role:</span>
+                <input
+                  type="date"
+                  className="at-filter-input"
+                  value={filterDate}
+                  onChange={(e) => {
+                    setFilterDate(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                />
+              </div>
+
+              <div className="at-filter-group">
                 <select
                   className="at-filter-input"
                   value={filterRole}
-                  onChange={(e) => setFilterRole(e.target.value)}
+                  onChange={(e) => {
+                    setFilterRole(e.target.value);
+                    setCurrentPage(1);
+                  }}
                 >
                   <option value="All">All Roles</option>
                   <option value="Healer">Healer</option>
@@ -400,11 +382,13 @@ const AttendancePage: React.FC = () => {
               </div>
 
               <div className="at-filter-group">
-                <span className="at-filter-label">Status:</span>
                 <select
                   className="at-filter-input"
                   value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
+                  onChange={(e) => {
+                    setFilterStatus(e.target.value);
+                    setCurrentPage(1);
+                  }}
                 >
                   <option value="All">All Statuses</option>
                   <option value="Present">Present</option>
@@ -419,6 +403,8 @@ const AttendancePage: React.FC = () => {
                   setFilterDate('');
                   setFilterRole('All');
                   setFilterStatus('All');
+                  setFilterWorkerName('');
+                  setCurrentPage(1);
                 }}
               >
                 Clear Filters
@@ -438,44 +424,80 @@ const AttendancePage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredHistory.map((log) => (
-                    <tr key={log.id}>
-                      <td>{log.date}</td>
-                      <td>
-                        <span style={{ fontWeight: 700 }}>{log.workerName}</span>
+                  {paginatedHistory.length > 0 ? (
+                    paginatedHistory.map((log) => (
+                      <tr key={log.id}>
+                        <td>{log.date}</td>
+                        <td>
+                          <span style={{ fontWeight: 700 }}>{log.workerName}</span>
+                        </td>
+                        <td>
+                          <span
+                            className={`at-badge at-badge--${
+                              log.status === 'Present'
+                                ? 'present'
+                                : log.status === 'Absent'
+                                ? 'absent'
+                                : 'halfday'
+                            }`}
+                          >
+                            {log.status}
+                          </span>
+                        </td>
+                        <td>{log.hours}</td>
+                        <td>{log.remarks}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5} style={{ textAlign: 'center', color: '#64748b', padding: '30px' }}>
+                        No historical attendance records match your search filters.
                       </td>
-                      <td>
-                        <span
-                          className={`at-badge at-badge--${
-                            log.status === 'Present'
-                              ? 'present'
-                              : log.status === 'Absent'
-                              ? 'absent'
-                              : 'halfday'
-                          }`}
-                        >
-                          {log.status}
-                        </span>
-                      </td>
-                      <td>{log.hours}</td>
-                      <td>{log.remarks}</td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>
 
             {/* Table Pagination */}
             <div className="at-pagination">
-              <span className="at-pagination-info">Showing 1-{filteredHistory.length} of 280 records</span>
+              <span className="at-pagination-info">
+                {filteredHistory.length > 0 ? (
+                  `Showing ${indexOfFirstItem + 1}-${Math.min(indexOfLastItem, filteredHistory.length)} of ${filteredHistory.length} records`
+                ) : (
+                  'Showing 0-0 of 0 records'
+                )}
+              </span>
               <div className="at-pagination-controls">
-                <button className="at-pagination-btn" disabled>
+                <button
+                  className="at-pagination-btn"
+                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                  disabled={activePage === 1}
+                  style={{ opacity: activePage === 1 ? 0.5 : 1, cursor: activePage === 1 ? 'not-allowed' : 'pointer' }}
+                >
                   <IonIcon icon={chevronBackOutline} />
                 </button>
-                <button className="at-pagination-btn at-pagination-btn--active">1</button>
-                <button className="at-pagination-btn">2</button>
-                <button className="at-pagination-btn">3</button>
-                <button className="at-pagination-btn">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                  <button
+                    key={pageNum}
+                    className={`at-pagination-btn ${activePage === pageNum ? 'at-pagination-btn--active' : ''}`}
+                    onClick={() => setCurrentPage(pageNum)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    {pageNum}
+                  </button>
+                ))}
+                {totalPages === 0 && (
+                  <button className="at-pagination-btn at-pagination-btn--active" disabled>
+                    1
+                  </button>
+                )}
+                <button
+                  className="at-pagination-btn"
+                  onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                  disabled={activePage === totalPages || totalPages === 0}
+                  style={{ opacity: (activePage === totalPages || totalPages === 0) ? 0.5 : 1, cursor: (activePage === totalPages || totalPages === 0) ? 'not-allowed' : 'pointer' }}
+                >
                   <IonIcon icon={chevronForwardOutline} />
                 </button>
               </div>
@@ -498,34 +520,27 @@ const AttendancePage: React.FC = () => {
                 <p className="sa-text-muted">{selectedWorker.role}</p>
               </div>
             )}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
               <button 
                 className="sa-btn sa-btn--primary"
-                style={{ justifyContent: 'center' }}
+                style={{ width: '240px', justifyContent: 'center' }}
                 onClick={() => handleUpdateStatus('Present')}
               >
                 Mark Present
               </button>
               <button 
                 className="sa-btn sa-btn--danger"
-                style={{ justifyContent: 'center' }}
+                style={{ width: '240px', justifyContent: 'center' }}
                 onClick={() => handleUpdateStatus('Absent')}
               >
                 Mark Absent
               </button>
               <button 
                 className="sa-btn sa-btn--warning"
-                style={{ justifyContent: 'center', color: '#ffffff' }}
+                style={{ width: '240px', justifyContent: 'center', color: '#ffffff' }}
                 onClick={() => handleUpdateStatus('Half Day')}
               >
                 Mark Half Day
-              </button>
-              <button 
-                className="sa-btn sa-btn--outline"
-                style={{ justifyContent: 'center' }}
-                onClick={() => handleUpdateStatus('Select...')}
-              >
-                Reset Select
               </button>
             </div>
           </div>

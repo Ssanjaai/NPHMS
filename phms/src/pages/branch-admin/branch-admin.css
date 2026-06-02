@@ -342,6 +342,19 @@
   transform: translateY(-1px);
 }
 
+.sa-btn--warning {
+  background: #f59e0b;
+  color: white;
+  --color: white;
+}
+
+.sa-btn--warning:hover {
+  background: #d97706;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+  transform: translateY(-1px);
+}
+
+
 .sa-action-btn--delete {
   color: #ef4444 !important;
 }
