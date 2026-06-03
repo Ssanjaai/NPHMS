@@ -46,6 +46,25 @@ interface HistoricalLog {
   remarks: string;
 }
 
+const getFormattedDate = (date: Date) => {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const monthStr = months[date.getMonth()];
+  const dayStr = date.getDate();
+  const yearStr = date.getFullYear();
+  return `${monthStr} ${dayStr}, ${yearStr}`;
+};
+
+const getFormattedTime = (date: Date) => {
+  let hours = date.getHours();
+  const minutes = date.getMinutes();
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12; // the hour '0' should be '12'
+  const minutesStr = minutes < 10 ? '0' + minutes : minutes;
+  const hoursStr = hours < 10 ? '0' + hours : hours;
+  return `${hoursStr}:${minutesStr} ${ampm}`;
+};
+
 const AttendancePage: React.FC = () => {
   const { user } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState('');
@@ -82,7 +101,7 @@ const AttendancePage: React.FC = () => {
   ]);
 
   // Historical log items matching the screenshot (expanded for pagination support)!
-  const [historicalLogs] = useState<HistoricalLog[]>([
+  const [historicalLogs, setHistoricalLogs] = useState<HistoricalLog[]>([
     { id: 1, date: 'Oct 24, 2023', workerName: 'David Park', status: 'Present', hours: '8.5h', remarks: 'Regular shift.' },
     { id: 2, date: 'Oct 24, 2023', workerName: 'Elena Rodriguez', status: 'Half Day', hours: '4.0h', remarks: "Doctor's appointment in the afternoon." },
     { id: 3, date: 'Oct 23, 2023', workerName: 'Samuel Peterson', status: 'Absent', hours: '0.0h', remarks: 'Medical leave (Cert submitted).' },
@@ -99,18 +118,79 @@ const AttendancePage: React.FC = () => {
 
   const handleUpdateStatus = (status: 'Present' | 'Absent' | 'Half Day' | 'Select...') => {
     if (!selectedWorker) return;
+    if (status === 'Select...') return;
+
+    const now = new Date();
+    const currentTimeStr = getFormattedTime(now);
+    const currentDateStr = getFormattedDate(now);
+
+    let updatedCheckIn = selectedWorker.checkIn;
+    let updatedCheckOut = selectedWorker.checkOut;
+
+    if (status === 'Present') {
+      updatedCheckIn = currentTimeStr;
+      updatedCheckOut = '--';
+    } else if (status === 'Half Day') {
+      if (selectedWorker.checkIn === 'N/A' || selectedWorker.checkIn === '--') {
+        updatedCheckIn = '08:30 AM';
+      }
+      updatedCheckOut = currentTimeStr;
+    } else if (status === 'Absent') {
+      updatedCheckIn = 'N/A';
+      updatedCheckOut = 'N/A';
+    }
+
     setDailyAttendance(
       dailyAttendance.map((w) =>
         w.id === selectedWorker.id
           ? {
               ...w,
               status,
-              checkIn: status === 'Absent' ? 'N/A' : w.checkIn === 'N/A' ? '08:30 AM' : w.checkIn,
-              checkOut: status === 'Absent' ? 'N/A' : w.checkOut,
+              checkIn: updatedCheckIn,
+              checkOut: updatedCheckOut,
             }
           : w
       )
     );
+
+    // Determine hours based on status
+    let hours = '0.0h';
+    if (status === 'Present') {
+      hours = '8.0h';
+    } else if (status === 'Half Day') {
+      hours = '4.0h';
+    }
+
+    // Determine remarks
+    const remarks = `Marked ${status} via attendance page.`;
+
+    setHistoricalLogs((prevLogs) => {
+      const existingLogIndex = prevLogs.findIndex(
+        (log) => log.workerName === selectedWorker.name && log.date === currentDateStr
+      );
+
+      if (existingLogIndex >= 0) {
+        const updatedLogs = [...prevLogs];
+        updatedLogs[existingLogIndex] = {
+          ...updatedLogs[existingLogIndex],
+          status: status as 'Present' | 'Absent' | 'Half Day',
+          hours,
+          remarks,
+        };
+        return updatedLogs;
+      } else {
+        const newLog: HistoricalLog = {
+          id: prevLogs.length > 0 ? Math.max(...prevLogs.map((l) => l.id)) + 1 : 1,
+          date: currentDateStr,
+          workerName: selectedWorker.name,
+          status: status as 'Present' | 'Absent' | 'Half Day',
+          hours,
+          remarks,
+        };
+        return [newLog, ...prevLogs];
+      }
+    });
+
     setShowStatusModal(false);
     setSelectedWorker(null);
   };

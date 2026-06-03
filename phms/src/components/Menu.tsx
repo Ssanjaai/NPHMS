@@ -88,13 +88,35 @@ const branchAdminNav: NavItem[] = [
   { title: 'Settings', url: ROUTES.BRANCH_ADMIN.SETTINGS, icon: settingsOutline },
 ];
 
+const healerNav: NavItem[] = [
+  { title: 'Dashboard', url: ROUTES.HEALER.DASHBOARD, icon: gridOutline },
+  { title: 'My Patients', url: ROUTES.HEALER.PATIENTS, icon: peopleOutline },
+  { title: 'Sessions List', url: ROUTES.HEALER.SESSIONS, icon: timeOutline },
+  { title: 'Profile', url: ROUTES.HEALER.PROFILE, icon: personOutline },
+];
+
+const patientNav: NavItem[] = [
+  { title: 'Dashboard', url: ROUTES.PATIENT.DASHBOARD, icon: gridOutline },
+  { title: 'Appointments', url: ROUTES.PATIENT.APPOINTMENTS, icon: calendarOutline },
+  { title: 'My Healers', url: ROUTES.PATIENT.HEALERS, icon: medkitOutline },
+  { title: 'Health Records', url: ROUTES.PATIENT.HEALTH_RECORDS, icon: documentOutline },
+  { title: 'Visitor Passes', url: ROUTES.PATIENT.VISITORS, icon: listOutline },
+  { title: 'Profile', url: ROUTES.PATIENT.PROFILE, icon: personOutline },
+];
+
 const Menu: React.FC = () => {
   const location = useLocation();
   const history = useHistory();
   const { user, logout } = useAuthStore();
   const [expandedItems, setExpandedItems] = React.useState<string[]>([]);
 
-  const navItems = user?.role === 'SUPER_ADMIN' ? superAdminNav : branchAdminNav;
+  const navItems = user?.role === 'SUPER_ADMIN'
+    ? superAdminNav
+    : user?.role === 'HEALER'
+      ? healerNav
+      : user?.role === 'PATIENT'
+        ? patientNav
+        : branchAdminNav;
 
   // On mobile, parent toggles dropdown only; subitems close sidebar. On desktop, default behavior.
   const handleNavClick = (item: NavItem, isSubItem = false) => {

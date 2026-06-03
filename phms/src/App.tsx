@@ -60,6 +60,8 @@ import SATreatmentTypePage from './pages/super-admin/TreatmentTypePage';
 import SACreateTreatmentTypePage from './pages/super-admin/SACreateTreatmentTypePage';
 import SATreatmentTypeDetailsPage from './pages/super-admin/SATreatmentTypeDetailsPage';
 import SAEditTreatmentTypePage from './pages/super-admin/SAEditTreatmentTypePage';
+import PatientDashboardPage from './pages/patient/DashboardPage';
+import PatientDocumentsPage from './pages/patient/DocumentsPage';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -282,6 +284,15 @@ const AppContent: React.FC = () => {
         <Route path={ROUTES.BRANCH_ADMIN.SETTINGS} exact={true}>
           <BASettingsPage />
         </Route>
+
+        {/* Patient Routes */}
+        <Route path={ROUTES.PATIENT.DASHBOARD} exact={true}>
+          <PatientDashboardPage />
+        </Route>
+        <Route path={ROUTES.PATIENT.HEALTH_RECORDS} exact={true}>
+          <PatientDocumentsPage />
+        </Route>
+
         <Route path="/" exact={true}>
           <Redirect to={ROUTES.AUTH.LOGIN} />
         </Route>
