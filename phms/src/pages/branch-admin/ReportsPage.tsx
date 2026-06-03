@@ -8,6 +8,7 @@ import {
   IonButtons,
   IonIcon,
   IonMenuButton,
+  IonModal,
 } from '@ionic/react';
 import {
   barChartOutline,
@@ -57,6 +58,7 @@ interface SessionRow {
   treatment: string;
   time: string;
   status: 'Completed' | 'Scheduled' | 'Cancelled';
+  date: string;
 }
 
 interface AttendanceRow {
@@ -77,6 +79,24 @@ interface HealerRow {
   status: 'Active' | 'On Leave';
 }
 
+interface PatientRow {
+  name: string;
+  healer: string;
+  status: 'Active' | 'Under Treatment' | 'Completed' | 'Pending';
+  date: string;
+  treatment: string;
+}
+
+const formatDateStr = (daysAgo: number) => {
+  const d = new Date();
+  d.setDate(d.getDate() - daysAgo);
+  const allMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const month = allMonths[d.getMonth()];
+  const date = String(d.getDate()).padStart(2, '0');
+  const year = d.getFullYear();
+  return `${month} ${date}, ${year}`;
+};
+
 const ReportsPage: React.FC = () => {
   const { user } = useAuthStore();
 
@@ -88,45 +108,79 @@ const ReportsPage: React.FC = () => {
 
   // Filters State
   const [dateRange, setDateRange] = useState<'Today' | 'This Week' | 'This Month' | 'Custom'>('This Month');
-  const [categoryFilter, setCategoryFilter] = useState('All Departments');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Tabs State
-  const [selectedTab, setSelectedTab] = useState<'Finance' | 'Visitors' | 'Sessions' | 'Attendance' | 'Healer'>('Finance');
+  const [selectedTab, setSelectedTab] = useState<'Finance' | 'Visitors' | 'Sessions' | 'Attendance' | 'Healer' | 'Patients'>('Finance');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
+  // Export Modal States
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportFormat, setExportFormat] = useState<'PDF' | 'Excel' | null>(null);
+  const [exportProgress, setExportProgress] = useState(0);
+  const [exportState, setExportState] = useState<'idle' | 'generating' | 'completed'>('idle');
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const triggerToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const handleExportReport = (format: 'PDF' | 'Excel') => {
+    setExportFormat(format);
+    setExportProgress(0);
+    setExportState('generating');
+    setShowExportModal(true);
+
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += Math.floor(Math.random() * 15) + 5;
+      if (progress >= 100) {
+        clearInterval(interval);
+        setExportProgress(100);
+        setTimeout(() => {
+          setExportState('completed');
+        }, 200);
+      } else {
+        setExportProgress(progress);
+      }
+    }, 150);
+  };
+
   // Mock ledger data lists
   const financeData: FinanceRow[] = [
-    { date: 'Oct 24, 2023 | 10:45 AM', type: 'Income', category: 'Consultation Fee', amount: '₹2,500.00', paymentMode: 'UPI / GPay', recordedBy: 'Anjali Sharma' },
-    { date: 'Oct 24, 2023 | 11:30 AM', type: 'Expense', category: 'Medical Supplies', amount: '₹4,200.00', paymentMode: 'Bank Transfer', recordedBy: 'Rajesh Kumar' },
-    { date: 'Oct 23, 2023 | 04:15 PM', type: 'Income', category: 'Yoga Session', amount: '₹1,200.00', paymentMode: 'Cash', recordedBy: 'Anjali Sharma' },
-    { date: 'Oct 23, 2023 | 05:00 PM', type: 'Income', category: 'Ayurvedic Meds', amount: '₹8,450.00', paymentMode: 'Card', recordedBy: 'Siddharth M.' },
-    { date: 'Oct 23, 2023 | 06:10 PM', type: 'Expense', category: 'Utility Bills', amount: '₹12,000.00', paymentMode: 'Bank Transfer', recordedBy: 'Admin Mumbai' }
+    { date: `${formatDateStr(0)} | 10:45 AM`, type: 'Income', category: 'Consultation Fee', amount: '₹2,500.00', paymentMode: 'UPI / GPay', recordedBy: 'Anjali Sharma' },
+    { date: `${formatDateStr(0)} | 11:30 AM`, type: 'Expense', category: 'Medical Supplies', amount: '₹4,200.00', paymentMode: 'Bank Transfer', recordedBy: 'Rajesh Kumar' },
+    { date: `${formatDateStr(1)} | 04:15 PM`, type: 'Income', category: 'Yoga Session', amount: '₹1,200.00', paymentMode: 'Cash', recordedBy: 'Anjali Sharma' },
+    { date: `${formatDateStr(3)} | 05:00 PM`, type: 'Income', category: 'Ayurvedic Meds', amount: '₹8,450.00', paymentMode: 'UPI', recordedBy: 'Siddharth M.' },
+    { date: `${formatDateStr(15)} | 06:10 PM`, type: 'Expense', category: 'Utility Bills', amount: '₹12,000.00', paymentMode: 'Bank Transfer', recordedBy: 'Admin Mumbai' }
   ];
 
   const visitorData: VisitorRow[] = [
-    { date: 'Oct 24, 2023', name: 'Karan Johar', purpose: 'Healing Session', checkIn: '09:30 AM', checkOut: '10:30 AM', status: 'Checked Out' },
-    { date: 'Oct 24, 2023', name: 'Sunita Patel', purpose: 'Consultation', checkIn: '10:15 AM', checkOut: '11:00 AM', status: 'Checked Out' },
-    { date: 'Oct 24, 2023', name: 'Rohan Das', purpose: 'Inquiry', checkIn: '02:00 PM', checkOut: '--', status: 'Inside Center' },
-    { date: 'Oct 23, 2023', name: 'Amit Mehra', purpose: 'Therapy Session', checkIn: '03:00 PM', checkOut: '04:30 PM', status: 'Checked Out' },
-    { date: 'Oct 23, 2023', name: 'Nisha Sen', purpose: 'Pharmacy Visit', checkIn: '04:45 PM', checkOut: '05:05 PM', status: 'Checked Out' }
+    { date: formatDateStr(0), name: 'Karan Johar', purpose: 'Healing Session', checkIn: '09:30 AM', checkOut: '10:30 AM', status: 'Checked Out' },
+    { date: formatDateStr(0), name: 'Sunita Patel', purpose: 'Consultation', checkIn: '10:15 AM', checkOut: '11:00 AM', status: 'Checked Out' },
+    { date: formatDateStr(1), name: 'Rohan Das', purpose: 'Inquiry', checkIn: '02:00 PM', checkOut: '--', status: 'Inside Center' },
+    { date: formatDateStr(4), name: 'Amit Mehra', purpose: 'Therapy Session', checkIn: '03:00 PM', checkOut: '04:30 PM', status: 'Checked Out' },
+    { date: formatDateStr(20), name: 'Nisha Sen', purpose: 'Pharmacy Visit', checkIn: '04:45 PM', checkOut: '05:05 PM', status: 'Checked Out' }
   ];
 
   const sessionData: SessionRow[] = [
-    { id: 'S-9081', patient: 'Elena Rodriguez', healer: 'Dr. Aris Varma', treatment: 'Basic Pranic Healing', time: '09:00 AM', status: 'Completed' },
-    { id: 'S-9082', patient: 'David Park', healer: 'Julian Mars', treatment: 'Advanced Pranic Healing', time: '11:00 AM', status: 'Completed' },
-    { id: 'S-9083', patient: 'Ayesha Khan', healer: 'Dr. Aris Varma', treatment: 'Pranic Psychotherapy', time: '02:30 PM', status: 'Scheduled' },
-    { id: 'S-9084', patient: 'Samuel Peterson', healer: 'Julian Mars', treatment: 'Crystal Healing', time: '04:00 PM', status: 'Scheduled' },
-    { id: 'S-9085', patient: 'Carol Danvers', healer: 'Dr. Aris Varma', treatment: 'Basic Pranic Healing', time: 'Yesterday', status: 'Completed' }
+    { id: 'S-9081', patient: 'Elena Rodriguez', healer: 'Dr. Aris Varma', treatment: 'Basic Pranic Healing', time: '09:00 AM', status: 'Completed', date: formatDateStr(0) },
+    { id: 'S-9082', patient: 'David Park', healer: 'Julian Mars', treatment: 'Advanced Pranic Healing', time: '11:00 AM', status: 'Completed', date: formatDateStr(0) },
+    { id: 'S-9083', patient: 'Ayesha Khan', healer: 'Dr. Aris Varma', treatment: 'Pranic Psychotherapy', time: '02:30 PM', status: 'Scheduled', date: formatDateStr(1) },
+    { id: 'S-9084', patient: 'Samuel Peterson', healer: 'Julian Mars', treatment: 'Crystal Healing', time: '04:00 PM', status: 'Scheduled', date: formatDateStr(3) },
+    { id: 'S-9085', patient: 'Carol Danvers', healer: 'Dr. Aris Varma', treatment: 'Basic Pranic Healing', time: 'Yesterday', status: 'Completed', date: formatDateStr(8) }
   ];
 
   const attendanceData: AttendanceRow[] = [
-    { worker: 'Elena Rodriguez', role: 'Senior Healer', date: 'Oct 24, 2023', checkIn: '08:15 AM', hours: '8.5h', status: 'Present' },
-    { worker: 'David Park', role: 'Admin Staff', date: 'Oct 24, 2023', checkIn: 'N/A', hours: '0.0h', status: 'Absent' },
-    { worker: 'Ayesha Khan', role: 'Lead Healer', date: 'Oct 24, 2023', checkIn: '09:30 AM', hours: '4.0h', status: 'Half Day' },
-    { worker: 'Samuel Peterson', role: 'Physician', date: 'Oct 24, 2023', checkIn: '08:00 AM', hours: '8.0h', status: 'Present' },
-    { worker: 'Marcus Chen', role: 'Lead Administrator', date: 'Oct 24, 2023', checkIn: '08:30 AM', hours: '8.5h', status: 'Present' }
+    { worker: 'Elena Rodriguez', role: 'Senior Healer', date: formatDateStr(0), checkIn: '08:15 AM', hours: '8.5h', status: 'Present' },
+    { worker: 'David Park', role: 'Admin Staff', date: formatDateStr(0), checkIn: 'N/A', hours: '0.0h', status: 'Absent' },
+    { worker: 'Ayesha Khan', role: 'Lead Healer', date: formatDateStr(1), checkIn: '09:30 AM', hours: '4.0h', status: 'Half Day' },
+    { worker: 'Samuel Peterson', role: 'Physician', date: formatDateStr(5), checkIn: '08:00 AM', hours: '8.0h', status: 'Present' },
+    { worker: 'Marcus Chen', role: 'Lead Administrator', date: formatDateStr(18), checkIn: '08:30 AM', hours: '8.5h', status: 'Present' }
   ];
 
   const healerData: HealerRow[] = [
@@ -137,11 +191,113 @@ const ReportsPage: React.FC = () => {
     { healer: 'Lila Thorne', specialty: 'Basic Pranic', sessions: 72, satisfaction: '92%', rating: '4.5', status: 'Active' }
   ];
 
+  const patientData: PatientRow[] = [
+    { name: 'Arjun Sharma', healer: 'Dr. Aris Varma', status: 'Under Treatment', date: formatDateStr(0), treatment: 'Pranic Psychotherapy' },
+    { name: 'Priya Kapoor', healer: 'Julian Mars', status: 'Active', date: formatDateStr(0), treatment: 'Advanced Pranic Healing' },
+    { name: 'Rahul Verma', healer: 'Dr. Shailesh Kumar', status: 'Completed', date: formatDateStr(2), treatment: 'Clinical Psychology' },
+    { name: 'Meera Singh', healer: 'Maya Rose', status: 'Active', date: formatDateStr(5), treatment: 'Crystal Healing' },
+    { name: 'Karan Johar', healer: 'Lila Thorne', status: 'Pending', date: formatDateStr(25), treatment: 'Basic Pranic Healing' }
+  ];
+
   // Helper to reset filters
   const handleResetFilters = () => {
     setDateRange('This Month');
-    setCategoryFilter('All Departments');
+    setStartDate('');
+    setEndDate('');
     setSearchQuery('');
+  };
+
+  // Helper to filter dates relative to local system time
+  const isWithinDateRange = (rowDateStr: string) => {
+    if (!rowDateStr) return true;
+    const cleanDate = rowDateStr.split('|')[0].trim();
+    const rowDate = new Date(cleanDate);
+    if (isNaN(rowDate.getTime())) return true;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const rowDay = new Date(rowDate);
+    rowDay.setHours(0, 0, 0, 0);
+
+    if (dateRange === 'Today') {
+      const diffTime = today.getTime() - rowDay.getTime();
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays === 0;
+    }
+    if (dateRange === 'This Week') {
+      const diffTime = today.getTime() - rowDay.getTime();
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays >= 0 && diffDays < 7;
+    }
+    if (dateRange === 'This Month') {
+      const diffTime = today.getTime() - rowDay.getTime();
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays >= 0 && diffDays < 30;
+    }
+    if (dateRange === 'Custom') {
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        if (rowDay < start) return false;
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        if (rowDay > end) return false;
+      }
+      return true;
+    }
+    return true; // 'Custom' fallback
+  };
+
+  const getFinanceCardVal = () => {
+    const filtered = financeData.filter(d => isWithinDateRange(d.date) && d.type === 'Income');
+    const sum = filtered.reduce((acc, row) => {
+      const val = parseFloat(row.amount.replace(/[₹,]/g, ''));
+      return acc + (isNaN(val) ? 0 : val);
+    }, 0);
+    let base = 0;
+    if (dateRange === 'Today') base = 5000;
+    else if (dateRange === 'This Week') base = 25000;
+    else if (dateRange === 'This Month') base = 73000;
+    else if (dateRange === 'Custom') base = 50000;
+    return `₹${(base + sum).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+
+  const getVisitorsCardVal = () => {
+    const filtered = visitorData.filter(d => isWithinDateRange(d.date));
+    let base = 0;
+    if (dateRange === 'Today') base = 15;
+    else if (dateRange === 'This Week') base = 120;
+    else if (dateRange === 'This Month') base = 445;
+    else if (dateRange === 'Custom') base = 300;
+    return `${base + filtered.length} Total`;
+  };
+
+  const getSessionsCardVal = () => {
+    const filtered = sessionData.filter(d => isWithinDateRange(d.date));
+    let base = 0;
+    if (dateRange === 'Today') base = 12;
+    else if (dateRange === 'This Week') base = 90;
+    else if (dateRange === 'This Month') base = 1235;
+    else if (dateRange === 'Custom') base = 800;
+    return `${(base + filtered.length).toLocaleString('en-IN')}`;
+  };
+
+  const getAttendanceCardVal = () => {
+    const filtered = attendanceData.filter(d => isWithinDateRange(d.date) && d.status === 'Present');
+    let base = 0;
+    if (dateRange === 'Today') base = 40;
+    else if (dateRange === 'This Week') base = 39;
+    else if (dateRange === 'This Month') base = 40;
+    else if (dateRange === 'Custom') base = 38;
+    return `${base + filtered.length} Present`;
+  };
+
+  const getHealersCardVal = () => {
+    const activeCount = healerData.filter(d => d.status === 'Active').length;
+    return `${activeCount} Active`;
   };
 
   // Helper to search and filter current active list
@@ -149,30 +305,46 @@ const ReportsPage: React.FC = () => {
     switch (selectedTab) {
       case 'Finance':
         return financeData.filter(d => 
-          d.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          d.recordedBy.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          d.paymentMode.toLowerCase().includes(searchQuery.toLowerCase())
+          isWithinDateRange(d.date) && (
+            d.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            d.recordedBy.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            d.paymentMode.toLowerCase().includes(searchQuery.toLowerCase())
+          )
         );
       case 'Visitors':
         return visitorData.filter(d => 
-          d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          d.purpose.toLowerCase().includes(searchQuery.toLowerCase())
+          isWithinDateRange(d.date) && (
+            d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            d.purpose.toLowerCase().includes(searchQuery.toLowerCase())
+          )
         );
       case 'Sessions':
         return sessionData.filter(d => 
-          d.patient.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          d.healer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          d.treatment.toLowerCase().includes(searchQuery.toLowerCase())
+          isWithinDateRange(d.date) && (
+            d.patient.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            d.healer.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            d.treatment.toLowerCase().includes(searchQuery.toLowerCase())
+          )
         );
       case 'Attendance':
         return attendanceData.filter(d => 
-          d.worker.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          d.role.toLowerCase().includes(searchQuery.toLowerCase())
+          isWithinDateRange(d.date) && (
+            d.worker.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            d.role.toLowerCase().includes(searchQuery.toLowerCase())
+          )
         );
       case 'Healer':
         return healerData.filter(d => 
           d.healer.toLowerCase().includes(searchQuery.toLowerCase()) ||
           d.specialty.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+      case 'Patients':
+        return patientData.filter(d => 
+          isWithinDateRange(d.date) && (
+            d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            d.healer.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            d.treatment.toLowerCase().includes(searchQuery.toLowerCase())
+          )
         );
       default:
         return [];
@@ -221,10 +393,10 @@ const ReportsPage: React.FC = () => {
               </p>
             </div>
             <div className="rp-header-actions">
-              <button className="rp-btn rp-btn--outline">
+              <button className="rp-btn rp-btn--outline" onClick={() => handleExportReport('PDF')}>
                 <IonIcon icon={downloadOutline} /> Export PDF
               </button>
-              <button className="rp-btn rp-btn--primary">
+              <button className="rp-btn rp-btn--primary" onClick={() => handleExportReport('Excel')}>
                 <IonIcon icon={barChartOutline} /> Export Excel
               </button>
             </div>
@@ -264,21 +436,35 @@ const ReportsPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="rp-filter-item">
-                <span className="rp-filter-label">CATEGORY</span>
-                <div className="rp-select-container">
-                  <select
-                    className="rp-select"
-                    value={categoryFilter}
-                    onChange={(e) => setCategoryFilter(e.target.value)}
-                  >
-                    <option>All Departments</option>
-                    <option>Medical</option>
-                    <option>Therapy</option>
-                    <option>Administrative</option>
-                  </select>
+              {dateRange === 'Custom' && (
+                <div className="rp-filter-item">
+                  <span className="rp-filter-label">START DATE</span>
+                  <div className="rp-select-container">
+                    <input
+                      type="date"
+                      className="rp-select"
+                      style={{ outline: 'none', border: 'none', background: 'transparent' }}
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {dateRange === 'Custom' && (
+                <div className="rp-filter-item">
+                  <span className="rp-filter-label">END DATE</span>
+                  <div className="rp-select-container">
+                    <input
+                      type="date"
+                      className="rp-select"
+                      style={{ outline: 'none', border: 'none', background: 'transparent' }}
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             <button className="rp-reset-btn" onClick={handleResetFilters}>
@@ -287,31 +473,18 @@ const ReportsPage: React.FC = () => {
             </button>
           </div>
 
-          {/* Metrics Ribbon (5 Cards with SVG Sparklines) */}
+          {/* Metrics Ribbon (5 Cards) */}
           <div className="rp-metrics-row">
             {/* Card 1: Finance */}
             <div className="rp-metric-card">
               <div className="rp-metric-top">
                 <div className="rp-metric-meta">
                   <span className="rp-metric-label">FINANCE</span>
-                  <span className="rp-metric-val">₹85,500</span>
+                  <span className="rp-metric-val">{getFinanceCardVal()}</span>
                 </div>
                 <div className="rp-metric-icon rp-metric-icon--teal">
                   <IonIcon icon={cashOutline} />
                 </div>
-              </div>
-              <div className="rp-metric-trend">
-                <span className="rp-trend-badge rp-trend-badge--up">▲ 12%</span>
-              </div>
-              <div className="rp-sparkline-box">
-                <svg className="rp-sparkline" viewBox="0 0 120 30">
-                  <path
-                    d="M0,30 Q15,5 30,25 T60,10 T90,28 T120,8"
-                    fill="none"
-                    stroke="#1f7a6a"
-                    strokeWidth="2"
-                  />
-                </svg>
               </div>
             </div>
 
@@ -320,24 +493,11 @@ const ReportsPage: React.FC = () => {
               <div className="rp-metric-top">
                 <div className="rp-metric-meta">
                   <span className="rp-metric-label">VISITORS</span>
-                  <span className="rp-metric-val">450 Total</span>
+                  <span className="rp-metric-val">{getVisitorsCardVal()}</span>
                 </div>
                 <div className="rp-metric-icon rp-metric-icon--blue">
                   <IonIcon icon={peopleOutline} />
                 </div>
-              </div>
-              <div className="rp-metric-trend">
-                <span className="rp-trend-badge rp-trend-badge--up">▲ 8%</span>
-              </div>
-              <div className="rp-sparkline-box">
-                <svg className="rp-sparkline" viewBox="0 0 120 30">
-                  <path
-                    d="M0,28 Q15,15 30,22 T60,8 T90,26 T120,12"
-                    fill="none"
-                    stroke="#3b82f6"
-                    strokeWidth="2"
-                  />
-                </svg>
               </div>
             </div>
 
@@ -346,24 +506,11 @@ const ReportsPage: React.FC = () => {
               <div className="rp-metric-top">
                 <div className="rp-metric-meta">
                   <span className="rp-metric-label">SESSIONS</span>
-                  <span className="rp-metric-val">1,240</span>
+                  <span className="rp-metric-val">{getSessionsCardVal()}</span>
                 </div>
                 <div className="rp-metric-icon rp-metric-icon--red">
                   <IonIcon icon={timeOutline} />
                 </div>
-              </div>
-              <div className="rp-metric-trend">
-                <span className="rp-trend-badge rp-trend-badge--down">▼ 3%</span>
-              </div>
-              <div className="rp-sparkline-box">
-                <svg className="rp-sparkline" viewBox="0 0 120 30">
-                  <path
-                    d="M0,8 Q15,22 30,12 T60,28 T90,14 T120,24"
-                    fill="none"
-                    stroke="#ef4444"
-                    strokeWidth="2"
-                  />
-                </svg>
               </div>
             </div>
 
@@ -372,50 +519,24 @@ const ReportsPage: React.FC = () => {
               <div className="rp-metric-top">
                 <div className="rp-metric-meta">
                   <span className="rp-metric-label">ATTENDANCE</span>
-                  <span className="rp-metric-val">42 Present</span>
+                  <span className="rp-metric-val">{getAttendanceCardVal()}</span>
                 </div>
                 <div className="rp-metric-icon rp-metric-icon--green">
                   <IonIcon icon={checkmarkCircleOutline} />
                 </div>
               </div>
-              <div className="rp-metric-trend">
-                <span className="rp-trend-badge rp-trend-badge--up">✔ 98%</span>
-              </div>
-              <div className="rp-sparkline-box">
-                <svg className="rp-sparkline" viewBox="0 0 120 30">
-                  <line
-                    x1="0" y1="20" x2="120" y2="20"
-                    stroke="#10b981"
-                    strokeWidth="2"
-                    strokeDasharray="4 4"
-                  />
-                </svg>
-              </div>
             </div>
 
-            {/* Card 5: Healer Perf */}
+            {/* Card 5: Healers */}
             <div className="rp-metric-card">
               <div className="rp-metric-top">
                 <div className="rp-metric-meta">
-                  <span className="rp-metric-label">HEALER PERF.</span>
-                  <span className="rp-metric-val">Top 15%</span>
+                  <span className="rp-metric-label">HEALERS</span>
+                  <span className="rp-metric-val">{getHealersCardVal()}</span>
                 </div>
                 <div className="rp-metric-icon rp-metric-icon--purple">
                   <IonIcon icon={starOutline} />
                 </div>
-              </div>
-              <div className="rp-metric-trend">
-                <span className="rp-trend-badge rp-trend-badge--up">★ 4.8</span>
-              </div>
-              <div className="rp-sparkline-box">
-                <svg className="rp-sparkline" viewBox="0 0 120 30">
-                  <path
-                    d="M0,28 Q15,26 30,15 T60,20 T90,10 T120,5"
-                    fill="none"
-                    stroke="#8b5cf6"
-                    strokeWidth="2"
-                  />
-                </svg>
               </div>
             </div>
           </div>
@@ -454,6 +575,12 @@ const ReportsPage: React.FC = () => {
                 >
                   Healer
                 </button>
+                <button
+                  className={`rp-tab-btn ${selectedTab === 'Patients' ? 'rp-tab-btn--active' : ''}`}
+                  onClick={() => setSelectedTab('Patients')}
+                >
+                  Patients
+                </button>
               </div>
             </div>
 
@@ -471,7 +598,7 @@ const ReportsPage: React.FC = () => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
-                <button className="rp-table-btn">
+                <button className="rp-table-btn" onClick={() => handleExportReport(selectedTab === 'Finance' ? 'Excel' : 'PDF')}>
                   <IonIcon icon={downloadOutline} />
                 </button>
               </div>
@@ -639,8 +766,6 @@ const ReportsPage: React.FC = () => {
                       <th>HEALER</th>
                       <th>SPECIALTY</th>
                       <th>SESSIONS CONDUCTED</th>
-                      <th>SATISFACTION</th>
-                      <th>RATING</th>
                       <th>STATUS</th>
                     </tr>
                   </thead>
@@ -651,8 +776,6 @@ const ReportsPage: React.FC = () => {
                           <td className="rp-cell-bold">{row.healer}</td>
                           <td>{row.specialty}</td>
                           <td className="rp-cell-bold">{row.sessions}</td>
-                          <td>{row.satisfaction}</td>
-                          <td className="rp-cell-bold">{row.rating} / 5</td>
                           <td>
                             <span className="rp-badge rp-badge--income">
                               {row.status}
@@ -662,7 +785,49 @@ const ReportsPage: React.FC = () => {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={6} className="rp-table-empty">No healer logs match your query.</td>
+                        <td colSpan={4} className="rp-table-empty">No healer logs match your query.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              )}
+
+              {selectedTab === 'Patients' && (
+                <table className="rp-table">
+                  <thead>
+                    <tr>
+                      <th>PATIENT NAME</th>
+                      <th>ASSIGNED HEALER</th>
+                      <th>STATUS</th>
+                      <th>REGISTRATION DATE</th>
+                      <th>TREATMENT TYPE</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedList.length > 0 ? (
+                      (paginatedList as PatientRow[]).map((row, idx) => {
+                        let statusColor = 'general';
+                        if (row.status === 'Active') statusColor = 'income';
+                        else if (row.status === 'Completed') statusColor = 'present';
+                        else if (row.status === 'Under Treatment') statusColor = 'half-day';
+
+                        return (
+                          <tr key={idx} className="rp-table-row">
+                            <td className="rp-cell-bold">{row.name}</td>
+                            <td>{row.healer}</td>
+                            <td>
+                              <span className={`rp-badge rp-badge--${statusColor}`}>
+                                {row.status}
+                              </span>
+                            </td>
+                            <td>{row.date}</td>
+                            <td className="rp-cell-bold">{row.treatment}</td>
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="rp-table-empty">No patient logs match your query.</td>
                       </tr>
                     )}
                   </tbody>
@@ -704,95 +869,126 @@ const ReportsPage: React.FC = () => {
               )}
             </div>
           </div>
-
-          {/* Bottom Dual Analytics Row (Distribution & Peak activity) */}
-          <div className="rp-analytics-grid">
-            {/* Left Column: Visitor Type Distribution */}
-            <div className="rp-panel">
-              <div className="rp-panel-header">
-                <h2 className="rp-panel-title">Visitor Type Distribution</h2>
-                <button className="rp-view-details-link">View Details</button>
-              </div>
-
-              <div className="rp-donut-workspace">
-                <div className="rp-donut-chart-container">
-                  <div className="rp-donut-chart-donut">
-                    <svg className="rp-donut-svg" viewBox="0 0 100 100">
-                      {/* Patients: 75% (stroke-dasharray="75 25", offset="0") */}
-                      <circle
-                        cx="50" cy="50" r="40"
-                        className="rp-donut-segment rp-donut-segment--patients"
-                      />
-                      {/* Healers: 15% (stroke-dasharray="15 85", offset="75") */}
-                      <circle
-                        cx="50" cy="50" r="40"
-                        className="rp-donut-segment rp-donut-segment--healers"
-                      />
-                      {/* Admin: 10% (stroke-dasharray="10 90", offset="90") */}
-                      <circle
-                        cx="50" cy="50" r="40"
-                        className="rp-donut-segment rp-donut-segment--staff"
-                      />
-                      <circle cx="50" cy="50" r="32" fill="white" />
-                    </svg>
-                  </div>
-                </div>
-
-                <div className="rp-donut-legend">
-                  <div className="rp-legend-item">
-                    <div className="rp-legend-dot rp-legend-dot--teal"></div>
-                    <span className="rp-legend-name">Patients</span>
-                    <span className="rp-legend-pct">75%</span>
-                  </div>
-
-                  <div className="rp-legend-item">
-                    <div className="rp-legend-dot rp-legend-dot--blue"></div>
-                    <span className="rp-legend-name">Healers</span>
-                    <span className="rp-legend-pct">15%</span>
-                  </div>
-
-                  <div className="rp-legend-item">
-                    <div className="rp-legend-dot rp-legend-dot--staff"></div>
-                    <span className="rp-legend-name">Admin/Staff</span>
-                    <span className="rp-legend-pct">10%</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column: Peak Activity Hours */}
-            <div className="rp-panel">
-              <div className="rp-panel-header">
-                <h2 className="rp-panel-title">Peak Activity Hours</h2>
-                <button className="rp-view-details-link">View Details</button>
-              </div>
-
-              <div className="rp-bar-chart-workspace">
-                <div className="rp-bars-container">
-                  <div className="rp-chart-bar" style={{ '--bar-height': '20%' } as React.CSSProperties}></div>
-                  <div className="rp-chart-bar" style={{ '--bar-height': '40%' } as React.CSSProperties}></div>
-                  <div className="rp-chart-bar" style={{ '--bar-height': '80%' } as React.CSSProperties}></div>
-                  <div className="rp-chart-bar rp-chart-bar--peak" style={{ '--bar-height': '100%' } as React.CSSProperties}></div>
-                  <div className="rp-chart-bar" style={{ '--bar-height': '70%' } as React.CSSProperties}></div>
-                  <div className="rp-chart-bar" style={{ '--bar-height': '40%' } as React.CSSProperties}></div>
-                  <div className="rp-chart-bar" style={{ '--bar-height': '40%' } as React.CSSProperties}></div>
-                  <div className="rp-chart-bar rp-chart-bar--peak" style={{ '--bar-height': '90%' } as React.CSSProperties}></div>
-                  <div className="rp-chart-bar rp-chart-bar--peak" style={{ '--bar-height': '85%' } as React.CSSProperties}></div>
-                  <div className="rp-chart-bar" style={{ '--bar-height': '45%' } as React.CSSProperties}></div>
-                  <div className="rp-chart-bar" style={{ '--bar-height': '20%' } as React.CSSProperties}></div>
-                </div>
-
-                <div className="rp-bars-x-axis">
-                  <span>08:00</span>
-                  <span>13:00</span>
-                  <span>18:00</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
         </div>
       </IonContent>
+      {/* ── MODAL: PREMIUM REPORT EXPORTER ────────────────────────────── */}
+      <IonModal 
+        isOpen={showExportModal} 
+        onDidDismiss={() => { if (exportState === 'completed') setShowExportModal(false); }} 
+        className="sa-modal sa-modal--sm"
+      >
+        <div className="sa-modal__header" style={{ background: '#0d5c46', color: '#fff', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2 className="sa-modal__title" style={{ color: '#fff', fontSize: '16px', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <IonIcon icon={downloadOutline} /> 
+            {exportState === 'generating' ? `Compiling ${exportFormat} Report` : `${exportFormat} Export Complete`}
+          </h2>
+          {exportState === 'completed' && (
+            <button className="sa-modal__close-btn" style={{ color: '#fff', background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer' }} onClick={() => setShowExportModal(false)}>&times;</button>
+          )}
+        </div>
+
+        <div className="sa-modal__body" style={{ padding: '24px', textAlign: 'center' }}>
+          {exportState === 'generating' ? (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+                <div style={{
+                  border: '4px solid #f3f3f3',
+                  borderTop: '4px solid #0d5c46',
+                  borderRadius: '50%',
+                  width: '50px',
+                  height: '50px',
+                  animation: 'spin 1s linear infinite'
+                }} />
+              </div>
+              <style dangerouslySetInnerHTML={{__html: `
+                @keyframes spin {
+                  0% { transform: rotate(0deg); }
+                  100% { transform: rotate(360deg); }
+                }
+              `}} />
+
+              <h4 style={{ margin: '0 0 8px 0', fontWeight: 700, color: '#334155', fontSize: '15px' }}>
+                Processing operational database...
+              </h4>
+              <p style={{ margin: '0 0 20px 0', fontSize: '12px', color: '#64748b', lineHeight: 1.4 }}>
+                Compiling branch files, verifying secure signatures, and packaging digital assets.
+              </p>
+
+              <div style={{ width: '100%', background: '#e2e8f0', borderRadius: '8px', height: '12px', overflow: 'hidden', position: 'relative' }}>
+                <div style={{
+                  width: `${exportProgress}%`,
+                  background: 'linear-gradient(90deg, #10b981 0%, #0d5c46 100%)',
+                  height: '100%',
+                  transition: 'width 0.1s ease-out'
+                }} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px', fontSize: '11px', color: '#64748b', fontWeight: 700 }}>
+                <span>Formatting logs...</span>
+                <span>{exportProgress}%</span>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+                <div style={{
+                  background: '#ecfdf5',
+                  borderRadius: '50%',
+                  width: '72px',
+                  height: '72px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '2px solid #a7f3d0'
+                }}>
+                  <IonIcon icon={checkmarkCircleOutline} style={{ fontSize: '42px', color: '#10b981' }} />
+                </div>
+              </div>
+
+              <h3 style={{ margin: '0 0 8px 0', fontWeight: 800, color: '#0d5c46', fontSize: '18px' }}>
+                Operational Report Compiled!
+              </h3>
+              <p style={{ margin: '0 0 20px 0', fontSize: '13px', color: '#475569', lineHeight: 1.5 }}>
+                Your {exportFormat} report for <strong>{branchName}</strong> has been created successfully. All selected filters, stats cards, and ledger tables have been packaged.
+              </p>
+
+              <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', marginBottom: '20px', fontSize: '11px', textAlign: 'left', fontFamily: 'monospace', color: '#475569', lineHeight: 1.6 }}>
+                <div><strong>File Name:</strong> PHMS-Branch-Report-{new Date().getFullYear()}.{exportFormat?.toLowerCase() === 'excel' ? 'xlsx' : 'pdf'}</div>
+                <div><strong>Format:</strong> {exportFormat === 'Excel' ? 'Microsoft Excel Spreadsheet' : 'Adobe PDF Document'}</div>
+                <div><strong>Size:</strong> {exportFormat === 'Excel' ? '54.2 KB' : '182.8 KB'}</div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  type="button"
+                  className="sa-btn sa-btn--primary"
+                  style={{ flex: 1, background: '#10b981', border: 'none', justifyContent: 'center', fontSize: '13px', padding: '10px' }}
+                  onClick={() => {
+                    setShowExportModal(false);
+                    triggerToast(`Downloaded PHMS-Branch-Report.${exportFormat?.toLowerCase() === 'excel' ? 'xlsx' : 'pdf'} successfully!`);
+                  }}
+                >
+                  Download File
+                </button>
+                <button
+                  type="button"
+                  className="sa-btn sa-btn--outline"
+                  style={{ flex: 1, justifyContent: 'center', fontSize: '13px', padding: '10px' }}
+                  onClick={() => setShowExportModal(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </IonModal>
+
+      {/* Glassmorphic Toast Overlay */}
+      {toastMessage && (
+        <div className="dm-toast">
+          <span>{toastMessage}</span>
+        </div>
+      )}
     </IonPage>
   );
 };
