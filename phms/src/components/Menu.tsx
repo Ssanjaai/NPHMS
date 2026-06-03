@@ -27,6 +27,8 @@ import {
   chevronDownOutline,
   chevronForwardOutline,
   documentOutline,
+  sunnyOutline,
+  moonOutline,
 } from 'ionicons/icons';
 import { ROUTES } from '../constants/routes.constant';
 import { useAuthStore } from '../store/auth.store';
@@ -109,6 +111,48 @@ const Menu: React.FC = () => {
   const history = useHistory();
   const { user, logout } = useAuthStore();
   const [expandedItems, setExpandedItems] = React.useState<string[]>([]);
+  const [isDarkMode, setIsDarkMode] = React.useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return document.body.classList.contains('db-dark-mode');
+    }
+    return false;
+  });
+
+  React.useEffect(() => {
+    const syncTheme = () => {
+      setIsDarkMode(document.body.classList.contains('db-dark-mode'));
+    };
+
+    window.addEventListener('theme-change', syncTheme);
+
+    const savedTheme = localStorage.getItem('branch-admin-theme');
+    const isDark = savedTheme === 'dark';
+    const hasClass = document.body.classList.contains('db-dark-mode');
+    
+    if (isDark && !hasClass) {
+      document.body.classList.add('db-dark-mode');
+      window.dispatchEvent(new Event('theme-change'));
+    } else if (!isDark && hasClass && savedTheme === 'light') {
+      document.body.classList.remove('db-dark-mode');
+      window.dispatchEvent(new Event('theme-change'));
+    }
+
+    return () => {
+      window.removeEventListener('theme-change', syncTheme);
+    };
+  }, []);
+
+  const toggleTheme = () => {
+    const nextDark = !document.body.classList.contains('db-dark-mode');
+    if (nextDark) {
+      document.body.classList.add('db-dark-mode');
+      localStorage.setItem('branch-admin-theme', 'dark');
+    } else {
+      document.body.classList.remove('db-dark-mode');
+      localStorage.setItem('branch-admin-theme', 'light');
+    }
+    window.dispatchEvent(new Event('theme-change'));
+  };
 
   const navItems = user?.role === 'SUPER_ADMIN'
     ? superAdminNav
@@ -247,6 +291,11 @@ const Menu: React.FC = () => {
               <span className="app-menu__user-role">{userSubtext}</span>
             </div>
           </div>
+          {user?.role === 'BRANCH_ADMIN' && (
+            <button className="app-menu__theme-btn" onClick={toggleTheme} title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}>
+              <IonIcon icon={isDarkMode ? sunnyOutline : moonOutline} />
+            </button>
+          )}
           <button className="app-menu__logout-btn" onClick={handleLogout} title="Logout">
             <IonIcon icon={logOutOutline} />
           </button>

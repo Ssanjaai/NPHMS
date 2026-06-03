@@ -907,7 +907,7 @@ const ReportsPage: React.FC = () => {
                 }
               `}} />
 
-              <h4 style={{ margin: '0 0 8px 0', fontWeight: 700, color: '#334155', fontSize: '15px' }}>
+              <h4 style={{ margin: '0 0 8px 0', fontWeight: 700, fontSize: '15px' }}>
                 Processing operational database...
               </h4>
               <p style={{ margin: '0 0 20px 0', fontSize: '12px', color: '#64748b', lineHeight: 1.4 }}>
@@ -947,11 +947,11 @@ const ReportsPage: React.FC = () => {
               <h3 style={{ margin: '0 0 8px 0', fontWeight: 800, color: '#0d5c46', fontSize: '18px' }}>
                 Operational Report Compiled!
               </h3>
-              <p style={{ margin: '0 0 20px 0', fontSize: '13px', color: '#475569', lineHeight: 1.5 }}>
+              <p style={{ margin: '0 0 20px 0', fontSize: '13px', lineHeight: 1.5 }}>
                 Your {exportFormat} report for <strong>{branchName}</strong> has been created successfully. All selected filters, stats cards, and ledger tables have been packaged.
               </p>
 
-              <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', marginBottom: '20px', fontSize: '11px', textAlign: 'left', fontFamily: 'monospace', color: '#475569', lineHeight: 1.6 }}>
+              <div className="sa-code-box" style={{ padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', marginBottom: '20px', fontSize: '11px', textAlign: 'left', fontFamily: 'monospace', lineHeight: 1.6 }}>
                 <div><strong>File Name:</strong> PHMS-Branch-Report-{new Date().getFullYear()}.{exportFormat?.toLowerCase() === 'excel' ? 'xlsx' : 'pdf'}</div>
                 <div><strong>Format:</strong> {exportFormat === 'Excel' ? 'Microsoft Excel Spreadsheet' : 'Adobe PDF Document'}</div>
                 <div><strong>Size:</strong> {exportFormat === 'Excel' ? '54.2 KB' : '182.8 KB'}</div>

@@ -11941,8 +11941,926 @@ select.sa-settings__input {
   to { bottom: 24px; opacity: 1; }
 }
 
+/* ============================================
+   Branch Admin - Settings Dashboard Console Styles
+   ============================================ */
 
+.st-settings-console {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 24px;
+  margin-top: 24px;
+  align-items: start;
+}
 
+@media (max-width: 1024px) {
+  .st-settings-console {
+    grid-template-columns: 1fr;
+  }
+}
+
+.st-settings-nav {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+@media (max-width: 1024px) {
+  .st-settings-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    white-space: nowrap;
+    padding: 8px;
+  }
+}
+
+.st-settings-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: #475569;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  width: 100%;
+}
+
+.st-settings-nav-item ion-icon {
+  font-size: 18px;
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.st-settings-nav-item:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.st-settings-nav-item:hover ion-icon {
+  color: var(--color-primary);
+}
+
+.st-settings-nav-item.active {
+  background: var(--color-primary);
+  color: white;
+}
+
+.st-settings-nav-item.active ion-icon {
+  color: white;
+}
+
+@media (max-width: 1024px) {
+  .st-settings-nav-item {
+    width: auto;
+    padding: 10px 16px;
+  }
+}
+
+.st-settings-content-panel {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  padding: 28px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.st-settings-section-header {
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 16px;
+  margin-bottom: 8px;
+}
+
+.st-settings-section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+}
+
+.st-settings-section-desc {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+}
+
+.st-settings-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.st-settings-toggle-row:last-child {
+  border-bottom: none;
+}
+
+.st-settings-toggle-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-right: 16px;
+}
+
+.st-settings-toggle-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.st-settings-toggle-desc {
+  font-size: 12px;
+  color: #64748b;
+}
+
+/* Styled switch toggle custom component */
+.st-toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.st-toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.st-toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #cbd5e1;
+  transition: .2s;
+  border-radius: 24px;
+}
+
+.st-toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .2s;
+  border-radius: 50%;
+}
+
+input:checked + .st-toggle-slider {
+  background-color: var(--color-primary);
+}
+
+input:focus + .st-toggle-slider {
+  box-shadow: 0 0 1px var(--color-primary);
+}
+
+input:checked + .st-toggle-slider:before {
+  transform: translateX(20px);
+}
+
+.st-settings-checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.st-settings-checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.st-settings-checkbox-item input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+.st-settings-checkbox-label {
+  font-size: 13px;
+  color: #334155;
+  font-weight: 500;
+  user-select: none;
+}
+
+.st-settings-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.st-settings-stat-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.st-settings-stat-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #64748b;
+  letter-spacing: 0.5px;
+}
+
+.st-settings-stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.st-settings-grid-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .st-header-search {
+    display: none !important;
+  }
+}
+
+.st-settings-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid #cbd5e1;
+  background: white;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+  padding: 0;
+}
+
+.st-settings-action-btn ion-icon {
+  font-size: 16px;
+}
+
+.st-settings-action-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: #f8fafc;
+  transform: translateY(-1px);
+}
+
+.st-settings-action-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.2);
+}
+
+.st-settings-action-btn--danger:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+  background: #fef2f2;
+}
+
+.st-settings-action-btn--success:hover {
+  border-color: #10b981;
+  color: #10b981;
+  background: #ecfdf5;
+}
+
+/* ==========================================================================
+   Branch Admin - Dashboard Dark Mode Styles (.db-dark-mode)
+   ========================================================================== */
+
+.db-dark-mode .db-corp-layout {
+  background: #0f172a !important;
+  color: #cbd5e1 !important;
+}
+
+.db-dark-mode .db-corp-navbar {
+  background: #1e293b !important;
+  border-bottom: 1px solid #334155 !important;
+}
+
+.db-dark-mode .db-corp-page-title {
+  color: #10b981 !important;
+}
+
+.db-dark-mode .db-corp-page-subtitle {
+  color: #94a3b8 !important;
+}
+
+.db-dark-mode .db-corp-card,
+.db-dark-mode .db-hc-metric-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+}
+
+.db-dark-mode .db-corp-card:hover,
+.db-dark-mode .db-hc-metric-card:hover {
+  border-color: #10b981 !important;
+  box-shadow: 0 10px 24px rgba(16, 185, 129, 0.08) !important;
+}
+
+.db-dark-mode .db-corp-card-title {
+  color: #f8fafc !important;
+}
+
+.db-dark-mode .db-corp-card-header {
+  border-bottom: 1px solid #334155 !important;
+}
+
+.db-dark-mode .st-table th {
+  background: #1e293b !important;
+  color: #94a3b8 !important;
+  border-bottom: 2px solid #334155 !important;
+}
+
+.db-dark-mode .st-table td {
+  border-bottom: 1px solid #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+.db-dark-mode .st-table tbody tr:hover {
+  background: #334155 !important;
+}
+
+.db-dark-mode .sa-finance-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+.db-dark-mode .sa-finance-card__value {
+  color: #10b981 !important;
+}
+
+.db-dark-mode .sa-finance-card__label {
+  color: #94a3b8 !important;
+}
+
+.db-dark-mode .sa-modal__content {
+  background: #1e293b !important;
+  color: #f8fafc !important;
+  border: 1px solid #334155 !important;
+}
+
+.db-dark-mode .sa-modal__header {
+  border-bottom: 1px solid #334155 !important;
+  color: #f8fafc !important;
+}
+
+.db-dark-mode .sa-modal__header h2 {
+  color: #f8fafc !important;
+}
+
+.db-dark-mode .sa-modal__close-btn {
+  color: #94a3b8 !important;
+}
+
+.db-dark-mode .sa-modal__footer {
+  border-top: 1px solid #334155 !important;
+}
+
+.db-dark-mode .st-input,
+.db-dark-mode .st-textarea,
+.db-dark-mode select.st-input {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+.db-dark-mode .st-input:focus,
+.db-dark-mode .st-textarea:focus {
+  border-color: #10b981 !important;
+}
+
+.db-dark-mode .db-corp-nav-icon-btn {
+  color: #cbd5e1 !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.db-dark-mode .db-corp-nav-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #f8fafc !important;
+}
+
+.db-dark-mode .db-hc-card-body .db-hc-card-value {
+  color: #f8fafc !important;
+}
+
+.db-dark-mode .db-hc-card-body .db-hc-card-label {
+  color: #94a3b8 !important;
+}
+
+.db-dark-mode .sa-btn--outline {
+  background: #1e293b !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+}
+
+.db-dark-mode .sa-btn--outline:hover {
+  border-color: #10b981 !important;
+  color: #10b981 !important;
+}
+
+.db-dark-mode .db-hc-metrics-grid-10 .db-hc-metric-card .db-hc-card-trend {
+  color: #10b981 !important;
+}
+
+/* ==========================================================================
+   Branch Admin - Global Dark Mode Theme Overrides
+   ========================================================================== */
+
+/* Root backgrounds */
+body.db-dark-mode,
+body.db-dark-mode .sa-page,
+body.db-dark-mode .sa-page__content,
+body.db-dark-mode ion-content,
+body.db-dark-mode .db-corp-layout,
+body.db-dark-mode .db-corp-canvas {
+  --background: #0f172a !important;
+  background-color: #0f172a !important;
+  background: #0f172a !important;
+  color: #cbd5e1 !important;
+}
+
+/* Toolbars */
+body.db-dark-mode .sa-page__toolbar {
+  --background: #1e293b !important;
+  --border-color: #334155 !important;
+  --color: #cbd5e1 !important;
+  background: #1e293b !important;
+  border-bottom: 1px solid #334155 !important;
+}
+
+body.db-dark-mode .sa-page__toolbar-title,
+body.db-dark-mode .st-page-title,
+body.db-dark-mode .bf-title {
+  color: #10b981 !important;
+}
+
+body.db-dark-mode .sa-page__toolbar-actions button,
+body.db-dark-mode .st-header-bell {
+  color: #cbd5e1 !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+body.db-dark-mode .sa-page__toolbar-actions button:hover,
+body.db-dark-mode .st-header-bell:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+body.db-dark-mode .st-page-subtitle,
+body.db-dark-mode .sa-section__subtitle,
+body.db-dark-mode .bf-breadcrumb {
+  color: #94a3b8 !important;
+}
+
+/* Section Containers & Cards */
+body.db-dark-mode .sa-section,
+body.db-dark-mode .sa-stat-card,
+body.db-dark-mode .sa-finance-card,
+body.db-dark-mode .sa-chart-container,
+body.db-dark-mode .bf-stats-grid > div,
+body.db-dark-mode .st-settings-content-panel,
+body.db-dark-mode .st-settings-nav {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+}
+
+body.db-dark-mode .sa-stat-card__value {
+  color: #f8fafc !important;
+}
+
+body.db-dark-mode .sa-stat-card__label {
+  color: #94a3b8 !important;
+}
+
+body.db-dark-mode .st-header-search {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+
+body.db-dark-mode .sa-chart-plot-area {
+  background-image: linear-gradient(to bottom, #334155 1px, transparent 1px) !important;
+}
+
+body.db-dark-mode .sa-section__title,
+body.db-dark-mode .st-settings-section-title {
+  color: #f8fafc !important;
+}
+
+body.db-dark-mode .sa-section__subtitle,
+body.db-dark-mode .st-settings-section-desc {
+  color: #94a3b8 !important;
+}
+
+/* Settings Nav Items */
+body.db-dark-mode .st-settings-nav-item {
+  color: #cbd5e1 !important;
+}
+
+body.db-dark-mode .st-settings-nav-item ion-icon {
+  color: #94a3b8 !important;
+}
+
+body.db-dark-mode .st-settings-nav-item:hover {
+  background: #334155 !important;
+  color: #f8fafc !important;
+}
+
+body.db-dark-mode .st-settings-nav-item.active {
+  background: #10b981 !important;
+  color: white !important;
+}
+
+body.db-dark-mode .st-settings-nav-item.active ion-icon {
+  color: white !important;
+}
+
+/* Settings Toggles and Stat Boxes */
+body.db-dark-mode .st-settings-toggle-row {
+  border-bottom: 1px solid #334155 !important;
+}
+
+body.db-dark-mode .st-settings-toggle-label {
+  color: #cbd5e1 !important;
+}
+
+body.db-dark-mode .st-settings-toggle-desc {
+  color: #94a3b8 !important;
+}
+
+body.db-dark-mode .st-settings-stat-box {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+
+body.db-dark-mode .st-settings-stat-label {
+  color: #94a3b8 !important;
+}
+
+body.db-dark-mode .st-settings-stat-value {
+  color: #10b981 !important;
+}
+
+body.db-dark-mode .st-form-label {
+  color: #cbd5e1 !important;
+}
+
+/* Table styling */
+body.db-dark-mode .st-table-container {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+body.db-dark-mode .st-table th {
+  background: #1e293b !important;
+  color: #94a3b8 !important;
+  border-bottom: 2px solid #334155 !important;
+}
+
+body.db-dark-mode .st-table td,
+body.db-dark-mode .st-table td span,
+body.db-dark-mode .st-table td strong {
+  border-bottom: 1px solid #334155 !important;
+  color: #cbd5e1 !important;
+  background: transparent !important;
+}
+
+body.db-dark-mode .st-table tbody tr:hover {
+  background: #334155 !important;
+}
+
+/* Form inputs & controls */
+body.db-dark-mode .sa-input,
+body.db-dark-mode .sa-search-input,
+body.db-dark-mode .st-input,
+body.db-dark-mode .st-textarea,
+body.db-dark-mode select.sa-input,
+body.db-dark-mode select.st-input,
+body.db-dark-mode .sa-settings__input,
+body.db-dark-mode select,
+body.db-dark-mode .st-search-bar-input {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+body.db-dark-mode .sa-input:focus,
+body.db-dark-mode .st-input:focus,
+body.db-dark-mode select.sa-input:focus {
+  border-color: #10b981 !important;
+}
+
+/* Badges styling */
+body.db-dark-mode .sa-badge--active,
+body.db-dark-mode .sa-badge--present,
+body.db-dark-mode .sa-badge--completed,
+body.db-dark-mode .sa-badge--paid,
+body.db-dark-mode .st-panel-badge--green {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #10b981 !important;
+}
+
+body.db-dark-mode .sa-badge--inactive,
+body.db-dark-mode .sa-badge--absent,
+body.db-dark-mode .sa-badge--cancelled,
+body.db-dark-mode .sa-badge--unpaid {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #ef4444 !important;
+}
+
+body.db-dark-mode .sa-badge--pending,
+body.db-dark-mode .sa-badge--on-hold {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #f59e0b !important;
+}
+
+/* Buttons outline */
+body.db-dark-mode .sa-btn--outline {
+  background: #1e293b !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+}
+
+body.db-dark-mode .sa-btn--outline:hover {
+  border-color: #10b981 !important;
+  color: #10b981 !important;
+}
+
+/* Finance Page components */
+body.db-dark-mode .bf-tabs {
+  border-bottom-color: #334155 !important;
+}
+
+body.db-dark-mode .bf-tabs button {
+  color: #cbd5e1 !important;
+}
+
+body.db-dark-mode .bf-tabs button[style*="font-weight: 800"],
+body.db-dark-mode .bf-tabs button[style*="800"] {
+  color: #10b981 !important;
+  border-bottom: 3px solid #10b981 !important;
+}
+
+body.db-dark-mode .bf-stat-card[style*="#f8fafc"] {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+body.db-dark-mode .bf-stat-card[style*="#ecfdf5"] {
+  background: linear-gradient(135deg, #064e3b 0%, #022c22 100%) !important;
+  border-color: #065f46 !important;
+  color: #a7f3d0 !important;
+}
+
+body.db-dark-mode .bf-stat-card[style*="#fef2f2"] {
+  background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%) !important;
+  border-color: #991b1b !important;
+  color: #fecaca !important;
+}
+
+body.db-dark-mode .bf-stat-card[style*="#eff6ff"],
+body.db-dark-mode .bf-stat-card[style*="#fef9c3"] {
+  background: linear-gradient(135deg, #1e3a8a 0%, #172554 100%) !important;
+  border-color: #1e40af !important;
+  color: #bfdbfe !important;
+}
+
+body.db-dark-mode .bf-stat-card[style*="#fff7ed"] {
+  background: linear-gradient(135deg, #7c2d12 0%, #431407 100%) !important;
+  border-color: #9a3412 !important;
+  color: #fed7aa !important;
+}
+
+/* Modals inside pages */
+body.db-dark-mode .sa-modal__content {
+  background: #1e293b !important;
+  color: #f8fafc !important;
+  border: 1px solid #334155 !important;
+}
+
+body.db-dark-mode .sa-modal__header {
+  border-bottom: 1px solid #334155 !important;
+  color: #f8fafc !important;
+}
+
+body.db-dark-mode .sa-modal__header h2 {
+  color: #f8fafc !important;
+}
+
+body.db-dark-mode .sa-modal__close-btn {
+  color: #94a3b8 !important;
+}
+
+body.db-dark-mode .sa-modal__footer {
+  border-top: 1px solid #334155 !important;
+}
+
+/* ==========================================
+   Standardized Table/List Action Buttons (View, Edit, Delete)
+   ========================================== */
+.sa-action-btn {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  font-size: 20px !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 4px !important;
+  width: 32px !important;
+  height: 32px !important;
+  transition: transform 0.15s ease, opacity 0.15s ease !important;
+}
+
+.sa-action-btn:hover {
+  transform: scale(1.15) !important;
+  opacity: 0.85 !important;
+}
+
+.sa-action-btn--view {
+  color: #10b981 !important; /* Green eye icon */
+}
+
+.sa-action-btn--edit {
+  color: #4f46e5 !important; /* Blue/Indigo in light mode */
+}
+
+body.db-dark-mode .sa-action-btn--edit {
+  color: #6366f1 !important; /* Light indigo in dark mode */
+}
+
+.sa-action-btn--delete {
+  color: #ef4444 !important; /* Red trash icon */
+}
+
+/* ==========================================
+   Dark Mode Layout Specific Overrides
+   ========================================== */
+
+/* Visitor Log Page Card Gradients */
+body.db-dark-mode .vl-stat-card {
+  color: #cbd5e1 !important;
+}
+body.db-dark-mode .vl-stat-card--total {
+  background: linear-gradient(135deg, #1e3a8a 0%, #172554 100%) !important;
+  border-color: #1e40af !important;
+}
+body.db-dark-mode .vl-stat-card--total .vl-stat-label {
+  color: #bfdbfe !important;
+}
+body.db-dark-mode .vl-stat-card--total .vl-stat-value {
+  color: #f8fafc !important;
+}
+body.db-dark-mode .vl-stat-card--total .vl-stat-icon-wrapper {
+  background: rgba(59, 130, 246, 0.15) !important;
+  color: #3b82f6 !important;
+}
+
+body.db-dark-mode .vl-stat-card--meditation {
+  background: linear-gradient(135deg, #7c2d12 0%, #431407 100%) !important;
+  border-color: #9a3412 !important;
+}
+body.db-dark-mode .vl-stat-card--meditation .vl-stat-label {
+  color: #fed7aa !important;
+}
+body.db-dark-mode .vl-stat-card--meditation .vl-stat-value {
+  color: #f8fafc !important;
+}
+body.db-dark-mode .vl-stat-card--meditation .vl-stat-icon-wrapper {
+  background: rgba(249, 115, 22, 0.15) !important;
+  color: #f97316 !important;
+}
+
+body.db-dark-mode .vl-stat-card--sessions {
+  background: linear-gradient(135deg, #064e3b 0%, #022c22 100%) !important;
+  border-color: #065f46 !important;
+}
+body.db-dark-mode .vl-stat-card--sessions .vl-stat-label {
+  color: #a7f3d0 !important;
+}
+body.db-dark-mode .vl-stat-card--sessions .vl-stat-value {
+  color: #f8fafc !important;
+}
+body.db-dark-mode .vl-stat-card--sessions .vl-stat-icon-wrapper {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #10b981 !important;
+}
+
+/* Worker Attendance Page Stat Cards */
+body.db-dark-mode .at-stat-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+body.db-dark-mode .at-stat-card .at-stat-value {
+  color: #f8fafc !important;
+}
+body.db-dark-mode .at-stat-card .at-stat-label {
+  color: #94a3b8 !important;
+}
+body.db-dark-mode .at-stat-card .at-stat-trend {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Document Management Page PDF Viewer paper */
+body.db-dark-mode .dm-viewer-paper {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+body.db-dark-mode .dm-viewer-logo-text,
+body.db-dark-mode .dm-viewer-logo-icon {
+  color: #10b981 !important;
+}
+body.db-dark-mode .dm-viewer-meta-title {
+  color: #f8fafc !important;
+}
+body.db-dark-mode .dm-viewer-patient-grid {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+body.db-dark-mode .dm-viewer-patient-val {
+  color: #cbd5e1 !important;
+}
+body.db-dark-mode .dm-viewer-body-section {
+  border-top-color: #334155 !important;
+}
+body.db-dark-mode .dm-viewer-body-title {
+  color: #f8fafc !important;
+}
+body.db-dark-mode .dm-viewer-notes-box {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+body.db-dark-mode .dm-viewer-footer {
+  border-top-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+/* Modal body typography */
+body.db-dark-mode .sa-modal__body h3 {
+  color: #f8fafc !important;
+}
+body.db-dark-mode .sa-text-muted {
+  color: #94a3b8 !important;
+}
+
+.sa-code-box {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+}
+
+body.db-dark-mode .sa-code-box {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+body.db-dark-mode .sa-btn--delete-light {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #ef4444 !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+}
+
+body.db-dark-mode .sa-btn--delete-light:hover {
+  background: rgba(239, 68, 68, 0.25) !important;
+}
 
 
 

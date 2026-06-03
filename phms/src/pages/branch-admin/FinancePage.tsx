@@ -1173,21 +1173,21 @@ const FinancePage: React.FC = () => {
                             <td>
                               <div style={{ display: 'flex', gap: '6px' }}>
                                 <button
-                                  className="pa-doc-action-btn"
+                                  className="sa-action-btn sa-action-btn--view"
                                   title="Print Receipt"
                                   onClick={() => handlePrintReceipt(tx)}
                                 >
                                   <IonIcon icon={printOutline} />
                                 </button>
                                 <button
-                                  className="pa-doc-action-btn"
+                                  className="sa-action-btn sa-action-btn--edit"
                                   title="Edit Entry"
                                   onClick={() => handleOpenEditModal(tx)}
                                 >
-                                  <IonIcon icon={pencilOutline} style={{ color: '#4f46e5' }} />
+                                  <IonIcon icon={pencilOutline} />
                                 </button>
                                 <button
-                                  className="pa-doc-action-btn pa-doc-action-btn--delete"
+                                  className="sa-action-btn sa-action-btn--delete"
                                   title="Delete Record"
                                   onClick={() => handleDeleteTx(tx.id)}
                                 >

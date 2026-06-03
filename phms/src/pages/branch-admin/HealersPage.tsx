@@ -1138,21 +1138,21 @@ const HealersPage: React.FC = () => {
                               <td>
                                 <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }} onClick={e => e.stopPropagation()}>
                                   <button 
-                                    style={{ background: 'none', border: 'none', color: '#10b981', fontSize: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center' }} 
+                                    className="sa-action-btn sa-action-btn--view" 
                                     title="View details"
                                     onClick={() => history.push(`/branch-admin/healers/detail/${healer.id}`)}
                                   >
                                     <IonIcon icon={eyeOutline} />
                                   </button>
                                   <button 
-                                    style={{ background: 'none', border: 'none', color: '#6366f1', fontSize: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center' }} 
+                                    className="sa-action-btn sa-action-btn--edit" 
                                     title="Edit Profile"
                                     onClick={() => history.push(`/branch-admin/healers/edit/${healer.id}`)}
                                   >
                                     <IonIcon icon={pencilOutline} />
                                   </button>
                                   <button 
-                                    style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center' }} 
+                                    className="sa-action-btn sa-action-btn--delete" 
                                     title="Deactivate Healer"
                                     onClick={() => {
                                       setSelectedHealer(healer);

@@ -323,56 +323,56 @@ const VisitorLogPage: React.FC = () => {
           {/* 5 Stats Cards Grid — Enforced BRD Visitor Categories */}
           <div className="vl-stats-grid">
             {/* Card 1: Walk-ins */}
-            <div className="vl-stat-card vl-stat-card--total" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)', border: '1px solid #bfdbfe' }}>
+            <div className="vl-stat-card vl-stat-card--total">
               <div className="vl-stat-info">
-                <div className="vl-stat-label" style={{ color: '#1e40af' }}>WALK-INS</div>
-                <div className="vl-stat-value" style={{ color: '#1d4ed8' }}>{countWalkins}</div>
+                <div className="vl-stat-label">WALK-INS</div>
+                <div className="vl-stat-value">{countWalkins}</div>
               </div>
-              <div className="vl-stat-icon-wrapper" style={{ background: 'rgba(29, 78, 216, 0.1)', color: '#1d4ed8' }}>
+              <div className="vl-stat-icon-wrapper">
                 <IonIcon icon={checkmarkCircleOutline} />
               </div>
             </div>
 
             {/* Card 2: Meditation */}
-            <div className="vl-stat-card vl-stat-card--meditation" style={{ background: 'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)', border: '1px solid #fed7aa' }}>
+            <div className="vl-stat-card vl-stat-card--meditation">
               <div className="vl-stat-info">
-                <div className="vl-stat-label" style={{ color: '#7c2d12' }}>MEDITATION</div>
-                <div className="vl-stat-value" style={{ color: '#c2410c' }}>{countMeditation}</div>
+                <div className="vl-stat-label">MEDITATION</div>
+                <div className="vl-stat-value">{countMeditation}</div>
               </div>
-              <div className="vl-stat-icon-wrapper" style={{ background: 'rgba(194, 65, 12, 0.1)', color: '#c2410c' }}>
+              <div className="vl-stat-icon-wrapper">
                 <IonIcon icon={calendarOutline} />
               </div>
             </div>
 
             {/* Card 3: Sessions */}
-            <div className="vl-stat-card vl-stat-card--sessions" style={{ background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)', border: '1px solid #a7f3d0' }}>
+            <div className="vl-stat-card vl-stat-card--sessions">
               <div className="vl-stat-info">
-                <div className="vl-stat-label" style={{ color: '#065f46' }}>SESSIONS</div>
-                <div className="vl-stat-value" style={{ color: '#047857' }}>{countSessions}</div>
+                <div className="vl-stat-label">SESSIONS</div>
+                <div className="vl-stat-value">{countSessions}</div>
               </div>
-              <div className="vl-stat-icon-wrapper" style={{ background: 'rgba(4, 120, 87, 0.1)', color: '#047857' }}>
+              <div className="vl-stat-icon-wrapper">
                 <IonIcon icon={timeOutline} />
               </div>
             </div>
 
             {/* Card 4: Camp */}
-            <div className="vl-stat-card" style={{ background: 'linear-gradient(135deg, #fdf4ff 0%, #f3e8ff 100%)', border: '1px solid #e9d5ff', borderRadius: '12px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="vl-stat-card vl-stat-card--camp">
               <div className="vl-stat-info">
-                <div className="vl-stat-label" style={{ color: '#6b21a8' }}>CAMP</div>
-                <div className="vl-stat-value" style={{ color: '#7e22ce' }}>{countCamp}</div>
+                <div className="vl-stat-label">CAMP</div>
+                <div className="vl-stat-value">{countCamp}</div>
               </div>
-              <div className="vl-stat-icon-wrapper" style={{ background: 'rgba(126, 34, 206, 0.1)', color: '#7e22ce', width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>
+              <div className="vl-stat-icon-wrapper">
                 <IonIcon icon={peopleOutline} />
               </div>
             </div>
 
             {/* Card 5: Healers */}
-            <div className="vl-stat-card" style={{ background: 'linear-gradient(135deg, #ecfeff 0%, #cffafe 100%)', border: '1px solid #a5f3fc', borderRadius: '12px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="vl-stat-card vl-stat-card--healers">
               <div className="vl-stat-info">
-                <div className="vl-stat-label" style={{ color: '#083344' }}>HEALERS</div>
-                <div className="vl-stat-value" style={{ color: '#0369a1' }}>{countHealers}</div>
+                <div className="vl-stat-label">HEALERS</div>
+                <div className="vl-stat-value">{countHealers}</div>
               </div>
-              <div className="vl-stat-icon-wrapper" style={{ background: 'rgba(3, 105, 161, 0.1)', color: '#0369a1', width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>
+              <div className="vl-stat-icon-wrapper">
                 <IonIcon icon={radioOutline} />
               </div>
             </div>
@@ -392,16 +392,16 @@ const VisitorLogPage: React.FC = () => {
                 </div>
 
                 {/* Advanced Search & Filtering Controls */}
-                <div className="sa-section" style={{ margin: '0 0 20px 0', padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1', background: '#f8fafc' }}>
+                <div className="sa-section" style={{ margin: '0 0 20px 0', padding: '16px', borderRadius: '12px' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
                     {/* Visitor Search Textbox */}
-                    <div className="sa-search" style={{ margin: 0, width: '100%', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <IonIcon icon={searchOutline} style={{ color: '#64748b', fontSize: '16px' }} />
+                    <div className="sa-search" style={{ margin: 0, width: '100%' }}>
+                      <IonIcon icon={searchOutline} style={{ fontSize: '16px' }} />
                       <input
                         placeholder="Search Name, ID, or Phone..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', fontSize: '13px', color: '#1e293b' }}
+                        style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', fontSize: '13px' }}
                       />
                     </div>
 
@@ -411,7 +411,7 @@ const VisitorLogPage: React.FC = () => {
                         className="sa-input"
                         value={filterType}
                         onChange={(e) => setFilterType(e.target.value)}
-                        style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', width: '100%', background: '#fff', fontSize: '13px', outline: 'none', color: '#334155' }}
+                        style={{ padding: '8px 12px', borderRadius: '8px', width: '100%', fontSize: '13px', outline: 'none' }}
                       >
                         <option value="All">All Visitor Types</option>
                         <option value="Walk-in">Walk-in</option>
@@ -429,7 +429,7 @@ const VisitorLogPage: React.FC = () => {
                         className="sa-input"
                         value={filterDate}
                         onChange={(e) => setFilterDate(e.target.value)}
-                        style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', width: '100%', background: '#fff', fontSize: '13px', outline: 'none', color: '#334155' }}
+                        style={{ padding: '8px 12px', borderRadius: '8px', width: '100%', fontSize: '13px', outline: 'none' }}
                       />
                     </div>
 
@@ -439,7 +439,7 @@ const VisitorLogPage: React.FC = () => {
                         className="sa-input"
                         value={filterStatus}
                         onChange={(e) => setFilterStatus(e.target.value as any)}
-                        style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', width: '100%', background: '#fff', fontSize: '13px', outline: 'none', color: '#334155' }}
+                        style={{ padding: '8px 12px', borderRadius: '8px', width: '100%', fontSize: '13px', outline: 'none' }}
                       >
                         <option value="All">All Statuses</option>
                         <option value="Inside">Inside</option>

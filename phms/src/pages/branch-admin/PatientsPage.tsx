@@ -1098,25 +1098,25 @@ const PatientsPage: React.FC = () => {
                   SECTION 1: CLINICAL STATS PREVIEW PRE-CHECKS RIBBON
                  ======================================================= */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-                <div style={{ background: '#ffffff', borderRadius: '12px', padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.02)', borderLeft: '4px solid #10b981', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Active Cases</span>
-                  <span style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a' }}>{activeCount}</span>
+                <div className="sa-stat-card" style={{ borderLeft: '4px solid #10b981', padding: '16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span className="sa-stat-card__label">Active Cases</span>
+                  <span className="sa-stat-card__value">{activeCount}</span>
                 </div>
-                <div style={{ background: '#ffffff', borderRadius: '12px', padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.02)', borderLeft: '4px solid #1e3a8a', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Total Registered</span>
-                  <span style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a' }}>{mtdRegistered}</span>
+                <div className="sa-stat-card" style={{ borderLeft: '4px solid #1e3a8a', padding: '16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span className="sa-stat-card__label">Total Registered</span>
+                  <span className="sa-stat-card__value">{mtdRegistered}</span>
                 </div>
-                <div style={{ background: '#ffffff', borderRadius: '12px', padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.02)', borderLeft: '4px solid #f59e0b', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Daily Appts Queue</span>
-                  <span style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a' }}>18</span>
+                <div className="sa-stat-card" style={{ borderLeft: '4px solid #f59e0b', padding: '16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span className="sa-stat-card__label">Daily Appts Queue</span>
+                  <span className="sa-stat-card__value">18</span>
                 </div>
-                <div style={{ background: '#ffffff', borderRadius: '12px', padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.02)', borderLeft: '4px solid #8b5cf6', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Documents Vaulted</span>
-                  <span style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a' }}>24</span>
+                <div className="sa-stat-card" style={{ borderLeft: '4px solid #8b5cf6', padding: '16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span className="sa-stat-card__label">Documents Vaulted</span>
+                  <span className="sa-stat-card__value">24</span>
                 </div>
-                <div style={{ background: '#ffffff', borderRadius: '12px', padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.02)', borderLeft: '4px solid #ef4444', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Pending Balance</span>
-                  <span style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a' }}>₹2500</span>
+                <div className="sa-stat-card" style={{ borderLeft: '4px solid #ef4444', padding: '16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span className="sa-stat-card__label">Pending Balance</span>
+                  <span className="sa-stat-card__value">₹2500</span>
                 </div>
               </div>
 
@@ -1193,10 +1193,10 @@ const PatientsPage: React.FC = () => {
               {/* ==========================================
                   SECTION 3: PATIENT REGISTRY TABLE (12 COLS)
                  ========================================== */}
-              <div style={{ background: '#ffffff', borderRadius: '16px', padding: '20px', border: '1px solid #e2e8f0', marginBottom: '24px' }}>
+              <div className="sa-section" style={{ borderRadius: '16px', padding: '20px', marginBottom: '24px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                   <div>
-                    <h2 style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a', margin: 0 }}>Branch Patient Directory</h2>
+                    <h2 style={{ fontSize: '16px', fontWeight: 800, margin: 0 }}>Branch Patient Directory</h2>
                     <p style={{ fontSize: '11px', color: '#64748b', margin: '2px 0 0 0' }}>Search and select patients to view complete profile folders</p>
                   </div>
 
@@ -1266,13 +1266,13 @@ const PatientsPage: React.FC = () => {
                               </td>
                               <td style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
                                 <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                                  <button className="pa-doc-action-btn" title="View Folder" onClick={() => { setSelectedPatientId(patient.id); setViewMode('detail'); }}>
+                                  <button className="sa-action-btn sa-action-btn--view" title="View Folder" onClick={() => { setSelectedPatientId(patient.id); setViewMode('detail'); }}>
                                     <IonIcon icon={eyeOutline} />
                                   </button>
-                                  <button className="pa-doc-action-btn" title="Edit Profile" onClick={() => { setSelectedPatientId(patient.id); history.push(ROUTES.BRANCH_ADMIN.EDIT_PATIENT.replace(':id', encodeURIComponent(patient.id))); }}>
+                                  <button className="sa-action-btn sa-action-btn--edit" title="Edit Profile" onClick={() => { setSelectedPatientId(patient.id); history.push(ROUTES.BRANCH_ADMIN.EDIT_PATIENT.replace(':id', encodeURIComponent(patient.id))); }}>
                                     <IonIcon icon={pencilOutline} />
                                   </button>
-                                  <button className="pa-doc-action-btn pa-doc-action-btn--delete" title="Delete Profile" onClick={() => handleDeletePatient(patient)}>
+                                  <button className="sa-action-btn sa-action-btn--delete" title="Delete Profile" onClick={() => handleDeletePatient(patient)}>
                                     <IonIcon icon={trashOutline} />
                                   </button>
                                 </div>
@@ -1849,21 +1849,21 @@ const PatientsPage: React.FC = () => {
                   return (
                     <div>
                       <div className="pa-billing-summary" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '20px' }}>
-                        <div style={{ borderLeft: '4px solid #ef4444', background: '#ffffff', padding: '16px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
-                          <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#64748b', fontWeight: 700 }}>Outstanding Balance</span>
-                          <span style={{ display: 'block', fontSize: '24px', fontWeight: 800, color: computedBalanceDue > 0 ? '#ef4444' : '#64748b', marginTop: '4px' }}>
+                        <div className="sa-stat-card" style={{ borderLeft: '4px solid #ef4444', padding: '16px' }}>
+                          <span className="sa-stat-card__label">Outstanding Balance</span>
+                          <span className="sa-stat-card__value" style={{ color: computedBalanceDue > 0 ? '#ef4444' : '#64748b' }}>
                             ₹{computedBalanceDue}
                           </span>
                         </div>
-                        <div style={{ borderLeft: '4px solid #10b981', background: '#ffffff', padding: '16px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
-                          <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#64748b', fontWeight: 700 }}>Completed Collections</span>
-                          <span style={{ display: 'block', fontSize: '24px', fontWeight: 800, color: '#10b981', marginTop: '4px' }}>
+                        <div className="sa-stat-card" style={{ borderLeft: '4px solid #10b981', padding: '16px' }}>
+                          <span className="sa-stat-card__label">Completed Collections</span>
+                          <span className="sa-stat-card__value" style={{ color: '#10b981' }}>
                             ₹{totalCollected}
                           </span>
                         </div>
-                        <div style={{ borderLeft: '4px solid #3b82f6', background: '#ffffff', padding: '16px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
-                          <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#64748b', fontWeight: 700 }}>Billing Invoices</span>
-                          <span style={{ display: 'block', fontSize: '24px', fontWeight: 800, color: '#3b82f6', marginTop: '4px' }}>
+                        <div className="sa-stat-card" style={{ borderLeft: '4px solid #3b82f6', padding: '16px' }}>
+                          <span className="sa-stat-card__label">Billing Invoices</span>
+                          <span className="sa-stat-card__value" style={{ color: '#3b82f6' }}>
                             {selectedPatient.financials.invoices.length} Bills
                           </span>
                         </div>
@@ -1971,13 +1971,13 @@ const PatientsPage: React.FC = () => {
                               </div>
                             </div>
                             <div className="pa-doc-right" style={{ display: 'flex', gap: '6px' }}>
-                              <button className="pa-doc-action-btn" title="View Document" onClick={() => alert(`Viewing document: ${d.name}\nUploaded By: ${d.uploadedBy || 'System'}\nUpload Date: ${d.date}`)}>
+                              <button className="sa-action-btn sa-action-btn--view" title="View Document" onClick={() => alert(`Viewing document: ${d.name}\nUploaded By: ${d.uploadedBy || 'System'}\nUpload Date: ${d.date}`)}>
                                 <IonIcon icon={eyeOutline} />
                               </button>
-                              <button className="pa-doc-action-btn" title="Download Document" onClick={() => alert(`Downloading document: ${d.name}`)}>
+                              <button className="sa-action-btn sa-action-btn--edit" title="Download Document" onClick={() => alert(`Downloading document: ${d.name}`)}>
                                 <IonIcon icon={downloadOutline} />
                               </button>
-                              <button className="pa-doc-action-btn pa-doc-action-btn--delete" title="Delete Document" onClick={() => handleMockDocDelete(d.id)}>
+                              <button className="sa-action-btn sa-action-btn--delete" title="Delete Document" onClick={() => handleMockDocDelete(d.id)}>
                                 <IonIcon icon={trashOutline} />
                               </button>
                             </div>

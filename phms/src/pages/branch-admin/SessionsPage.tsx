@@ -592,7 +592,7 @@ const SessionsPage: React.FC = () => {
                           <div style={{ display: 'flex', gap: '6px' }}>
                             {/* View Notes */}
                             <button
-                              className="pa-doc-action-btn"
+                              className="sa-action-btn sa-action-btn--view"
                               title="View Observations"
                               onClick={() => {
                                 history.push(`/branch-admin/sessions/detail/${session.id}`);
@@ -604,11 +604,11 @@ const SessionsPage: React.FC = () => {
                              {/* Edit Session Scoped for non-patients */}
                              {rawRole !== 'PATIENT' && (
                               <button
-                                className="pa-doc-action-btn"
+                                className="sa-action-btn sa-action-btn--edit"
                                 title="Edit Session"
                                 onClick={() => history.push(ROUTES.BRANCH_ADMIN.EDIT_SESSION.replace(':id', session.id.toString()))}
                               >
-                                <IonIcon icon={pencilOutline} style={{ color: '#6366f1' }} />
+                                <IonIcon icon={pencilOutline} />
                               </button>
                             )}
 
@@ -629,7 +629,7 @@ const SessionsPage: React.FC = () => {
                             {/* Delete Action Scoped for Admins */}
                             {rawRole === 'BRANCH_ADMIN' && (
                               <button
-                                className="pa-doc-action-btn pa-doc-action-btn--delete"
+                                className="sa-action-btn sa-action-btn--delete"
                                 title="Delete Session"
                                 onClick={() => handleDeleteSession(session.id)}
                               >

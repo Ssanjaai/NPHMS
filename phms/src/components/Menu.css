@@ -241,3 +241,88 @@ ion-split-pane {
     padding-bottom: calc(14px + env(safe-area-inset-bottom)) !important;
   }
 }
+
+/* Theme Toggle Button Style */
+.app-menu__theme-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  font-size: 20px;
+  padding: 6px;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-right: 6px;
+}
+
+.app-menu__theme-btn:hover {
+  background: rgba(31, 122, 106, 0.08) !important;
+  color: var(--color-primary) !important;
+}
+
+/* Sidebar Menu Global Dark Mode Overrides */
+body.db-dark-mode ion-menu.app-menu {
+  --background: #1e293b !important;
+}
+
+body.db-dark-mode .app-menu__content {
+  --background: #1e293b !important;
+}
+
+body.db-dark-mode .app-menu__brand {
+  background-color: #1e293b !important;
+  border-bottom: 1px solid #334155 !important;
+}
+
+body.db-dark-mode .app-menu__brand-name {
+  color: #f8fafc !important;
+}
+
+body.db-dark-mode .app-menu__nav-item {
+  color: #cbd5e1 !important;
+}
+
+body.db-dark-mode .app-menu__nav-item:hover {
+  background: #334155 !important;
+  color: #f8fafc !important;
+}
+
+body.db-dark-mode .app-menu__nav-item--active {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #10b981 !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+}
+
+body.db-dark-mode .app-menu__sub-nav {
+  border-left: 2px solid #334155 !important;
+}
+
+body.db-dark-mode .app-menu__nav-item--sub {
+  color: #94a3b8 !important;
+}
+
+body.db-dark-mode .app-menu__nav-item--sub:hover {
+  color: #10b981 !important;
+}
+
+body.db-dark-mode .app-menu__footer {
+  background-color: #1e293b !important;
+  border-top: 1px solid #334155 !important;
+}
+
+body.db-dark-mode .app-menu__user-name {
+  color: #f8fafc !important;
+}
+
+body.db-dark-mode .app-menu__theme-btn {
+  color: #cbd5e1 !important;
+}
+
+body.db-dark-mode .app-menu__theme-btn:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #10b981 !important;
+}

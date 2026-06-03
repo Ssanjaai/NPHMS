@@ -349,7 +349,7 @@ const AttendancePage: React.FC = () => {
                               style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
                               title={`Click to view ${worker.name}'s attendance history`}
                             >
-                              <span className="vl-visitor-name" style={{ color: '#0d5c46', textDecoration: 'underline', fontWeight: 700 }}>{worker.name}</span>
+                              <span className="vl-visitor-name" style={{ textDecoration: 'underline', fontWeight: 700 }}>{worker.name}</span>
                             </div>
                           </td>
                           <td>{worker.role}</td>
@@ -429,7 +429,7 @@ const AttendancePage: React.FC = () => {
                     setFilterWorkerName(e.target.value);
                     setCurrentPage(1);
                   }}
-                  style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', color: '#1e293b' }}
+                  style={{ padding: '8px 12px', fontSize: '13px', outline: 'none' }}
                 />
               </div>
 

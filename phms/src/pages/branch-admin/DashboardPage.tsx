@@ -21,6 +21,8 @@ import {
   shieldCheckmarkOutline,
   trendingUpOutline,
   arrowForwardOutline,
+  sunnyOutline,
+  moonOutline,
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { ROUTES } from '../../constants/routes.constant';
@@ -87,6 +89,35 @@ interface WorkerAttendance {
 const DashboardPage: React.FC = () => {
   const history = useHistory();
   const { user } = useAuthStore();
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return document.body.classList.contains('db-dark-mode');
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    const syncTheme = () => {
+      setIsDarkMode(document.body.classList.contains('db-dark-mode'));
+    };
+
+    window.addEventListener('theme-change', syncTheme);
+    return () => {
+      window.removeEventListener('theme-change', syncTheme);
+    };
+  }, []);
+
+  const toggleTheme = () => {
+    const nextDark = !document.body.classList.contains('db-dark-mode');
+    if (nextDark) {
+      document.body.classList.add('db-dark-mode');
+      localStorage.setItem('branch-admin-theme', 'dark');
+    } else {
+      document.body.classList.remove('db-dark-mode');
+      localStorage.setItem('branch-admin-theme', 'light');
+    }
+    window.dispatchEvent(new Event('theme-change'));
+  };
 
   const isBranchAdmin = user?.role === 'BRANCH_ADMIN';
 
@@ -297,6 +328,13 @@ const DashboardPage: React.FC = () => {
 
               <div className="db-corp-navbar-right">
 
+                <button 
+                  className="db-corp-nav-icon-btn" 
+                  title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                  onClick={toggleTheme}
+                >
+                  <IonIcon icon={isDarkMode ? sunnyOutline : moonOutline} />
+                </button>
 
                 <button className="db-corp-nav-icon-btn" title="System Alerts">
                   <IonIcon icon={notificationsOutline} />
