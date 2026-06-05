@@ -1399,3 +1399,366 @@
     grid-column: span 1;
   }
 }
+
+/* Healer Profile Page Dashboard Grid Layout */
+.healer-profile-grid {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 992px) {
+  .healer-profile-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+.healer-profile-left-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.healer-profile-right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Profile Photo & Upload */
+.healer-profile-photo-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+}
+
+.healer-avatar-wrapper {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(15, 118, 110, 0.15);
+  border: 4px solid white;
+  overflow: hidden;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.healer-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.healer-avatar-initials {
+  font-size: 36px;
+  font-weight: 800;
+  color: #0f766e;
+}
+
+.healer-avatar-hover-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 118, 110, 0.65);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  cursor: pointer;
+}
+
+.healer-avatar-wrapper:hover .healer-avatar-hover-overlay {
+  opacity: 1;
+}
+
+.healer-avatar-hover-overlay ion-icon {
+  font-size: 24px;
+  margin-bottom: 4px;
+}
+
+.healer-avatar-hover-overlay span {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.healer-photo-upload-btn {
+  background: none;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.healer-photo-upload-btn:hover {
+  background: #f8fafc;
+  color: #0f766e;
+  border-color: #0f766e;
+}
+
+/* Availability Status Control */
+.healer-availability-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.healer-availability-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.healer-status-pill-group {
+  display: flex;
+  width: 100%;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 30px;
+  border: 1px solid #e2e8f0;
+}
+
+.healer-status-pill {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 8px 4px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #64748b;
+}
+
+.healer-status-pill.active {
+  color: white;
+}
+
+.healer-status-pill--available.active {
+  background: #10b981;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.2);
+}
+
+.healer-status-pill--busy.active {
+  background: #f59e0b;
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.2);
+}
+
+.healer-status-pill--leave.active {
+  background: #ef4444;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.2);
+}
+
+.healer-status-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.healer-status-indicator--available { background: #10b981; }
+.healer-status-indicator--busy { background: #f59e0b; }
+.healer-status-indicator--leave { background: #ef4444; }
+
+/* Treatment Chip Tags */
+.healer-tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.healer-chip-tag {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.healer-chip-tag--teal {
+  background: #e2f5f1;
+  color: #0f766e;
+  border-color: #ccfbf1;
+}
+
+.healer-chip-tag--purple {
+  background: #f3e8ff;
+  color: #6b21a8;
+  border-color: #faf5ff;
+}
+
+.healer-chip-tag--blue {
+  background: #e0f2fe;
+  color: #0369a1;
+  border-color: #cbd5e1;
+}
+
+.healer-chip-tag--pink {
+  background: #fce7f3;
+  color: #9d174d;
+  border-color: #fbcfe8;
+}
+
+/* Edit Details Action Header */
+.healer-card-header-with-action {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.healer-card-edit-btn {
+  background: none;
+  border: none;
+  color: #0f766e;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.15s ease;
+}
+
+.healer-card-edit-btn:hover {
+  background: #e2f5f1;
+}
+
+/* Certifications Presentation */
+.healer-cert-display {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #faf8fc;
+  border: 1px solid #faf5ff;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.healer-cert-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.healer-cert-icon-container {
+  color: #6b21a8;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+}
+
+.healer-cert-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e1b4b;
+  margin: 0;
+}
+
+.healer-cert-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  border-top: 1px dashed #e9e3f0;
+  padding-top: 12px;
+  margin-top: 4px;
+}
+
+.healer-cert-detail-label {
+  font-size: 11px;
+  color: #6b7280;
+  text-transform: uppercase;
+}
+
+.healer-cert-detail-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: #374151;
+  margin-top: 2px;
+}
+
+/* Premium Statistics Presentation */
+.healer-stats-subdeck {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 16px;
+}
+
+@media (max-width: 576px) {
+  .healer-stats-subdeck {
+    grid-template-columns: 1fr;
+  }
+}
+
+.healer-substat-card {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+  border: 1px solid #e2e8f0;
+}
+
+.healer-substat-value {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f766e;
+}
+
+.healer-substat-label {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.healer-form-input {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  padding: 10px 12px;
+  font-size: 14px;
+  outline: none;
+  font-family: inherit;
+  color: #1e293b;
+  background-color: #ffffff;
+  transition: all 0.15s ease;
+}
+
+.healer-form-input:focus {
+  border-color: #0f766e;
+  box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.1);
+}
+
+
