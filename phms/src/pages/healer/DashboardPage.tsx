@@ -69,7 +69,7 @@ const HealerDashboardPage: React.FC = () => {
           </div>
 
           <h3 className="healer-section-title">
-            Quick Stats (BRD 6.11)
+            Quick Stats
           </h3>
 
           <div className="healer-stats-grid">

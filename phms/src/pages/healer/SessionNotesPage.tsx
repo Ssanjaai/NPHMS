@@ -145,7 +145,7 @@ const SessionNotesPage: React.FC = () => {
           
           <div className="healer-header-box">
             <h2 className="healer-page-title">Record Healing Notes</h2>
-            <p className="healer-page-subtitle">BRD 5.6 Step 5 & 6.6: Log patient observations and energy work notes post-session.</p>
+            <p className="healer-page-subtitle">Log patient observations and energy work notes post-session.</p>
           </div>
 
           <AppCard padding="large" shadow>

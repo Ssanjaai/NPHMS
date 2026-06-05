@@ -248,7 +248,7 @@ const MyPatientsPage: React.FC = () => {
           </div>
 
           <h3 className="healer-sub-title">
-            Assigned Patients List (BRD 6.9)
+            Assigned Patients List
           </h3>
 
           <div className="healer-actions-list">

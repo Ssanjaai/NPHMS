@@ -385,7 +385,7 @@ const DocumentsPage: React.FC = () => {
         <div className="healer-container">
           
           <div className="healer-header-box">
-            <h2 className="healer-page-title">Patient Documents (BRD 6.7)</h2>
+            <h2 className="healer-page-title">Patient Documents</h2>
             <p className="healer-page-subtitle">Review lab reports, doctor records, and consultation files uploaded for your assigned patients.</p>
           </div>
 
