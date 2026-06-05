@@ -27,6 +27,7 @@ import { useHistory } from 'react-router-dom';
 import AppCard from '../../components/common/AppCard';
 import '../branch-admin/branch-admin.css';
 import '../healer/Healers.css';
+import './Patient.css';
 
 interface Session {
   id: number;
@@ -150,51 +151,35 @@ const PatientDashboardPage: React.FC = () => {
       tomorrow.setDate(tomorrow.getDate() + 1);
       const tomorrowStr = tomorrow.toISOString().split('T')[0];
 
-      const dayAfter = new Date();
-      dayAfter.setDate(dayAfter.getDate() + 2);
-      const dayAfterStr = dayAfter.toISOString().split('T')[0];
-
       upcomingList = [
         {
-          id: Date.now() - 3600000 * 2, // Booked 2 hours ago
-          sessionNo: 'SESS-2041',
+          id: Date.now() + 3600000 * 24, // Booked 1 day in future
+          sessionNo: 'SESS-2036',
           date: tomorrowStr,
-          startTime: '10:00 AM',
-          endTime: '11:00 AM',
+          startTime: '04:00 PM',
+          endTime: '05:00 PM',
           patient: patientName,
           healer: currentHealer,
-          type: 'Advanced Pranic Healing',
-          status: 'Scheduled'
-        },
-        {
-          id: Date.now() - 3600000 * 24, // Booked 24 hours ago
-          sessionNo: 'SESS-2048',
-          date: dayAfterStr,
-          startTime: '04:30 PM',
-          endTime: '05:30 PM',
-          patient: patientName,
-          healer: currentHealer,
-          type: 'Pranic Psychotherapy',
+          type: 'Basic Pranic Healing',
           status: 'Scheduled'
         }
       ];
     }
     setUpcomingSessions(upcomingList);
 
-    // 3. Load feedbacks to check which completed sessions need reviews
-    const savedFeedbacks = localStorage.getItem('phms_feedbacks') || '[]';
+    // 3. Feedback reminders filtering (completed sessions not reviewed yet)
+    const savedReviews = localStorage.getItem('phms_reviews') || '[]';
     try {
-      const feedbacks = JSON.parse(savedFeedbacks);
-      const feedbackSessionIds = feedbacks.map((f: any) => f.sessionId);
-      
-      const pendingFeedback = completedList.filter(s => !feedbackSessionIds.includes(s.id));
-      setFeedbackReminders(pendingFeedback);
+      const reviews = JSON.parse(savedReviews);
+      const reviewedSessionIds = new Set(reviews.map((r: any) => Number(r.sessionId)));
+      const pendingReviews = completedList.filter(s => !reviewedSessionIds.has(s.id));
+      setFeedbackReminders(pendingReviews);
     } catch (e) {
       console.error(e);
     }
 
-    // 4. Load Billing summary
-    const savedPayments = localStorage.getItem('phms_patient_payments');
+    // 4. Load Payments Data
+    const savedPayments = localStorage.getItem('phms_payments');
     if (savedPayments) {
       try {
         const parsed = JSON.parse(savedPayments);
@@ -230,9 +215,9 @@ const PatientDashboardPage: React.FC = () => {
           </IonButtons>
           <IonTitle className="sa-page__toolbar-title">Patient Portal</IonTitle>
           <IonButtons slot="end">
-            <button className="sa-page__toolbar-avatar" onClick={() => history.push('/patient/profile')} style={{ overflow: 'hidden', padding: 0 }}>
+            <button className="sa-page__toolbar-avatar pat-toolbar-avatar" onClick={() => history.push('/patient/profile')}>
               {user?.avatar ? (
-                <img src={user.avatar} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src={user.avatar} alt="Avatar" className="pat-avatar-img" />
               ) : (
                 resolvedPatientName[0].toUpperCase()
               )}
@@ -245,22 +230,22 @@ const PatientDashboardPage: React.FC = () => {
         <div className="healer-container">
           
           {/* Welcome Card */}
-          <div className="dm-access-card" style={{ marginBottom: '28px', background: 'linear-gradient(135deg, #0f766e 0%, #115e59 100%)' }}>
-            <div className="dm-access-card__header" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <IonIcon icon={leafOutline} style={{ fontSize: '28px', color: '#a7f3d0' }} />
-              <h2 className="dm-access-card__title" style={{ fontSize: '22px', margin: 0 }}>Namaste, {resolvedPatientName}!</h2>
+          <div className="dm-access-card pat-welcome-card">
+            <div className="dm-access-card__header pat-welcome-header">
+              <IonIcon icon={leafOutline} className="pat-welcome-icon" />
+              <h2 className="dm-access-card__title pat-welcome-title">Namaste, {resolvedPatientName}!</h2>
             </div>
-            <p style={{ color: '#e2f5f1', fontSize: '15px', margin: '12px 0 20px 0', lineHeight: 1.5 }}>
+            <p className="pat-welcome-subtitle">
               Welcome back to your personalized healing dashboard. Manage your sessions, connect with healers, and upload medical files.
             </p>
-            <div className="dm-access-branch-box" style={{ background: 'rgba(255,255,255,0.1)', borderColor: 'rgba(255,255,255,0.15)', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+            <div className="dm-access-branch-box pat-welcome-details-box">
               <div>
-                <span className="dm-access-branch-label" style={{ color: '#a7f3d0' }}>YOUR REGISTERED BRANCH</span>
-                <span className="dm-access-branch-val" style={{ color: 'white', display: 'block', marginTop: '4px' }}>{branchName}</span>
+                <span className="dm-access-branch-label pat-detail-label">YOUR REGISTERED BRANCH</span>
+                <span className="dm-access-branch-val pat-detail-val">{branchName}</span>
               </div>
-              <div style={{ borderLeft: '1px solid rgba(255,255,255,0.2)', paddingLeft: '20px' }}>
-                <span className="dm-access-branch-label" style={{ color: '#a7f3d0' }}>YOUR ASSIGNED HEALER</span>
-                <span className="dm-access-branch-val" style={{ color: 'white', display: 'block', marginTop: '4px' }}>{assignedHealer}</span>
+              <div className="pat-details-divider">
+                <span className="dm-access-branch-label pat-detail-label">YOUR ASSIGNED HEALER</span>
+                <span className="dm-access-branch-val pat-detail-val">{assignedHealer}</span>
               </div>
             </div>
           </div>
@@ -268,20 +253,19 @@ const PatientDashboardPage: React.FC = () => {
           {/* Feedback Reminder Widget */}
           {feedbackReminders.length > 0 && (
             <div 
-              className="healer-alert-widget" 
-              style={{ cursor: 'pointer', marginBottom: '24px' }}
+              className="healer-alert-widget pat-alert-widget" 
               onClick={() => history.push('/patient/feedback')}
             >
               <div className="healer-alert-widget__left">
-                <IonIcon icon={chatboxOutline} className="healer-alert-widget__icon" style={{ color: '#ea580c' }} />
+                <IonIcon icon={chatboxOutline} className="healer-alert-widget__icon pat-alert-icon" />
                 <div>
-                  <h4 className="healer-alert-widget__title" style={{ color: '#c2410c' }}>Pending Session Feedback</h4>
-                  <p className="healer-alert-widget__desc" style={{ color: '#ea580c' }}>
+                  <h4 className="healer-alert-widget__title pat-alert-title">Pending Session Feedback</h4>
+                  <p className="healer-alert-widget__desc pat-alert-desc">
                     You have {feedbackReminders.length} completed session{feedbackReminders.length > 1 ? 's' : ''} awaiting your rating and feedback.
                   </p>
                 </div>
               </div>
-              <span className="healer-alert-widget__count" style={{ background: '#ea580c' }}>{feedbackReminders.length}</span>
+              <span className="healer-alert-widget__count pat-alert-count">{feedbackReminders.length}</span>
             </div>
           )}
 
@@ -293,22 +277,22 @@ const PatientDashboardPage: React.FC = () => {
               
               {/* Progress Overview */}
               <AppCard padding="large" shadow>
-                <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1e293b', margin: '0 0 16px 0' }}>
+                <h3 className="pat-card-title">
                   Healing Progress
                 </h3>
 
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '12px 0' }}>
-                  <div style={{ position: 'relative', width: '100%', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                      <span style={{ color: '#64748b' }}>Sessions Conducted</span>
-                      <strong style={{ color: '#0f766e' }}>{completedSessions.length} / {targetSessions}</strong>
+                <div className="pat-progress-container">
+                  <div className="pat-progress-inner">
+                    <div className="pat-progress-header">
+                      <span className="pat-progress-label">Sessions Conducted</span>
+                      <strong className="pat-progress-val">{completedSessions.length} / {targetSessions}</strong>
                     </div>
                     
-                    <div style={{ width: '100%', height: '10px', background: '#e2e8f0', borderRadius: '5px', overflow: 'hidden' }}>
-                      <div style={{ width: `${progressPercent}%`, height: '100%', background: '#0f766e', borderRadius: '5px', transition: 'width 0.3s ease' }}></div>
+                    <div className="pat-progress-bar-bg">
+                      <div className="pat-progress-bar-fill" style={{ width: `${progressPercent}%` }}></div>
                     </div>
 
-                    <span style={{ fontSize: '11px', color: '#94a3b8', textAlign: 'right', display: 'block' }}>
+                    <span className="pat-progress-subtext">
                       {progressPercent}% completed
                     </span>
                   </div>
@@ -318,7 +302,7 @@ const PatientDashboardPage: React.FC = () => {
               {/* Payment Summary */}
               <AppCard padding="large" shadow>
                 <div className="healer-card-header-with-action">
-                  <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1e293b', margin: '0' }}>
+                  <h3 className="pat-card-title-no-margin">
                     Payment Summary
                   </h3>
                   <button className="healer-card-edit-btn" onClick={() => history.push('/patient/payments')}>
@@ -326,49 +310,49 @@ const PatientDashboardPage: React.FC = () => {
                   </button>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                    <span style={{ color: '#64748b' }}>Total Billed</span>
-                    <strong style={{ color: '#1e293b' }}>₹{totalBilled.toLocaleString()}</strong>
+                <div className="pat-payment-details-list">
+                  <div className="pat-payment-row">
+                    <span className="pat-payment-label">Total Billed</span>
+                    <strong className="pat-payment-value-dark">₹{totalBilled.toLocaleString()}</strong>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                    <span style={{ color: '#64748b' }}>Total Paid</span>
-                    <strong style={{ color: '#16a34a' }}>₹{totalPaid.toLocaleString()}</strong>
+                  <div className="pat-payment-row">
+                    <span className="pat-payment-label">Total Paid</span>
+                    <strong className="pat-payment-value-green">₹{totalPaid.toLocaleString()}</strong>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', paddingTop: '8px', borderTop: '1px dashed #e2e8f0' }}>
-                    <span style={{ color: '#64748b', fontWeight: '700' }}>Outstanding</span>
-                    <strong style={{ color: outstandingBalance > 0 ? '#dc2626' : '#1e293b', fontWeight: '700' }}>₹{outstandingBalance.toLocaleString()}</strong>
+                  <div className="pat-payment-row-total">
+                    <span className="pat-payment-label-bold">Outstanding</span>
+                    <strong className={outstandingBalance > 0 ? 'pat-color-red' : 'pat-payment-value-dark'}>₹{outstandingBalance.toLocaleString()}</strong>
                   </div>
                 </div>
               </AppCard>
 
               {/* Quick Navigation Panel */}
               <AppCard padding="large" shadow>
-                <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1e293b', margin: '0 0 16px 0' }}>
+                <h3 className="pat-card-title">
                   Quick Shortcuts
                 </h3>
                 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div className="pat-vertical-list-12">
                   <button 
                     onClick={() => history.push('/patient/health-records')}
-                    style={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'space-between', background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', cursor: 'pointer', textAlign: 'left' }}
+                    className="pat-menu-item-btn"
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#475569', fontWeight: '600' }}>
-                      <IonIcon icon={documentTextOutline} style={{ color: '#0f766e', fontSize: '18px' }} />
+                    <div className="pat-menu-item-content">
+                      <IonIcon icon={documentTextOutline} className="pat-menu-item-icon" />
                       View Health Records
                     </div>
-                    <IonIcon icon={chevronForwardOutline} style={{ color: '#94a3b8' }} />
+                    <IonIcon icon={chevronForwardOutline} className="pat-chevron-icon" />
                   </button>
 
                   <button 
                     onClick={() => history.push('/patient/session-history')}
-                    style={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'space-between', background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', cursor: 'pointer', textAlign: 'left' }}
+                    className="pat-menu-item-btn"
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#475569', fontWeight: '600' }}>
-                      <IonIcon icon={timeOutline} style={{ color: '#0f766e', fontSize: '18px' }} />
+                    <div className="pat-menu-item-content">
+                      <IonIcon icon={timeOutline} className="pat-menu-item-icon" />
                       View Session Notes
                     </div>
-                    <IonIcon icon={chevronForwardOutline} style={{ color: '#94a3b8' }} />
+                    <IonIcon icon={chevronForwardOutline} className="pat-chevron-icon" />
                   </button>
                 </div>
               </AppCard>
@@ -381,7 +365,7 @@ const PatientDashboardPage: React.FC = () => {
               {/* Upcoming Healing Sessions */}
               <AppCard padding="large" shadow>
                 <div className="healer-card-header-with-action">
-                  <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#1e293b', margin: '0' }}>
+                  <h3 className="pat-section-title-no-margin">
                     Upcoming Scheduled Sessions
                   </h3>
                   <button className="healer-card-edit-btn" onClick={() => history.push('/patient/session-history')}>
@@ -390,28 +374,28 @@ const PatientDashboardPage: React.FC = () => {
                 </div>
 
                 {upcomingSessions.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '24px 16px', color: '#94a3b8' }}>
-                    <IonIcon icon={calendarOutline} style={{ fontSize: '40px', opacity: 0.3, marginBottom: '8px' }} />
-                    <p style={{ margin: 0, fontSize: '14px' }}>No upcoming sessions scheduled.</p>
+                  <div className="pat-empty-state-container">
+                    <IonIcon icon={calendarOutline} className="pat-empty-state-icon" />
+                    <p className="pat-empty-state-text">No upcoming sessions scheduled.</p>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
+                  <div className="pat-vertical-list-12-mt12">
                     {upcomingSessions.map((session) => (
                       <div 
                         key={session.id}
-                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fafafb', border: '1px solid #e2e8f0', padding: '14px', borderRadius: '10px' }}
+                        className="pat-session-list-item"
                       >
                         <div>
-                          <strong style={{ fontSize: '14px', color: '#1e293b' }}>{session.sessionNo} • {session.type}</strong>
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', fontSize: '12px', color: '#64748b', marginTop: '4px' }}>
+                          <strong className="pat-session-title">{session.sessionNo} • {session.type}</strong>
+                          <div className="pat-session-meta">
                             <span>Healer: <strong>{session.healer}</strong></span>
                             <span>Slot: <strong>{session.startTime}</strong></span>
                             <span>Created: <strong>{new Date(session.id).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</strong></span>
                           </div>
                         </div>
 
-                        <div style={{ textAlign: 'right' }}>
-                          <span style={{ fontSize: '12px', fontWeight: '700', color: '#0f766e', background: '#e2f5f1', padding: '4px 10px', borderRadius: '6px' }}>
+                        <div className="pat-text-right">
+                          <span className="pat-session-status-badge">
                             {session.date}
                           </span>
                         </div>
@@ -423,33 +407,33 @@ const PatientDashboardPage: React.FC = () => {
 
               {/* Recent Session Notes */}
               <AppCard padding="large" shadow>
-                <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#1e293b', margin: '0 0 12px 0' }}>
+                <h3 className="pat-card-title-16">
                   Recent Session Notes & Recommendation
                 </h3>
 
                 {!lastSessionNote ? (
-                  <div style={{ textAlign: 'center', padding: '32px 16px', color: '#94a3b8' }}>
-                    <IonIcon icon={documentTextOutline} style={{ fontSize: '40px', opacity: 0.3, marginBottom: '8px' }} />
-                    <p style={{ margin: 0, fontSize: '14px' }}>No session logs available.</p>
+                  <div className="pat-empty-state-container-32">
+                    <IonIcon icon={documentTextOutline} className="pat-empty-state-icon" />
+                    <p className="pat-empty-state-text">No session logs available.</p>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div className="pat-vertical-list-16">
                     
                     {/* Session metadata summary */}
-                    <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
-                      <span style={{ fontSize: '12px', color: '#475569' }}>Session: <strong>{lastSessionNote.sessionNo}</strong></span>
-                      <span style={{ fontSize: '12px', color: '#475569' }}>Modality: <strong>{lastSessionNote.type}</strong></span>
-                      <span style={{ fontSize: '12px', color: '#475569' }}>Date Conducted: <strong>{lastSessionNote.date}</strong></span>
-                      <span style={{ fontSize: '12px', color: '#475569' }}>Healer: <strong>{lastSessionNote.healer}</strong></span>
-                      <span style={{ fontSize: '12px', color: '#475569' }}>Created: <strong>{new Date(lastSessionNote.id).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</strong></span>
+                    <div className="pat-session-meta-panel">
+                      <span className="pat-session-meta-item">Session: <strong>{lastSessionNote.sessionNo}</strong></span>
+                      <span className="pat-session-meta-item">Modality: <strong>{lastSessionNote.type}</strong></span>
+                      <span className="pat-session-meta-item">Date Conducted: <strong>{lastSessionNote.date}</strong></span>
+                      <span className="pat-session-meta-item">Healer: <strong>{lastSessionNote.healer}</strong></span>
+                      <span className="pat-session-meta-item">Created: <strong>{new Date(lastSessionNote.id).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</strong></span>
                     </div>
 
                     {/* Observations */}
                     <div>
-                      <h4 style={{ fontSize: '12px', fontWeight: '800', color: '#0f766e', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 6px 0' }}>
+                      <h4 className="pat-note-section-title-teal">
                         Healer Observations
                       </h4>
-                      <p style={{ margin: 0, fontSize: '13px', color: '#334155', lineHeight: 1.5, background: '#fafafb', padding: '12px', borderRadius: '6px', borderLeft: '3px solid #0f766e' }}>
+                      <p className="pat-note-text-teal">
                         {lastSessionNote.notes?.observations && lastSessionNote.notes.observations !== '—' 
                           ? lastSessionNote.notes.observations 
                           : 'No observations logged.'
@@ -459,10 +443,10 @@ const PatientDashboardPage: React.FC = () => {
 
                     {/* Recommendations */}
                     <div>
-                      <h4 style={{ fontSize: '12px', fontWeight: '800', color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 6px 0' }}>
+                      <h4 className="pat-note-section-title-purple">
                         Wellness Recommendations
                       </h4>
-                      <p style={{ margin: 0, fontSize: '13px', color: '#5b21b6', lineHeight: 1.5, background: '#faf8fc', padding: '12px', borderRadius: '6px', borderLeft: '3px solid #7c3aed', fontWeight: '500' }}>
+                      <p className="pat-note-text-purple">
                         {lastSessionNote.notes?.recommendation && lastSessionNote.notes.recommendation !== '—' 
                           ? lastSessionNote.notes.recommendation 
                           : 'Ensure regular practice of physical exercises and meditation as advised.'

@@ -24,6 +24,7 @@ import { useAuthStore } from '../../store/auth.store';
 import AppCard from '../../components/common/AppCard';
 import '../branch-admin/branch-admin.css';
 import '../healer/Healers.css';
+import './Patient.css';
 
 interface HealingSession {
   id: number;
@@ -153,7 +154,7 @@ const SessionHistoryPage: React.FC = () => {
       </IonHeader>
 
       <IonContent className="sa-page__content">
-        <div className="healer-container" style={{ maxWidth: '900px' }}>
+        <div className="healer-container pat-container-narrow-900">
           
           <div className="healer-header-box">
             <h1 className="healer-page-title">Session History</h1>
@@ -163,47 +164,41 @@ const SessionHistoryPage: React.FC = () => {
           </div>
 
           <AppCard padding="large" shadow>
-            <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#1e293b', margin: '0 0 16px 0' }}>
+            <h3 className="pat-card-title-16-m16">
               My Healing Sessions ({sessions.length})
             </h3>
 
             {sessions.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '40px 16px', color: '#94a3b8' }}>
-                <IonIcon icon={timeOutline} style={{ fontSize: '48px', opacity: 0.3, marginBottom: '8px' }} />
-                <p style={{ margin: 0 }}>No session logs found on your account.</p>
+              <div className="pat-empty-state-container-40">
+                <IonIcon icon={timeOutline} className="pat-empty-state-icon-large" />
+                <p className="pat-empty-state-text-no-size">No session logs found on your account.</p>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div className="pat-vertical-list-16">
                 {sessions.map((session) => (
                   <div 
                     key={session.id}
-                    style={{
-                      background: '#f8fafc',
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '12px',
-                      padding: '18px',
-                      transition: 'all 0.2s',
-                    }}
+                    className="pat-session-card"
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
+                    <div className="pat-session-card-header">
                       <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <strong style={{ fontSize: '16px', color: '#0f172a' }}>{session.sessionNo}</strong>
-                          <span style={{ fontSize: '12px', background: '#e2f5f1', color: '#0f766e', padding: '2px 8px', borderRadius: '4px', fontWeight: '700' }}>
+                        <div className="pat-flex-align-center-gap8">
+                          <strong className="pat-session-card-title-text">{session.sessionNo}</strong>
+                          <span className="pat-session-badge-teal">
                             {session.type}
                           </span>
                         </div>
                         
-                        <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: '#475569', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <IonIcon icon={personOutline} style={{ color: '#0d9488' }} /> Healer: <strong>{session.healer}</strong>
+                        <p className="pat-session-card-healer-line">
+                          <IonIcon icon={personOutline} className="pat-icon-teal-0d" /> Healer: <strong>{session.healer}</strong>
                         </p>
                         
-                        <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <IonIcon icon={calendarOutline} style={{ color: '#0d9488' }} /> Conducted: <strong>{session.date} • {session.startTime} - {session.endTime}</strong>
+                        <p className="pat-session-card-date-line">
+                          <IonIcon icon={calendarOutline} className="pat-icon-teal-0d" /> Conducted: <strong>{session.date} • {session.startTime} - {session.endTime}</strong>
                         </p>
                       </div>
 
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+                      <div className="pat-flex-col-align-end-gap8">
                         <span className={`healer-status-badge ${
                           session.status === 'Completed' ? 'healer-status-badge--completed' : 'healer-status-badge--scheduled'
                         }`}>
@@ -212,8 +207,7 @@ const SessionHistoryPage: React.FC = () => {
 
                         {session.status === 'Completed' && (
                           <button 
-                            className="healer-photo-upload-btn"
-                            style={{ border: '1px solid #0f766e', color: '#0f766e', background: 'transparent' }}
+                            className="healer-photo-upload-btn pat-view-notes-btn"
                             onClick={() => setSelectedSession(session)}
                           >
                             View Notes & Advice
@@ -241,7 +235,7 @@ const SessionHistoryPage: React.FC = () => {
                 <IonTitle>Session Notes: {selectedSession?.sessionNo}</IonTitle>
                 <IonButtons slot="end">
                   <button className="healer-modal-close-btn" onClick={() => setSelectedSession(null)}>
-                    <IonIcon icon={closeOutline} style={{ fontSize: '24px' }} />
+                    <IonIcon icon={closeOutline} className="pat-modal-close-icon" />
                   </button>
                 </IonButtons>
               </IonToolbar>
@@ -249,36 +243,36 @@ const SessionHistoryPage: React.FC = () => {
 
             <IonContent className="ion-padding healer-modal-content">
               {selectedSession && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '16px 8px' }}>
+                <div className="pat-modal-body-container">
                   
                   {/* Overview Card */}
                   <AppCard padding="large" shadow>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                        <span style={{ color: '#64748b' }}>Session Modality</span>
-                        <strong style={{ color: '#0f766e' }}>{selectedSession.type}</strong>
+                    <div className="pat-vertical-list-8">
+                      <div className="pat-modal-row-item">
+                        <span className="pat-label-gray">Session Modality</span>
+                        <strong className="pat-val-teal">{selectedSession.type}</strong>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                        <span style={{ color: '#64748b' }}>Healing Practitioner</span>
-                        <strong style={{ color: '#1e293b' }}>{selectedSession.healer}</strong>
+                      <div className="pat-modal-row-item">
+                        <span className="pat-label-gray">Healing Practitioner</span>
+                        <strong className="pat-val-dark-1e">{selectedSession.healer}</strong>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                        <span style={{ color: '#64748b' }}>Conduct Date</span>
-                        <strong style={{ color: '#1e293b' }}>{selectedSession.date}</strong>
+                      <div className="pat-modal-row-item">
+                        <span className="pat-label-gray">Conduct Date</span>
+                        <strong className="pat-val-dark-1e">{selectedSession.date}</strong>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                        <span style={{ color: '#64748b' }}>Timing Slot</span>
-                        <strong style={{ color: '#1e293b' }}>{selectedSession.startTime} - {selectedSession.endTime}</strong>
+                      <div className="pat-modal-row-item">
+                        <span className="pat-label-gray">Timing Slot</span>
+                        <strong className="pat-val-dark-1e">{selectedSession.startTime} - {selectedSession.endTime}</strong>
                       </div>
                     </div>
                   </AppCard>
 
                   {/* Observations Section */}
                   <div>
-                    <h4 style={{ fontSize: '14px', fontWeight: '800', color: '#0f766e', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>
+                    <h4 className="pat-modal-section-title-teal">
                       Healer Observations & Aura Assessment
                     </h4>
-                    <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '16px', fontSize: '14px', color: '#334155', lineHeight: 1.5 }}>
+                    <div className="pat-modal-text-panel-teal">
                       {selectedSession.notes?.observations && selectedSession.notes.observations !== '—' 
                         ? selectedSession.notes.observations 
                         : 'No observations logged for this session.'
@@ -288,10 +282,10 @@ const SessionHistoryPage: React.FC = () => {
 
                   {/* Detailed Notes Section */}
                   <div>
-                    <h4 style={{ fontSize: '14px', fontWeight: '800', color: '#0f766e', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>
+                    <h4 className="pat-modal-section-title-teal">
                       Session Treatment Summary
                     </h4>
-                    <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '16px', fontSize: '14px', color: '#334155', lineHeight: 1.5 }}>
+                    <div className="pat-modal-text-panel-teal">
                       {selectedSession.notes?.detailedNotes && selectedSession.notes.detailedNotes !== '—' 
                         ? selectedSession.notes.detailedNotes 
                         : 'No detailed clinical summary logged.'
@@ -301,10 +295,10 @@ const SessionHistoryPage: React.FC = () => {
 
                   {/* Recommendations Section */}
                   <div>
-                    <h4 style={{ fontSize: '14px', fontWeight: '800', color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <h4 className="pat-modal-section-title-purple">
                       <IonIcon icon={leafOutline} /> Healer Recommendations & Advice
                     </h4>
-                    <div style={{ background: '#faf8fc', border: '1px solid #faf5ff', borderRadius: '8px', padding: '16px', fontSize: '14px', color: '#5b21b6', lineHeight: 1.5, fontWeight: '500' }}>
+                    <div className="pat-modal-text-panel-purple">
                       {selectedSession.notes?.recommendation && selectedSession.notes.recommendation !== '—' 
                         ? selectedSession.notes.recommendation 
                         : 'No specific recommendations logged yet. Ensure regular practice of physical exercises and meditation as advised.'
@@ -313,9 +307,8 @@ const SessionHistoryPage: React.FC = () => {
                   </div>
 
                   <button 
-                    className="healer-btn-primary" 
+                    className="healer-btn-primary pat-modal-close-btn-footer" 
                     onClick={() => setSelectedSession(null)}
-                    style={{ padding: '12px', borderRadius: '8px', border: 'none', background: '#0f766e', color: 'white', fontWeight: '700', cursor: 'pointer', marginTop: '12px' }}
                   >
                     Done
                   </button>

@@ -24,6 +24,7 @@ import { useAuthStore } from '../../store/auth.store';
 import AppCard from '../../components/common/AppCard';
 import '../branch-admin/branch-admin.css';
 import '../healer/Healers.css';
+import './Patient.css';
 
 interface Feedback {
   id: number;
@@ -224,7 +225,7 @@ const FeedbackPage: React.FC = () => {
       </IonHeader>
 
       <IonContent className="sa-page__content">
-        <div className="healer-container" style={{ maxWidth: '900px' }}>
+        <div className="healer-container pat-container-narrow-900">
           
           <div className="healer-header-box">
             <h1 className="healer-page-title">Give Session Reviews</h1>
@@ -234,28 +235,28 @@ const FeedbackPage: React.FC = () => {
           </div>
 
           {successMsg && (
-            <div style={{ background: '#e2f5f1', border: '1px solid #ccfbf1', padding: '16px', borderRadius: '12px', color: '#0f766e', display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px', fontSize: '14px', fontWeight: '600' }}>
-              <IonIcon icon={checkmarkCircleOutline} style={{ fontSize: '20px' }} />
+            <div className="pat-feedback-success-banner">
+              <IonIcon icon={checkmarkCircleOutline} className="pat-success-banner-icon" />
               {successMsg}
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: selectedSession ? '1.2fr 1fr' : '1fr', gap: '24px', alignItems: 'start' }}>
+          <div className={`pat-feedback-grid ${selectedSession ? 'pat-feedback-grid-2col' : 'pat-feedback-grid-1col'}`}>
             
             {/* Completed Sessions List */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div className="pat-vertical-list-16">
               <AppCard padding="large" shadow>
-                <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#1e293b', margin: '0 0 16px 0' }}>
+                <h3 className="pat-card-title-16-m16">
                   Completed Healing Sessions ({sessions.length})
                 </h3>
 
                 {sessions.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '32px 16px', color: '#94a3b8' }}>
-                    <IonIcon icon={timeOutline} style={{ fontSize: '40px', opacity: 0.3, marginBottom: '8px' }} />
-                    <p style={{ margin: 0, fontSize: '14px' }}>No completed sessions found to rate.</p>
+                  <div className="pat-empty-state-container-32">
+                    <IonIcon icon={timeOutline} className="pat-empty-state-icon" />
+                    <p className="pat-empty-state-text">No completed sessions found to rate.</p>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div className="pat-vertical-list-12">
                     {sessions.map((session) => {
                       const submittedFeedback = getFeedbackForSession(session.id);
                       const isSelected = selectedSession?.id === session.id;
@@ -263,50 +264,43 @@ const FeedbackPage: React.FC = () => {
                       return (
                         <div 
                           key={session.id} 
-                          style={{
-                            background: isSelected ? '#e2f5f1' : '#f8fafc',
-                            border: `1px solid ${isSelected ? '#0f766e' : '#e2e8f0'}`,
-                            borderRadius: '10px',
-                            padding: '16px',
-                            transition: 'all 0.15s ease',
-                          }}
+                          className={isSelected ? 'pat-feedback-card-selected' : 'pat-feedback-card-normal'}
                         >
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px' }}>
+                          <div className="pat-card-header-flex">
                             <div>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <strong style={{ fontSize: '15px', color: '#0f172a' }}>{session.sessionNo}</strong>
-                                <span style={{ fontSize: '12px', background: '#e2f5f1', color: '#0f766e', padding: '2px 8px', borderRadius: '4px', fontWeight: '700' }}>
+                              <div className="pat-flex-align-center-gap8">
+                                <strong className="pat-session-no-text">{session.sessionNo}</strong>
+                                <span className="pat-session-badge-teal">
                                   {session.type}
                                 </span>
                               </div>
-                              <p style={{ margin: '6px 0 0 0', fontSize: '13px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <p className="pat-card-line-p6">
                                 <IonIcon icon={personOutline} /> Healer: {session.healer}
                               </p>
-                              <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <p className="pat-card-line-p4">
                                 <IonIcon icon={calendarOutline} /> Conducted: {session.date} • {session.startTime}
                               </p>
                             </div>
 
                             <div>
                               {submittedFeedback ? (
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-                                  <span style={{ fontSize: '12px', color: '#15803d', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <div className="pat-flex-col-align-end">
+                                  <span className="pat-status-submitted-label">
                                     <IonIcon icon={checkmarkCircleOutline} /> Submitted
                                   </span>
-                                  <div style={{ display: 'flex', gap: '2px' }}>
+                                  <div className="pat-flex-gap2">
                                     {[1, 2, 3, 4, 5].map((s) => (
                                       <IonIcon 
                                         key={s} 
                                         icon={s <= (submittedFeedback.rating || 5) ? star : starOutline} 
-                                        style={{ fontSize: '14px', color: '#f59e0b' }} 
+                                        className="pat-star-icon"
                                       />
                                     ))}
                                   </div>
                                 </div>
                               ) : (
                                 <button 
-                                  className="healer-photo-upload-btn"
-                                  style={{ border: '1px solid #0f766e', color: '#0f766e', background: isSelected ? 'white' : 'transparent' }}
+                                  className={`healer-photo-upload-btn ${isSelected ? 'pat-action-btn-selected' : 'pat-action-btn-normal'}`}
                                   onClick={() => {
                                     setSelectedSession(session);
                                     setComments('');
@@ -320,13 +314,13 @@ const FeedbackPage: React.FC = () => {
                           </div>
 
                            {submittedFeedback && (
-                             <div style={{ marginTop: '12px', background: '#ffffff', padding: '10px 12px', borderRadius: '6px', borderLeft: '3px solid #16a34a', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                             <div className="pat-feedback-details-box">
                                {submittedFeedback.comments && (
-                                 <span style={{ fontSize: '13px', color: '#475569', fontStyle: 'italic' }}>
+                                 <span className="pat-feedback-text">
                                    "{submittedFeedback.comments}"
                                  </span>
                                )}
-                               <span style={{ fontSize: '11px', color: '#94a3b8', textAlign: 'right' }}>
+                               <span className="pat-feedback-date">
                                  Submitted On: {submittedFeedback.date}
                                </span>
                              </div>
@@ -341,26 +335,26 @@ const FeedbackPage: React.FC = () => {
 
             {/* Submit Feedback Form panel */}
             {selectedSession && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div className="pat-vertical-list-16">
                 <AppCard padding="large" shadow>
-                  <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#0f766e', margin: '0 0 16px 0', borderBottom: '1px solid #e2e8f0', paddingBottom: '6px' }}>
+                  <h3 className="pat-card-title-feedback-header">
                     Rate Session {selectedSession.sessionNo}
                   </h3>
 
                   <form onSubmit={handleSubmitFeedback} className="healer-form">
                     <div>
                       <span className="healer-form-label">Healer Rating</span>
-                      <div style={{ display: 'flex', gap: '8px', margin: '8px 0 16px 0' }}>
+                      <div className="pat-stars-input-container">
                         {[1, 2, 3, 4, 5].map((starNum) => (
                           <button
                             key={starNum}
                             type="button"
-                            style={{ background: 'none', border: 'none', padding: '4px', cursor: 'pointer' }}
+                            className="pat-star-button-input"
                             onClick={() => setRating(starNum)}
                           >
                             <IonIcon 
                               icon={starNum <= rating ? star : starOutline} 
-                              style={{ fontSize: '28px', color: '#f59e0b' }} 
+                              className="pat-star-icon-large"
                             />
                           </button>
                         ))}
@@ -379,19 +373,17 @@ const FeedbackPage: React.FC = () => {
                       />
                     </div>
 
-                    <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+                    <div className="pat-button-row">
                       <button 
                         type="submit" 
-                        className="healer-btn-primary" 
-                        style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: '#0f766e', color: 'white', fontWeight: '700', cursor: 'pointer' }}
+                        className="healer-btn-primary pat-btn-submit"
                       >
                         Submit Feedback
                       </button>
                       <button 
                         type="button" 
-                        className="healer-btn-secondary" 
+                        className="healer-btn-secondary pat-btn-cancel" 
                         onClick={() => setSelectedSession(null)}
-                        style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', background: 'white', color: '#475569', fontWeight: '700', cursor: 'pointer' }}
                       >
                         Cancel
                       </button>

@@ -28,6 +28,7 @@ import { useAuthStore } from '../../store/auth.store';
 import AppCard from '../../components/common/AppCard';
 import '../branch-admin/branch-admin.css';
 import '../healer/Healers.css';
+import './Patient.css';
 
 const ProfilePage: React.FC = () => {
   const history = useHistory();
@@ -182,11 +183,11 @@ const ProfilePage: React.FC = () => {
               {/* Profile Card */}
               <AppCard padding="large" shadow>
                 <div className="healer-profile-photo-section">
-                  <div className="healer-avatar-wrapper" style={{ background: '#e2f5f1', cursor: 'pointer' }} onClick={() => fileInputRef.current?.click()}>
+                  <div className="healer-avatar-wrapper pat-avatar-wrapper-override" onClick={() => fileInputRef.current?.click()}>
                     {patient.profilePhoto ? (
                       <img src={patient.profilePhoto} alt="Patient Profile" className="healer-avatar-img" />
                     ) : (
-                      <div className="healer-avatar-initials" style={{ color: '#0f766e' }}>{initials}</div>
+                      <div className="healer-avatar-initials pat-avatar-initials-override">{initials}</div>
                     )}
                     <div className="healer-avatar-hover-overlay">
                       <IonIcon icon={cameraOutline} />
@@ -197,7 +198,7 @@ const ProfilePage: React.FC = () => {
                   <input
                     type="file"
                     ref={fileInputRef}
-                    style={{ display: 'none' }}
+                    className="pat-display-none"
                     accept="image/*"
                     onChange={handlePhotoUpload}
                   />
@@ -206,8 +207,8 @@ const ProfilePage: React.FC = () => {
                     Upload / Update Photo
                   </button>
 
-                  <div style={{ textAlign: 'center', marginTop: '12px' }}>
-                    <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#0f172a', margin: '0 0 4px 0' }}>
+                  <div className="pat-profile-title-container">
+                    <h2 className="pat-profile-name-title">
                       {patient.name}
                     </h2>
                     <span className={`healer-status-badge ${
@@ -221,18 +222,18 @@ const ProfilePage: React.FC = () => {
                     </span>
                   </div>
 
-                  <div style={{ borderTop: '1px solid #e2e8f0', width: '100%', marginTop: '16px', paddingTop: '16px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '8px' }}>
-                      <span style={{ color: '#64748b' }}>Patient ID</span>
-                      <strong style={{ color: '#0f172a' }}>{patient.id}</strong>
+                  <div className="pat-profile-divider-box">
+                    <div className="pat-profile-row-item">
+                      <span className="pat-label-gray">Patient ID</span>
+                      <strong className="pat-val-dark">{patient.id}</strong>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '8px' }}>
-                      <span style={{ color: '#64748b' }}>Registered On</span>
-                      <strong style={{ color: '#0f172a' }}>{patient.regDate}</strong>
+                    <div className="pat-profile-row-item">
+                      <span className="pat-label-gray">Registered On</span>
+                      <strong className="pat-val-dark">{patient.regDate}</strong>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                      <span style={{ color: '#64748b' }}>Last Visit</span>
-                      <strong style={{ color: '#0f172a' }}>{patient.lastVisitDate}</strong>
+                    <div className="pat-profile-row-item-no-margin">
+                      <span className="pat-label-gray">Last Visit</span>
+                      <strong className="pat-val-dark">{patient.lastVisitDate}</strong>
                     </div>
                   </div>
                 </div>
@@ -240,24 +241,24 @@ const ProfilePage: React.FC = () => {
 
               {/* Emergency Contact */}
               <AppCard padding="large" shadow>
-                <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1e293b', margin: '0 0 16px 0' }}>
+                <h3 className="pat-card-title">
                   Emergency Contact
                 </h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <IonIcon icon={alertCircleOutline} style={{ color: '#ef4444', fontSize: '18px' }} />
+                <div className="pat-vertical-list-12">
+                  <div className="pat-flex-align-center-gap12">
+                    <IonIcon icon={alertCircleOutline} className="pat-alert-icon-red" />
                     <div>
-                      <span className="healer-credential-card__label" style={{ fontSize: '10px', color: '#ef4444' }}>CONTACT PERSON</span>
-                      <strong style={{ fontSize: '13px', color: '#1e293b' }}>
+                      <span className="healer-credential-card__label pat-alert-label-red">CONTACT PERSON</span>
+                      <strong className="pat-val-dark-13">
                         {patient.emergencyContact?.name || 'Not Assigned'} ({patient.emergencyContact?.relation || 'Spouse'})
                       </strong>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <IonIcon icon={callOutline} style={{ color: '#ef4444', fontSize: '18px' }} />
+                  <div className="pat-flex-align-center-gap12">
+                    <IonIcon icon={callOutline} className="pat-alert-icon-red" />
                     <div>
-                      <span className="healer-credential-card__label" style={{ fontSize: '10px', color: '#ef4444' }}>PHONE NUMBER</span>
-                      <strong style={{ fontSize: '13px', color: '#1e293b' }}>{patient.emergencyContact?.mobile || 'N/A'}</strong>
+                      <span className="healer-credential-card__label pat-alert-label-red">PHONE NUMBER</span>
+                      <strong className="pat-val-dark-13">{patient.emergencyContact?.mobile || 'N/A'}</strong>
                     </div>
                   </div>
                 </div>
@@ -270,11 +271,11 @@ const ProfilePage: React.FC = () => {
               
               {/* Personal & Medical Info */}
               <AppCard padding="large" shadow>
-                <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#1e293b', margin: '0 0 16px 0' }}>
+                <h3 className="pat-card-title-16-m16">
                   Personal Information
                 </h3>
                 
-                <div className="healer-detail-grid" style={{ marginBottom: 0 }}>
+                <div className="healer-detail-grid pat-detail-grid-flat">
                   <div>
                     <span className="healer-detail-grid__label">GENDER</span>
                     <strong>{patient.gender}</strong>
@@ -304,32 +305,32 @@ const ProfilePage: React.FC = () => {
 
               {/* Medical History Summary */}
               <AppCard padding="large" shadow>
-                <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#1e293b', margin: '0 0 16px 0' }}>
+                <h3 className="pat-card-title-16-m16">
                   Medical History Summary
                 </h3>
                 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div className="pat-vertical-list-14">
                   <div>
-                    <span className="healer-credential-card__label" style={{ fontSize: '10px', color: '#0d9488' }}>PRIMARY CONDITIONS</span>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '6px' }}>
+                    <span className="healer-credential-card__label pat-label-teal">PRIMARY CONDITIONS</span>
+                    <div className="pat-flex-wrap-gap8-mt6">
                       {patient.medicalInfo?.conditions && patient.medicalInfo.conditions.length > 0 ? (
                         patient.medicalInfo.conditions.map((cond: string, idx: number) => (
                           <span 
                             key={idx} 
-                            style={{ fontSize: '12px', background: '#fef2f2', color: '#dc2626', padding: '4px 10px', borderRadius: '6px', fontWeight: '600' }}
+                            className="pat-condition-badge-red"
                           >
                             {cond}
                           </span>
                         ))
                       ) : (
-                        <span style={{ fontSize: '13px', color: '#64748b' }}>No active medical conditions logged.</span>
+                        <span className="pat-label-gray-13">No active medical conditions logged.</span>
                       )}
                     </div>
                   </div>
 
-                  <div style={{ borderTop: '1px dashed #e2e8f0', paddingTop: '12px' }}>
-                    <span className="healer-credential-card__label" style={{ fontSize: '10px' }}>CLINICAL NOTES & HISTORY</span>
-                    <p style={{ margin: '6px 0 0 0', fontSize: '13px', color: '#475569', lineHeight: 1.5 }}>
+                  <div className="pat-divider-dashed-pt12">
+                    <span className="healer-credential-card__label pat-label-10">CLINICAL NOTES & HISTORY</span>
+                    <p className="pat-clinical-notes-p">
                       {patient.name === 'Valued Patient' || patient.name === defaultPatient.name
                         ? 'Lumbar Disc Herniation (Diagnosed 2024). Patient complains of chronic back fatigue. Energy sweeps scheduled on lower back chakras.'
                         : 'No detailed clinical notes available in primary records.'
@@ -341,31 +342,31 @@ const ProfilePage: React.FC = () => {
 
               {/* Assigned Treatment & Healer */}
               <AppCard padding="large" shadow>
-                <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#1e293b', margin: '0 0 16px 0' }}>
+                <h3 className="pat-card-title-16-m16">
                   Assigned Treatment Modality & Healing Team
                 </h3>
                 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                  <div className="healer-cert-display" style={{ background: '#e2f5f1', borderColor: '#ccfbf1' }}>
+                <div className="pat-grid-2col-gap16">
+                  <div className="healer-cert-display pat-cert-display-teal">
                     <div className="healer-cert-title-row">
-                      <div className="healer-cert-icon-container" style={{ color: '#0f766e' }}>
+                      <div className="healer-cert-icon-container pat-cert-icon-teal">
                         <IonIcon icon={medkitOutline} />
                       </div>
                       <div>
-                        <h4 className="healer-cert-name" style={{ color: '#0f766e' }}>{patient.assignedHealer || 'Assigned Healer'}</h4>
-                        <span style={{ fontSize: '12px', color: '#0d9488' }}>Primary Healing Practitioner</span>
+                        <h4 className="healer-cert-name pat-cert-name-teal">{patient.assignedHealer || 'Assigned Healer'}</h4>
+                        <span className="pat-cert-sub-teal">Primary Healing Practitioner</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="healer-cert-display" style={{ background: '#faf8fc', borderColor: '#faf5ff' }}>
+                  <div className="healer-cert-display pat-cert-display-purple">
                     <div className="healer-cert-title-row">
-                      <div className="healer-cert-icon-container" style={{ color: '#6b21a8' }}>
+                      <div className="healer-cert-icon-container pat-cert-icon-purple">
                         <IonIcon icon={heartOutline} />
                       </div>
                       <div>
-                        <h4 className="healer-cert-name" style={{ color: '#6b21a8' }}>{patient.treatmentType || 'Basic Pranic Healing'}</h4>
-                        <span style={{ fontSize: '12px', color: '#7c3aed' }}>Assigned Treatment Type</span>
+                        <h4 className="healer-cert-name pat-cert-name-purple">{patient.treatmentType || 'Basic Pranic Healing'}</h4>
+                        <span className="pat-cert-sub-purple">Assigned Treatment Type</span>
                       </div>
                     </div>
                   </div>
@@ -374,32 +375,32 @@ const ProfilePage: React.FC = () => {
 
               {/* Contact Information */}
               <AppCard padding="large" shadow>
-                <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#1e293b', margin: '0 0 16px 0' }}>
+                <h3 className="pat-card-title-16-m16">
                   Contact Information
                 </h3>
                 
-                <div className="healer-profile-info-list" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div className="healer-profile-info-item" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <IonIcon icon={mailOutline} style={{ color: '#0f766e', fontSize: '18px' }} />
+                <div className="healer-profile-info-list pat-vertical-list-16">
+                  <div className="healer-profile-info-item pat-flex-align-center-gap12">
+                    <IonIcon icon={mailOutline} className="pat-info-item-icon-teal" />
                     <div>
-                      <span className="healer-credential-card__label" style={{ fontSize: '10px' }}>EMAIL ADDRESS</span>
-                      <strong style={{ fontSize: '13px', color: '#1e293b' }}>{patient.email}</strong>
+                      <span className="healer-credential-card__label pat-label-10">EMAIL ADDRESS</span>
+                      <strong className="pat-val-dark-13">{patient.email}</strong>
                     </div>
                   </div>
 
-                  <div className="healer-profile-info-item" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <IonIcon icon={phonePortraitOutline} style={{ color: '#0f766e', fontSize: '18px' }} />
+                  <div className="healer-profile-info-item pat-flex-align-center-gap12">
+                    <IonIcon icon={phonePortraitOutline} className="pat-info-item-icon-teal" />
                     <div>
-                      <span className="healer-credential-card__label" style={{ fontSize: '10px' }}>MOBILE NUMBER</span>
-                      <strong style={{ fontSize: '13px', color: '#1e293b' }}>{patient.mobile}</strong>
+                      <span className="healer-credential-card__label pat-label-10">MOBILE NUMBER</span>
+                      <strong className="pat-val-dark-13">{patient.mobile}</strong>
                     </div>
                   </div>
 
-                  <div className="healer-profile-info-item" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <IonIcon icon={businessOutline} style={{ color: '#0f766e', fontSize: '18px' }} />
+                  <div className="healer-profile-info-item pat-flex-align-center-gap12">
+                    <IonIcon icon={businessOutline} className="pat-info-item-icon-teal" />
                     <div>
-                      <span className="healer-credential-card__label" style={{ fontSize: '10px' }}>BRANCH LOCATION</span>
-                      <strong style={{ fontSize: '13px', color: '#1e293b' }}>{branchName}</strong>
+                      <span className="healer-credential-card__label pat-label-10">BRANCH LOCATION</span>
+                      <strong className="pat-val-dark-13">{branchName}</strong>
                     </div>
                   </div>
                 </div>

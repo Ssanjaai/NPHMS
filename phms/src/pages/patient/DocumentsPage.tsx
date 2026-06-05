@@ -29,6 +29,7 @@ import { useHistory } from 'react-router-dom';
 import { useAuthStore } from '../../store/auth.store';
 import AppCard from '../../components/common/AppCard';
 import '../branch-admin/branch-admin.css';
+import './Patient.css';
 
 interface UploadedDocument {
   id: number;
@@ -381,7 +382,7 @@ const DocumentsPage: React.FC = () => {
           </div>
 
           {/* Documents Panel */}
-          <div className="dm-panel" style={{ marginBottom: '24px' }}>
+          <div className="dm-panel pat-margin-bottom-24">
             <div className="dm-panel__header">
               <h2 className="dm-panel__title">My Uploaded Documents</h2>
             </div>
@@ -402,19 +403,18 @@ const DocumentsPage: React.FC = () => {
                     paginatedDocs.map((doc) => (
                       <tr key={doc.id} className="dm-table-row">
                         <td 
-                          className="dm-cell-docname"
-                          style={{ cursor: 'pointer' }}
+                          className="dm-cell-docname pat-cursor-pointer"
                           onClick={() => setSelectedViewDoc(doc)}
                         >
                           <IonIcon icon={documentOutline} className="dm-cell-icon" />
-                          <span className="dm-doc-title" style={{ color: '#1f7a6a', fontWeight: 600 }}>{doc.documentName}</span>
+                          <span className="dm-doc-title pat-doc-title-link">{doc.documentName}</span>
                         </td>
                         <td>
                           <span className={`dm-badge dm-badge--${doc.type.toLowerCase().replace(' ', '-')}`}>
                             {doc.type}
                           </span>
                         </td>
-                        <td className="dm-cell-uploadedby" style={{ fontWeight: 500, color: '#475569' }}>
+                        <td className="dm-cell-uploadedby pat-td-uploadedby">
                           {doc.uploadedBy === resolvedPatientName ? 'Me' : doc.uploadedBy}
                         </td>
                         <td className="dm-cell-date">{doc.date}</td>
@@ -507,7 +507,7 @@ const DocumentsPage: React.FC = () => {
               />
             </div>
 
-            <div className="sa-settings__form-group" style={{ marginTop: '16px' }}>
+            <div className="sa-settings__form-group pat-margin-top-16">
               <label className="sa-settings__label">Verify Selected File</label>
               <div
                 className="dm-modal-drag-drop"
@@ -516,7 +516,7 @@ const DocumentsPage: React.FC = () => {
                 <input
                   type="file"
                   id="modal-file-input-pat"
-                  style={{ display: 'none' }}
+                  className="pat-display-none"
                   onChange={(e) => {
                     const files = e.target.files;
                     if (files && files.length > 0) {
@@ -556,16 +556,16 @@ const DocumentsPage: React.FC = () => {
           <div className="dm-viewer-container">
             <div className="dm-viewer-header">
               <div className="dm-viewer-header-left">
-                <IonIcon icon={documentOutline} style={{ fontSize: '24px', color: '#10b981' }} />
+                <IonIcon icon={documentOutline} className="pat-viewer-doc-icon" />
                 <div>
                   <h3 className="dm-viewer-title">{selectedViewDoc.documentName}</h3>
-                  <span className="dm-badge dm-badge--small" style={{ fontSize: '10px', marginTop: '2px', display: 'inline-block' }}>
+                  <span className="dm-badge dm-badge--small pat-viewer-doc-badge">
                     {selectedViewDoc.type} • {selectedViewDoc.format} • {selectedViewDoc.size}
                   </span>
                 </div>
               </div>
               <div className="dm-viewer-header-right">
-                <button className="dm-viewer-close-btn" onClick={() => setSelectedViewDoc(null)} style={{ background: '#ef4444', borderColor: '#ef4444' }}>
+                <button className="dm-viewer-close-btn pat-viewer-close-btn" onClick={() => setSelectedViewDoc(null)}>
                   <IonIcon icon={closeOutline} />
                   Close
                 </button>
@@ -576,38 +576,38 @@ const DocumentsPage: React.FC = () => {
               <div className="dm-viewer-paper">
                 <div className="dm-viewer-paper-header">
                   <div className="dm-viewer-paper-logo">
-                    <div className="dm-viewer-logo-icon" style={{ fontSize: '24px', color: '#1f7a6a', marginRight: '8px' }}>✦</div>
+                    <div className="dm-viewer-logo-icon pat-viewer-logo-icon">✦</div>
                     <div>
-                      <div className="dm-viewer-logo-text" style={{ fontSize: '18px', fontWeight: 700, color: '#1f7a6a' }}>NPHMS HEALTHCARE</div>
-                      <div className="dm-viewer-logo-sub" style={{ fontSize: '10px', color: '#64748b' }}>Mumbai Main Branch • Private Records Division</div>
+                      <div className="dm-viewer-logo-text pat-viewer-logo-text">NPHMS HEALTHCARE</div>
+                      <div className="dm-viewer-logo-sub pat-viewer-logo-sub">Mumbai Main Branch • Private Records Division</div>
                     </div>
                   </div>
-                  <div className="dm-viewer-paper-meta" style={{ textAlign: 'right' }}>
-                    <h2 className="dm-viewer-meta-title" style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 4px 0' }}>{selectedViewDoc.type}</h2>
-                    <p className="dm-viewer-meta-text" style={{ fontSize: '11px', color: '#64748b', margin: '2px 0' }}><strong>RECORD ID:</strong> NPHMS-DOC-{selectedViewDoc.id}</p>
-                    <p className="dm-viewer-meta-text" style={{ fontSize: '11px', color: '#64748b', margin: '2px 0' }}><strong>DATE GENERATED:</strong> {selectedViewDoc.date}</p>
+                  <div className="dm-viewer-paper-meta pat-viewer-paper-meta">
+                    <h2 className="dm-viewer-meta-title pat-viewer-meta-title">{selectedViewDoc.type}</h2>
+                    <p className="dm-viewer-meta-text pat-viewer-meta-text"><strong>RECORD ID:</strong> NPHMS-DOC-{selectedViewDoc.id}</p>
+                    <p className="dm-viewer-meta-text pat-viewer-meta-text"><strong>DATE GENERATED:</strong> {selectedViewDoc.date}</p>
                   </div>
                 </div>
 
-                <div style={{ borderTop: '2px solid #1f7a6a', margin: '20px 0', paddingTop: '20px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: '13px', color: '#475569' }}>
+                <div className="pat-viewer-content-divider">
+                  <div className="pat-viewer-grid-2col">
                     <div>
-                      <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase' }}>Patient Details</h4>
-                      <p style={{ margin: '2px 0' }}>Name: <strong>{selectedViewDoc.patientName}</strong></p>
-                      <p style={{ margin: '2px 0' }}>Record Type: <strong>{selectedViewDoc.type}</strong></p>
+                      <h4 className="pat-viewer-sub-section-title">Patient Details</h4>
+                      <p className="pat-viewer-p-margin">Name: <strong>{selectedViewDoc.patientName}</strong></p>
+                      <p className="pat-viewer-p-margin">Record Type: <strong>{selectedViewDoc.type}</strong></p>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase' }}>Security Details</h4>
-                      <p style={{ margin: '2px 0' }}>Uploaded By: <strong>{selectedViewDoc.uploadedBy}</strong></p>
-                      <p style={{ margin: '2px 0' }}>File Size: <strong>{selectedViewDoc.size} ({selectedViewDoc.format})</strong></p>
+                    <div className="pat-text-right">
+                      <h4 className="pat-viewer-sub-section-title">Security Details</h4>
+                      <p className="pat-viewer-p-margin">Uploaded By: <strong>{selectedViewDoc.uploadedBy}</strong></p>
+                      <p className="pat-viewer-p-margin">File Size: <strong>{selectedViewDoc.size} ({selectedViewDoc.format})</strong></p>
                     </div>
                   </div>
                 </div>
 
-                <div style={{ padding: '60px 20px', textAlign: 'center', border: '1px dashed #cbd5e1', borderRadius: '8px', background: '#f8fafc', color: '#94a3b8', margin: '40px 0' }}>
-                  <IonIcon icon={documentOutline} style={{ fontSize: '64px', color: '#94a3b8', opacity: 0.5, marginBottom: '16px' }} />
-                  <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#475569', margin: '0 0 4px 0' }}>Clinical Document Secured & Encrypted</h3>
-                  <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>The content of this file is protected with end-to-end patient-healer cryptographic keys.</p>
+                <div className="pat-viewer-enc-box">
+                  <IonIcon icon={documentOutline} className="pat-viewer-enc-icon" />
+                  <h3 className="pat-viewer-enc-title">Clinical Document Secured & Encrypted</h3>
+                  <p className="pat-viewer-enc-desc">The content of this file is protected with end-to-end patient-healer cryptographic keys.</p>
                 </div>
               </div>
             </div>

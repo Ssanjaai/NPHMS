@@ -23,6 +23,7 @@ import { useAuthStore } from '../../store/auth.store';
 import AppCard from '../../components/common/AppCard';
 import '../branch-admin/branch-admin.css';
 import '../healer/Healers.css';
+import './Patient.css';
 
 interface PaymentHistoryEntry {
   id: string;
@@ -177,7 +178,7 @@ const PaymentHistoryPage: React.FC = () => {
           </div>
 
           {/* Metrics summary row */}
-          <div className="healer-stats-grid" style={{ marginBottom: '24px', gridTemplateColumns: 'repeat(3, 1fr)' }}>
+          <div className="healer-stats-grid pat-stats-grid-3col">
             
             {/* Total Billed */}
             <div className="healer-stat-card">
@@ -186,7 +187,7 @@ const PaymentHistoryPage: React.FC = () => {
               </div>
               <div className="healer-stat-card__info">
                 <span className="healer-stat-card__label">Total Billed</span>
-                <strong className="healer-stat-card__value" style={{ fontSize: '20px' }}>₹{totalBilled.toLocaleString()}</strong>
+                <strong className="healer-stat-card__value pat-stat-card-value-20">₹{totalBilled.toLocaleString()}</strong>
               </div>
             </div>
 
@@ -197,18 +198,18 @@ const PaymentHistoryPage: React.FC = () => {
               </div>
               <div className="healer-stat-card__info">
                 <span className="healer-stat-card__label">Total Paid</span>
-                <strong className="healer-stat-card__value" style={{ fontSize: '20px' }}>₹{totalPaid.toLocaleString()}</strong>
+                <strong className="healer-stat-card__value pat-stat-card-value-20">₹{totalPaid.toLocaleString()}</strong>
               </div>
             </div>
 
             {/* Outstanding Balance */}
             <div className="healer-stat-card">
-              <div className="healer-stat-card__icon-wrap healer-stat-card__icon-wrap--blue" style={{ background: outstandingBalance > 0 ? '#fef2f2' : '', color: outstandingBalance > 0 ? '#dc2626' : '' }}>
+              <div className={`healer-stat-card__icon-wrap healer-stat-card__icon-wrap--blue ${outstandingBalance > 0 ? 'pat-stat-icon-alert' : ''}`}>
                 <IonIcon icon={walletOutline} />
               </div>
               <div className="healer-stat-card__info">
                 <span className="healer-stat-card__label">Outstanding Balance</span>
-                <strong className="healer-stat-card__value" style={{ fontSize: '20px', color: outstandingBalance > 0 ? '#dc2626' : '' }}>₹{outstandingBalance.toLocaleString()}</strong>
+                <strong className={`healer-stat-card__value pat-stat-card-value-20 ${outstandingBalance > 0 ? 'pat-color-red' : ''}`}>₹{outstandingBalance.toLocaleString()}</strong>
               </div>
             </div>
 
@@ -216,17 +217,17 @@ const PaymentHistoryPage: React.FC = () => {
 
           {/* Detailed ledger table */}
           <AppCard padding="large" shadow>
-            <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#1e293b', margin: '0 0 16px 0' }}>
+            <h3 className="pat-card-title-16-m16">
               Billing Ledgers & Invoices
             </h3>
 
             {ledgerEntries.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '40px 16px', color: '#94a3b8' }}>
-                <IonIcon icon={receiptOutline} style={{ fontSize: '48px', opacity: 0.3, marginBottom: '8px' }} />
-                <p style={{ margin: 0 }}>No billing history found.</p>
+              <div className="pat-empty-state-container-40">
+                <IonIcon icon={receiptOutline} className="pat-empty-state-icon-large" />
+                <p className="pat-empty-state-text-no-size">No billing history found.</p>
               </div>
             ) : (
-              <div className="dm-table-container" style={{ margin: 0, border: 'none', boxShadow: 'none' }}>
+              <div className="dm-table-container pat-table-container-flat">
                 <table className="dm-table">
                   <thead>
                     <tr>
@@ -247,12 +248,12 @@ const PaymentHistoryPage: React.FC = () => {
                       return (
                         <React.Fragment key={item.id}>
                           <tr className="dm-table-row">
-                            <td style={{ fontWeight: 700, color: '#1e293b' }}>{item.id}</td>
-                            <td style={{ color: '#0f766e', fontWeight: 600 }}>{item.sessionNo}</td>
+                            <td className="pat-td-bold-dark">{item.id}</td>
+                            <td className="pat-td-semibold-teal">{item.sessionNo}</td>
                             <td>{item.assignedHealer}</td>
-                            <td style={{ fontWeight: 600 }}>₹{item.totalBilled}</td>
-                            <td style={{ color: '#16a34a', fontWeight: 600 }}>₹{item.paid}</td>
-                            <td style={{ color: item.outstanding > 0 ? '#dc2626' : '#64748b', fontWeight: 600 }}>₹{item.outstanding}</td>
+                            <td className="pat-td-semibold">₹{item.totalBilled}</td>
+                            <td className="pat-td-semibold-green">₹{item.paid}</td>
+                            <td className={`pat-td-semibold ${item.outstanding > 0 ? 'pat-color-red' : 'pat-color-gray'}`}>₹{item.outstanding}</td>
                             <td>
                               <span className={`healer-status-badge ${
                                 resolvedStatus === 'Paid' 
@@ -269,17 +270,17 @@ const PaymentHistoryPage: React.FC = () => {
                         {/* Transaction Receipt Sub-rows */}
                         {item.history && item.history.length > 0 && (
                           <tr>
-                            <td colSpan={7} style={{ background: '#f8fafc', padding: '8px 24px' }}>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                <span style={{ fontSize: '11px', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            <td colSpan={7} className="pat-td-history-row">
+                              <div className="pat-vertical-list-6">
+                                <span className="pat-history-title-label">
                                   Receipt Payments History
                                 </span>
                                 {item.history.map((tx, idx) => (
-                                  <div key={idx} style={{ display: 'flex', gap: '20px', fontSize: '12px', color: '#475569' }}>
+                                  <div key={idx} className="pat-history-tx-item">
                                     <span>• Receipt Date: <strong>{tx.date}</strong></span>
-                                    <span>Amount Paid: <strong style={{ color: '#16a34a' }}>₹{tx.amount}</strong></span>
+                                    <span>Amount Paid: <strong className="pat-color-green">₹{tx.amount}</strong></span>
                                     <span>Method: <strong>{tx.mode}</strong></span>
-                                    <span style={{ color: '#16a34a' }}>✓ Success</span>
+                                    <span className="pat-color-green">✓ Success</span>
                                   </div>
                                 ))}
                               </div>

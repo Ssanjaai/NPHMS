@@ -1,0 +1,1137 @@
+/* ==========================================================================
+   Patient Workspace Consolidated Stylesheet - PHMS
+   Consolidated styles for the Patient Portal pages to remove inline CSS
+   ========================================================================== */
+
+/* Shared Utility & Common Layout Classes */
+.pat-display-none {
+  display: none !important;
+}
+
+.pat-cursor-pointer {
+  cursor: pointer !important;
+}
+
+.pat-text-right {
+  text-align: right !important;
+}
+
+.pat-margin-bottom-24 {
+  margin-bottom: 24px !important;
+}
+
+.pat-margin-top-16 {
+  margin-top: 16px !important;
+}
+
+.pat-vertical-list-6 {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pat-vertical-list-8 {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pat-vertical-list-12 {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pat-vertical-list-12-mt12 {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.pat-vertical-list-14 {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pat-vertical-list-16 {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pat-flex-align-center-gap8 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pat-flex-align-center-gap12 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pat-flex-col-align-end {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.pat-flex-col-align-end-gap8 {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.pat-flex-gap2 {
+  display: flex;
+  gap: 2px;
+}
+
+.pat-grid-2col-gap16 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.pat-container-narrow-900 {
+  max-width: 900px !important;
+}
+
+/* Color & Text Utility Classes */
+.pat-color-green {
+  color: #16a34a !important;
+}
+
+.pat-color-red {
+  color: #dc2626 !important;
+}
+
+.pat-color-gray {
+  color: #64748b !important;
+}
+
+.pat-label-gray {
+  color: #64748b;
+}
+
+.pat-label-teal {
+  font-size: 10px;
+  color: #0d9488;
+}
+
+.pat-label-10 {
+  font-size: 10px;
+}
+
+.pat-val-dark {
+  color: #0f172a;
+}
+
+.pat-val-dark-1e {
+  color: #1e293b;
+}
+
+.pat-val-dark-13 {
+  font-size: 13px;
+  color: #1e293b;
+}
+
+.pat-val-teal {
+  color: #0f766e;
+}
+
+/* Card Titles */
+.pat-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 16px 0;
+}
+
+.pat-card-title-no-margin {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.pat-card-title-16 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 12px 0;
+}
+
+.pat-card-title-16-m16 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 16px 0;
+}
+
+.pat-section-title-no-margin {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+/* Toolbar & Avatar Classes */
+.pat-toolbar-avatar {
+  overflow: hidden;
+  padding: 0;
+}
+
+.pat-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pat-avatar-wrapper-override {
+  background: #e2f5f1 !important;
+  cursor: pointer !important;
+}
+
+.pat-avatar-initials-override {
+  color: #0f766e !important;
+}
+
+.pat-profile-title-container {
+  text-align: center;
+  margin-top: 12px;
+}
+
+.pat-profile-name-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+}
+
+.pat-profile-divider-box {
+  border-top: 1px solid #e2e8f0;
+  width: 100%;
+  margin-top: 16px;
+  padding-top: 16px;
+}
+
+.pat-profile-row-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.pat-profile-row-item-no-margin {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+/* Welcome Card Classes */
+.pat-welcome-card {
+  margin-bottom: 28px;
+  background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
+}
+
+.pat-welcome-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pat-welcome-icon {
+  font-size: 28px;
+  color: #a7f3d0;
+}
+
+.pat-welcome-title {
+  font-size: 22px;
+  margin: 0;
+}
+
+.pat-welcome-subtitle {
+  color: #e2f5f1;
+  font-size: 15px;
+  margin: 12px 0 20px 0;
+  line-height: 1.5;
+}
+
+.pat-welcome-details-box {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.15);
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.pat-detail-label {
+  color: #a7f3d0;
+}
+
+.pat-detail-val {
+  color: white;
+  display: block;
+  margin-top: 4px;
+}
+
+.pat-details-divider {
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+  padding-left: 20px;
+}
+
+/* Alert Widget Classes */
+.pat-alert-widget {
+  cursor: pointer;
+  margin-bottom: 24px;
+}
+
+.pat-alert-icon {
+  color: #ea580c;
+}
+
+.pat-alert-title {
+  color: #c2410c;
+}
+
+.pat-alert-desc {
+  color: #ea580c;
+}
+
+.pat-alert-count {
+  background: #ea580c;
+}
+
+.pat-alert-icon-red {
+  color: #ef4444;
+  font-size: 18px;
+}
+
+.pat-alert-label-red {
+  font-size: 10px;
+  color: #ef4444;
+}
+
+/* Progress Bar Classes */
+.pat-progress-container {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 0;
+}
+
+.pat-progress-inner {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pat-progress-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.pat-progress-label {
+  color: #64748b;
+}
+
+.pat-progress-val {
+  color: #0f766e;
+}
+
+.pat-progress-bar-bg {
+  width: 100%;
+  height: 10px;
+  background: #e2e8f0;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.pat-progress-bar-fill {
+  height: 100%;
+  background: #0f766e;
+  border-radius: 5px;
+  transition: width 0.3s ease;
+}
+
+.pat-progress-subtext {
+  font-size: 11px;
+  color: #94a3b8;
+  text-align: right;
+  display: block;
+}
+
+/* Payment Summary Box (on Dashboard) */
+.pat-payment-details-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.pat-payment-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.pat-payment-label {
+  color: #64748b;
+}
+
+.pat-payment-value-dark {
+  color: #1e293b;
+}
+
+.pat-payment-value-green {
+  color: #16a34a;
+}
+
+.pat-payment-row-total {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  padding-top: 8px;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.pat-payment-label-bold {
+  color: #64748b;
+  font-weight: 700;
+}
+
+/* Dashboard Action Menu Items */
+.pat-menu-item-btn {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fafc;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.pat-menu-item-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #475569;
+  font-weight: 600;
+}
+
+.pat-menu-item-icon {
+  color: #0f766e;
+  font-size: 18px;
+}
+
+.pat-chevron-icon {
+  color: #94a3b8;
+}
+
+/* Empty States */
+.pat-empty-state-container {
+  text-align: center;
+  padding: 24px 16px;
+  color: #94a3b8;
+}
+
+.pat-empty-state-container-32 {
+  text-align: center;
+  padding: 32px 16px;
+  color: #94a3b8;
+}
+
+.pat-empty-state-container-40 {
+  text-align: center;
+  padding: 40px 16px;
+  color: #94a3b8;
+}
+
+.pat-empty-state-icon {
+  font-size: 40px;
+  opacity: 0.3;
+  margin-bottom: 8px;
+}
+
+.pat-empty-state-icon-large {
+  font-size: 48px;
+  opacity: 0.3;
+  margin-bottom: 8px;
+}
+
+.pat-empty-state-text {
+  margin: 0;
+  font-size: 14px;
+}
+
+.pat-empty-state-text-no-size {
+  margin: 0;
+}
+
+/* Sessions Cards / Lists */
+.pat-session-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fafafb;
+  border: 1px solid #e2e8f0;
+  padding: 14px;
+  border-radius: 10px;
+}
+
+.pat-session-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 18px;
+  transition: all 0.2s;
+}
+
+
+.pat-session-title {
+  font-size: 14px;
+  color: #1e293b;
+}
+
+.pat-session-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.pat-session-status-badge {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f766e;
+  background: #e2f5f1;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+.pat-session-meta-panel {
+  background: #f8fafc;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.pat-session-meta-item {
+  font-size: 12px;
+  color: #475569;
+}
+
+.pat-note-section-title-teal {
+  font-size: 12px;
+  font-weight: 800;
+  color: #0f766e;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 6px 0;
+}
+
+.pat-note-text-teal {
+  margin: 0;
+  font-size: 13px;
+  color: #334155;
+  line-height: 1.5;
+  background: #fafafb;
+  padding: 12px;
+  border-radius: 6px;
+  border-left: 3px solid #0f766e;
+}
+
+.pat-note-section-title-purple {
+  font-size: 12px;
+  font-weight: 800;
+  color: #7c3aed;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 6px 0;
+}
+
+.pat-note-text-purple {
+  margin: 0;
+  font-size: 13px;
+  color: #5b21b6;
+  line-height: 1.5;
+  background: #faf8fc;
+  padding: 12px;
+  border-radius: 6px;
+  border-left: 3px solid #7c3aed;
+  font-weight: 500;
+}
+
+/* Documents (Health Records) Portal */
+.pat-doc-title-link {
+  color: #1f7a6a;
+  font-weight: 600;
+}
+
+.pat-td-uploadedby {
+  font-weight: 500;
+  color: #475569;
+}
+
+.pat-viewer-doc-icon {
+  font-size: 24px;
+  color: #10b981;
+}
+
+.pat-viewer-doc-badge {
+  font-size: 10px;
+  margin-top: 2px;
+  display: inline-block;
+}
+
+.pat-viewer-close-btn {
+  background: #ef4444;
+  border-color: #ef4444;
+}
+
+.pat-viewer-logo-icon {
+  font-size: 24px;
+  color: #1f7a6a;
+  margin-right: 8px;
+}
+
+.pat-viewer-logo-text {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f7a6a;
+}
+
+.pat-viewer-logo-sub {
+  font-size: 10px;
+  color: #64748b;
+}
+
+.pat-viewer-paper-meta {
+  text-align: right;
+}
+
+.pat-viewer-meta-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+}
+
+.pat-viewer-meta-text {
+  font-size: 11px;
+  color: #64748b;
+  margin: 2px 0;
+}
+
+.pat-viewer-content-divider {
+  border-top: 2px solid #1f7a6a;
+  margin: 20px 0;
+  padding-top: 20px;
+}
+
+.pat-viewer-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  font-size: 13px;
+  color: #475569;
+}
+
+.pat-viewer-sub-section-title {
+  margin: 0 0 8px 0;
+  font-size: 12px;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.pat-viewer-p-margin {
+  margin: 2px 0;
+}
+
+.pat-viewer-enc-box {
+  padding: 60px 20px;
+  text-align: center;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #94a3b8;
+  margin: 40px 0;
+}
+
+.pat-viewer-enc-icon {
+  font-size: 64px;
+  color: #94a3b8;
+  opacity: 0.5;
+  margin-bottom: 16px;
+}
+
+.pat-viewer-enc-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #475569;
+  margin: 0 0 4px 0;
+}
+
+.pat-viewer-enc-desc {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Feedback & Reviews Page */
+.pat-feedback-success-banner {
+  background: #e2f5f1;
+  border: 1px solid #ccfbf1;
+  padding: 16px;
+  border-radius: 12px;
+  color: #0f766e;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.pat-success-banner-icon {
+  font-size: 20px;
+}
+
+.pat-feedback-grid {
+  display: grid;
+  gap: 24px;
+  align-items: start;
+}
+
+.pat-feedback-grid-2col {
+  grid-template-columns: 1.2fr 1fr;
+}
+
+.pat-feedback-grid-1col {
+  grid-template-columns: 1fr;
+}
+
+.pat-feedback-card-selected,
+.pat-feedback-card-normal {
+  border-radius: 10px;
+  padding: 16px;
+  transition: all 0.15s ease;
+}
+
+.pat-feedback-card-selected {
+  background: #e2f5f1 !important;
+  border: 2px solid #0f766e !important;
+  box-shadow: 0 4px 12px rgba(15, 118, 110, 0.1) !important;
+}
+
+.pat-feedback-card-normal {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: none !important;
+}
+
+.pat-card-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pat-session-no-text {
+  font-size: 15px;
+  color: #0f172a;
+}
+
+.pat-session-badge-teal {
+  font-size: 12px;
+  background: #e2f5f1;
+  color: #0f766e;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+.pat-card-line-p6 {
+  margin: 6px 0 0 0;
+  font-size: 13px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pat-card-line-p4 {
+  margin: 4px 0 0 0;
+  font-size: 13px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pat-status-submitted-label {
+  font-size: 12px;
+  color: #15803d;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pat-star-icon {
+  font-size: 14px;
+  color: #f59e0b;
+}
+
+.pat-star-icon-large {
+  font-size: 28px;
+  color: #f59e0b;
+}
+
+.pat-action-btn-selected {
+  border: 1px solid #0f766e !important;
+  color: #0f766e !important;
+  background: white !important;
+}
+
+.pat-action-btn-normal {
+  border: 1px solid #0f766e !important;
+  color: #0f766e !important;
+  background: transparent !important;
+}
+
+.pat-feedback-details-box {
+  margin-top: 12px;
+  background: #ffffff;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border-left: 3px solid #16a34a;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pat-feedback-text {
+  font-size: 13px;
+  color: #475569;
+  font-style: italic;
+}
+
+.pat-feedback-date {
+  font-size: 11px;
+  color: #94a3b8;
+  text-align: right;
+}
+
+.pat-card-title-feedback-header {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f766e;
+  margin: 0 0 16px 0;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 6px;
+}
+
+.pat-stars-input-container {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0 16px 0;
+}
+
+.pat-star-button-input {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+}
+
+.pat-button-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.pat-btn-submit {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  background: #0f766e;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pat-btn-cancel {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: white;
+  color: #475569;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Payment History Page Specifics */
+.pat-stats-grid-3col {
+  margin-bottom: 24px;
+  grid-template-columns: repeat(3, 1fr) !important;
+}
+
+.pat-stat-card-value-20 {
+  font-size: 20px;
+}
+
+.pat-stat-icon-alert {
+  background: #fef2f2 !important;
+  color: #dc2626 !important;
+}
+
+.pat-table-container-flat {
+  margin: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.pat-td-bold-dark {
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.pat-td-semibold-teal {
+  color: #0f766e;
+  font-weight: 600;
+}
+
+.pat-td-semibold {
+  font-weight: 600;
+}
+
+.pat-td-semibold-green {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.pat-td-history-row {
+  background: #f8fafc;
+  padding: 8px 24px !important;
+}
+
+.pat-history-title-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pat-history-tx-item {
+  display: flex;
+  gap: 20px;
+  font-size: 12px;
+  color: #475569;
+}
+
+/* Profile Page Specifics */
+.pat-detail-grid-flat {
+  margin-bottom: 0 !important;
+}
+
+.pat-condition-badge-red {
+  font-size: 12px;
+  background: #fef2f2;
+  color: #dc2626;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.pat-label-gray-13 {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.pat-divider-dashed-pt12 {
+  border-top: 1px dashed #e2e8f0;
+  padding-top: 12px;
+}
+
+.pat-clinical-notes-p {
+  margin: 6px 0 0 0;
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.pat-cert-display-teal {
+  background: #e2f5f1 !important;
+  border-color: #ccfbf1 !important;
+}
+
+.pat-cert-icon-teal {
+  color: #0f766e !important;
+}
+
+.pat-cert-name-teal {
+  color: #0f766e !important;
+}
+
+.pat-cert-sub-teal {
+  font-size: 12px;
+  color: #0d9488;
+}
+
+.pat-cert-display-purple {
+  background: #faf8fc !important;
+  border-color: #faf5ff !important;
+}
+
+.pat-cert-icon-purple {
+  color: #6b21a8 !important;
+}
+
+.pat-cert-name-purple {
+  color: #6b21a8 !important;
+}
+
+.pat-cert-sub-purple {
+  font-size: 12px;
+  color: #7c3aed;
+}
+
+.pat-info-item-icon-teal {
+  color: #0f766e;
+  font-size: 18px;
+}
+
+/* Session History Modals */
+.pat-session-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.pat-session-card-title-text {
+  font-size: 16px;
+  color: #0f172a;
+}
+
+.pat-session-card-healer-line {
+  margin: 8px 0 0 0;
+  font-size: 13px;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pat-icon-teal-0d {
+  color: #0d9488;
+}
+
+.pat-session-card-date-line {
+  margin: 4px 0 0 0;
+  font-size: 13px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pat-view-notes-btn {
+  border: 1px solid #0f766e !important;
+  color: #0f766e !important;
+  background: transparent !important;
+}
+
+.pat-modal-close-icon {
+  font-size: 24px;
+}
+
+.pat-modal-body-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 16px 8px;
+}
+
+.pat-modal-row-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.pat-modal-section-title-teal {
+  font-size: 14px;
+  font-weight: 800;
+  color: #0f766e;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.pat-modal-text-panel-teal {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  font-size: 14px;
+  color: #334155;
+  line-height: 1.5;
+}
+
+.pat-modal-section-title-purple {
+  font-size: 14px;
+  font-weight: 800;
+  color: #7c3aed;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pat-modal-text-panel-purple {
+  background: #faf8fc;
+  border: 1px solid #faf5ff;
+  border-radius: 8px;
+  padding: 16px;
+  font-size: 14px;
+  color: #5b21b6;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.pat-modal-close-btn-footer {
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  background: #0f766e;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 12px;
+}
