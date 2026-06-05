@@ -12901,7 +12901,19 @@ body.db-dark-mode .db-corp-back-btn ion-icon {
   color: #cbd5e1 !important;
 }
 
+/* Custom Document Viewer Modal Popup */
+.dm-document-viewer-popup {
+  --background: transparent;
+}
 
-
-
-
+.dm-document-viewer-popup::part(content) {
+  border-radius: 16px;
+  background: #0f172a;
+  width: 95%;
+  max-width: 850px;
+  height: 90%;
+  max-height: 850px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  border: 1px solid #334155;
+}

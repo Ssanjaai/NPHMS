@@ -218,6 +218,22 @@ const DocumentManagementPage: React.FC = () => {
           clearInterval(interval);
           setTimeout(() => {
             const extension = (fileName.split('.').pop() || 'PDF').toUpperCase() as any;
+
+            // Resolve assigned healer for the selected patient from the patients registry
+            let selectedPatientHealer = 'Dr. Shailesh';
+            const savedPatients = localStorage.getItem('phms_patients');
+            if (savedPatients) {
+              try {
+                const parsed = JSON.parse(savedPatients);
+                const found = parsed.find((p: any) => p.name?.toLowerCase().trim() === patient.toLowerCase().trim());
+                if (found && found.assignedHealer) {
+                  selectedPatientHealer = found.assignedHealer;
+                }
+              } catch (e) {
+                console.error(e);
+              }
+            }
+
             const newDoc: UploadedDocument = {
               id: Date.now(),
               documentName: fileName,
@@ -225,15 +241,15 @@ const DocumentManagementPage: React.FC = () => {
               type: type,
               date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
               format: extension,
-              size: `${(Math.random() * 5 + 1).toFixed(1)} MB`,
+              size: `${(Math.random() * 3 + 1).toFixed(1)} MB`,
               uploadedBy: user?.name || 'Branch Admin',
-              assignedHealer: user?.name || 'Healer Julian',
+              assignedHealer: selectedPatientHealer,
             };
 
-            // Prepend new document
-            setDocuments((prevDocs) => [newDoc, ...prevDocs]);
-
-
+            // Prepend new document and write directly to localStorage
+            const updatedDocsList = [newDoc, ...documents];
+            setDocuments(updatedDocsList);
+            localStorage.setItem('phms_uploaded_documents', JSON.stringify(updatedDocsList));
 
             setIsUploading(false);
             setUploadProgress(0);
@@ -589,7 +605,7 @@ const DocumentManagementPage: React.FC = () => {
 
                 {/* Live Encrypting Animation */}
                 {isUploading && (
-                  <div className="dm-upload-progress-container">
+                  <div className="dm-upload-progress-container" style={{ marginTop: '16px', padding: '12px' }}>
                     <div className="dm-upload-progress-header">
                       <span className="dm-uploading-file-label">
                         Encrypting & Storing: <strong>{uploadingFileName}</strong>
@@ -600,7 +616,7 @@ const DocumentManagementPage: React.FC = () => {
                       className="dm-upload-progress-bar"
                       style={{ '--progress-pct': `${uploadProgress}%` } as React.CSSProperties}
                     ></div>
-                    <span className="dm-uploading-subtext">Ready to encrypt and store...</span>
+                    <span className="dm-uploading-subtext">Securing to patient's private clinical vault...</span>
                   </div>
                 )}
               </div>
@@ -761,7 +777,7 @@ const DocumentManagementPage: React.FC = () => {
       <IonModal 
         isOpen={selectedViewDoc !== null} 
         onDidDismiss={() => setSelectedViewDoc(null)} 
-        className="sa-modal sa-modal--full"
+        className="dm-document-viewer-popup"
       >
         {selectedViewDoc && (
           <div className="dm-viewer-container">

@@ -62,6 +62,10 @@ import SATreatmentTypeDetailsPage from './pages/super-admin/SATreatmentTypeDetai
 import SAEditTreatmentTypePage from './pages/super-admin/SAEditTreatmentTypePage';
 import PatientDashboardPage from './pages/patient/DashboardPage';
 import PatientDocumentsPage from './pages/patient/DocumentsPage';
+import PatientSessionHistoryPage from './pages/patient/SessionHistoryPage';
+import PatientPaymentsPage from './pages/patient/PaymentHistoryPage';
+import PatientFeedbackPage from './pages/patient/FeedbackPage';
+import PatientProfilePage from './pages/patient/ProfilePage';
 import HealerDashboardPage from './pages/healer/DashboardPage';
 import HealerPatientsPage from './pages/healer/MyPatientsPage';
 import HealerPatientDetailsPage from './pages/healer/PatientsDetailPage';
@@ -297,8 +301,20 @@ const AppContent: React.FC = () => {
         <Route path={ROUTES.PATIENT.DASHBOARD} exact={true}>
           <PatientDashboardPage />
         </Route>
+        <Route path={ROUTES.PATIENT.SESSION_HISTORY} exact={true}>
+          <PatientSessionHistoryPage />
+        </Route>
         <Route path={ROUTES.PATIENT.HEALTH_RECORDS} exact={true}>
           <PatientDocumentsPage />
+        </Route>
+        <Route path={ROUTES.PATIENT.PAYMENTS} exact={true}>
+          <PatientPaymentsPage />
+        </Route>
+        <Route path={ROUTES.PATIENT.FEEDBACK} exact={true}>
+          <PatientFeedbackPage />
+        </Route>
+        <Route path={ROUTES.PATIENT.PROFILE} exact={true}>
+          <PatientProfilePage />
         </Route>
 
         {/* Healer Routes */}

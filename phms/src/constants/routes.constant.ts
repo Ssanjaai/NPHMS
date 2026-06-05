@@ -88,11 +88,11 @@ export const ROUTES = {
   // Patient Routes
   PATIENT: {
     DASHBOARD: '/patient/dashboard',
-    APPOINTMENTS: '/patient/appointments',
-    HEALERS: '/patient/healers',
-    PROFILE: '/patient/profile',
+    SESSION_HISTORY: '/patient/session-history',
     HEALTH_RECORDS: '/patient/health-records',
-    VISITORS: '/patient/visitors',
+    PAYMENTS: '/patient/payments',
+    FEEDBACK: '/patient/feedback',
+    PROFILE: '/patient/profile',
   },
 
   // Common Routes
