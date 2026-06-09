@@ -132,87 +132,88 @@ const SACreateTreatmentCategoryPage: React.FC = () => {
           </div>
 
           <div className="sa-form-layout">
-            <div className="sa-section">
-              <div className="sa-section__header">
-                <div>
-                  <h2 className="sa-section__title">Basic Information</h2>
-                  <p className="sa-section__subtitle">Core identification details for the category</p>
+            <div className="sa-grid-2">
+              <div className="sa-section">
+                <div className="sa-section__header">
+                  <div>
+                    <h2 className="sa-section__title">Basic Information</h2>
+                    <p className="sa-section__subtitle">Core identification details for the category</p>
+                  </div>
+                </div>
+
+                <div className="sa-settings__form">
+                  <div className="sa-settings__form-group">
+                    <label className="sa-settings__label">
+                      <IonIcon icon={folderOutline} style={{ marginRight: '8px' }} />
+                      Category Name <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <input
+                      className="sa-settings__input"
+                      placeholder="e.g., Advanced Healing"
+                      value={formData.name}
+                      maxLength={50}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="sa-settings__form-group">
+                    <label className="sa-settings__label">
+                      <IonIcon icon={codeOutline} style={{ marginRight: '8px' }} />
+                      Category Code (Optional)
+                    </label>
+                    <input
+                      className="sa-settings__input"
+                      placeholder="e.g., AD-001"
+                      value={formData.code}
+                      maxLength={10}
+                      onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="sa-settings__form-group">
+                    <label className="sa-settings__label">
+                      <IonIcon icon={documentTextOutline} style={{ marginRight: '8px' }} />
+                      Description
+                    </label>
+                    <textarea
+                      className="sa-settings__input"
+                      rows={3}
+                      placeholder="Describe the treatments included in this category..."
+                      style={{ resize: 'none', padding: '12px' }}
+                      value={formData.description}
+                      maxLength={200}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    ></textarea>
+                  </div>
                 </div>
               </div>
 
-              <div className="sa-settings__form">
-                <div className="sa-settings__form-group">
-                  <label className="sa-settings__label">
-                    <IonIcon icon={folderOutline} style={{ marginRight: '8px' }} />
-                    Category Name <span style={{ color: '#ef4444' }}>*</span>
-                  </label>
-                  <input
-                    className="sa-settings__input"
-                    placeholder="e.g., Advanced Healing"
-                    value={formData.name}
-                    maxLength={50}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  />
+              <div className="sa-section">
+                <div className="sa-section__header">
+                  <div>
+                    <h2 className="sa-section__title">Organization & Status</h2>
+                    <p className="sa-section__subtitle">Define sorting logic and availability</p>
+                  </div>
                 </div>
 
-                <div className="sa-settings__form-group">
-                  <label className="sa-settings__label">
-                    <IonIcon icon={codeOutline} style={{ marginRight: '8px' }} />
-                    Category Code (Optional)
-                  </label>
-                  <input
-                    className="sa-settings__input"
-                    placeholder="e.g., AD-001"
-                    value={formData.code}
-                    maxLength={10}
-                    onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                  />
-                </div>
-
-                <div className="sa-settings__form-group">
-                  <label className="sa-settings__label">
-                    <IonIcon icon={documentTextOutline} style={{ marginRight: '8px' }} />
-                    Description
-                  </label>
-                  <textarea
-                    className="sa-settings__input"
-                    rows={3}
-                    placeholder="Describe the treatments included in this category..."
-                    style={{ resize: 'none', padding: '12px' }}
-                    value={formData.description}
-                    maxLength={200}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  ></textarea>
+                <div className="sa-settings__form">
+                  <div className="sa-settings__form-group">
+                    <label className="sa-settings__label">
+                      <IonIcon icon={checkmarkCircleOutline} style={{ marginRight: '8px' }} />
+                      Status
+                    </label>
+                    <select
+                      className="sa-settings__input"
+                      value={formData.status}
+                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                    >
+                      <option value="Active">Active</option>
+                      <option value="Inactive">Inactive</option>
+                    </select>
+                  </div>
                 </div>
               </div>
             </div>
-
-            <div className="sa-section">
-              <div className="sa-section__header">
-                <div>
-                  <h2 className="sa-section__title">Organization & Status</h2>
-                  <p className="sa-section__subtitle">Define sorting logic and availability</p>
-                </div>
-              </div>
-
-              <div className="sa-settings__form">
-                <div className="sa-settings__form-group">
-                  <label className="sa-settings__label">
-                    <IonIcon icon={checkmarkCircleOutline} style={{ marginRight: '8px' }} />
-                    Status
-                  </label>
-                  <select
-                    className="sa-settings__input"
-                    value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  >
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px', marginTop: '32px', paddingBottom: '40px' }}>
               <button className="sa-btn sa-btn--outline" onClick={handleReset}>
